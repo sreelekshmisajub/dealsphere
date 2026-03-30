@@ -78,6 +78,153 @@ def _to_float(value):
     return float(value)
 
 
+def _clamp(value, low=0.0, high=1.0):
+    return max(low, min(high, value))
+
+
+def _status_progress(status: str) -> float:
+    return {
+        "pending": 0.08,
+        "confirmed": 0.22,
+        "processing": 0.42,
+        "shipped": 0.76,
+        "delivered": 1.0,
+        "cancelled": 0.0,
+    }.get((status or "").strip().lower(), 0.12)
+
+
+def _interpolate_position(start_lat, start_lng, end_lat, end_lng, progress):
+    return (
+        round(start_lat + ((end_lat - start_lat) * progress), 6),
+        round(start_lng + ((end_lng - start_lng) * progress), 6),
+    )
+
+
+def _build_order_delivery_map(order, user, index):
+    local_items = [
+        item
+        for item in order.items.all()
+        if item.source == "local" and item.merchant_id and item.merchant
+    ]
+    if not local_items:
+        return SimpleNamespace(
+            available=False,
+            reason="Live map is available for local merchant deliveries only.",
+        )
+
+    customer_lat = _to_float(getattr(user, "location_lat", None))
+    customer_lng = _to_float(getattr(user, "location_lng", None))
+    if customer_lat is None or customer_lng is None:
+        return SimpleNamespace(
+            available=False,
+            reason="Add your saved location in your profile to view the live delivery map.",
+        )
+
+    merchant_points = []
+    seen_merchants = set()
+    for item in local_items:
+        merchant = item.merchant
+        lat = _to_float(getattr(merchant, "location_lat", None))
+        lng = _to_float(getattr(merchant, "location_lng", None))
+        if lat is None or lng is None:
+            continue
+        merchant_key = (merchant.id, lat, lng)
+        if merchant_key in seen_merchants:
+            continue
+        seen_merchants.add(merchant_key)
+        merchant_points.append(
+            {
+                "merchant_id": merchant.id,
+                "label": merchant.shop_name,
+                "lat": lat,
+                "lng": lng,
+            }
+        )
+
+    if not merchant_points:
+        return SimpleNamespace(
+            available=False,
+            reason="Merchant location is not available for this delivery yet.",
+        )
+
+    if order.status == "cancelled":
+        return SimpleNamespace(
+            available=False,
+            reason="This order was cancelled, so live delivery tracking is not available.",
+        )
+
+    primary_item = min(local_items, key=lambda item: int(item.delivery_time_hours or 24))
+    primary_origin = next(
+        (
+            point
+            for point in merchant_points
+            if point["merchant_id"] == getattr(primary_item.merchant, "id", None)
+        ),
+        merchant_points[0],
+    )
+
+    max_eta_hours = max(int(item.delivery_time_hours or 24) for item in local_items) or 24
+    elapsed_hours = max((timezone.now() - order.created_at).total_seconds() / 3600, 0)
+    time_progress = _clamp(elapsed_hours / max_eta_hours if max_eta_hours else 0, 0.0, 0.98)
+    progress = 1.0 if order.status == "delivered" else _clamp(max(_status_progress(order.status), time_progress))
+    courier_lat, courier_lng = _interpolate_position(
+        primary_origin["lat"],
+        primary_origin["lng"],
+        customer_lat,
+        customer_lng,
+        progress,
+    )
+
+    remaining_hours = 0.0 if order.status == "delivered" else round(max(max_eta_hours - elapsed_hours, 0), 1)
+    if order.status == "delivered":
+        eta_label = "Delivered"
+        status_copy = "Delivery completed"
+    elif progress >= 0.72:
+        eta_label = f"{remaining_hours:.1f} hrs remaining" if remaining_hours else "Arriving soon"
+        status_copy = "Courier is on the way"
+    elif progress >= 0.35:
+        eta_label = f"{remaining_hours:.1f} hrs remaining" if remaining_hours else "Preparing dispatch"
+        status_copy = "Order is being packed for delivery"
+    else:
+        eta_label = f"{remaining_hours:.1f} hrs remaining" if remaining_hours else "Queued"
+        status_copy = "Merchant is preparing the order"
+
+    payload = {
+        "customer": {
+            "label": "Your saved location",
+            "lat": customer_lat,
+            "lng": customer_lng,
+        },
+        "origins": merchant_points,
+        "primary_origin": primary_origin,
+        "courier": {
+            "label": "Estimated courier position",
+            "lat": courier_lat,
+            "lng": courier_lng,
+        },
+        "progress": round(progress, 3),
+        "progress_percent": int(round(progress * 100)),
+        "status": order.status,
+        "route": [
+            [primary_origin["lat"], primary_origin["lng"]],
+            [courier_lat, courier_lng],
+            [customer_lat, customer_lng],
+        ],
+    }
+
+    return SimpleNamespace(
+        available=True,
+        script_id=f"order-map-data-{index}",
+        map_id=f"order-map-{index}",
+        payload=payload,
+        progress_percent=payload["progress_percent"],
+        eta_label=eta_label,
+        status_copy=status_copy,
+        note="Map uses your saved profile coordinates and local merchant locations.",
+        additional_origin_count=max(len(merchant_points) - 1, 0),
+    )
+
+
 def _discount_percentage(price, original_price):
     if price in (None, "") or original_price in (None, ""):
         return None
@@ -1410,6 +1557,8 @@ class OrderHistoryPageView(CustomerRequiredMixin, DashboardShellContextMixin, Ba
             .prefetch_related("items", "items__product", "items__merchant")
             .order_by("-created_at")[:25]
         )
+        for index, order in enumerate(orders, start=1):
+            order.delivery_map = _build_order_delivery_map(order, self.request.user, index)
         context["orders"] = orders
         return context
 
@@ -1569,12 +1718,28 @@ class DealLockPageView(CustomerRequiredMixin, DashboardShellContextMixin, BaseSi
     dashboard_intro = "Review price-match requests and initiate a deal-lock request for a selected product."
 
     def post(self, request, *args, **kwargs):
+        from apps.core.models import DealLock
         product_id = kwargs.get("product_id")
         if not product_id:
-            messages.error(request, "Select a product before requesting a price match.")
+            messages.error(request, "Select a product before locking a deal.")
             return redirect("dashboard_deal_lock")
 
+        action = request.POST.get("action", "lock")
         merchant_id = request.POST.get("merchant_id")
+
+        # --- Cancel an existing lock ---
+        if action == "cancel":
+            lock_id = request.POST.get("lock_id")
+            try:
+                lock = DealLock.objects.get(id=lock_id, user=request.user, status="active")
+                lock.status = "cancelled"
+                lock.save(update_fields=["status", "updated_at"])
+                messages.success(request, "Deal-lock cancelled.")
+            except DealLock.DoesNotExist:
+                messages.error(request, "Lock not found or already cancelled.")
+            return redirect("dashboard_deal_lock_product", product_id=product_id)
+
+        # --- Create a new lock ---
         offer = (
             Offer.objects.filter(product_id=product_id, merchant_id=merchant_id, is_active=True)
             .select_related("product", "merchant")
@@ -1584,50 +1749,61 @@ class DealLockPageView(CustomerRequiredMixin, DashboardShellContextMixin, BaseSi
             messages.error(request, "The selected local offer could not be found.")
             return redirect("dashboard_deal_lock_product", product_id=product_id)
 
-        online_baseline = _online_baseline_price(offer.product)
-        if online_baseline is None:
-            messages.error(request, "No online baseline price exists for this product yet, so price match is unavailable.")
-            return redirect("dashboard_deal_lock_product", product_id=product_id)
+        # Expire any old locks for this user+offer
+        DealLock.objects.filter(user=request.user, offer=offer, status="active").update(status="expired")
 
-        if float(offer.price) <= online_baseline:
-            messages.info(request, "This local offer already matches or beats the cheapest online baseline.")
-            return redirect("dashboard_deal_lock_product", product_id=product_id)
+        lock_hours = int(request.POST.get("lock_hours", 24))
+        lock_hours = max(1, min(lock_hours, 72))
+        locked_until = timezone.now() + timedelta(hours=lock_hours)
 
-        existing_request = PriceMatchRequest.objects.filter(
+        lock = DealLock.objects.create(
             user=request.user,
-            merchant=offer.merchant,
-            product=offer.product,
-            status="pending",
-        ).first()
-        if existing_request:
-            messages.info(request, "A pending deal-lock request already exists for this merchant and product.")
-            return redirect("dashboard_deal_lock_product", product_id=product_id)
-
-        baseline_decimal = Decimal(str(online_baseline))
-        request_record = PriceMatchRequest.objects.create(
-            user=request.user,
-            merchant=offer.merchant,
-            product=offer.product,
-            requested_price=baseline_decimal,
-            competitor_price=baseline_decimal,
-            competitor_source=_online_baseline_source(offer.product) or "online",
-            status="pending",
+            offer=offer,
+            locked_price=offer.price,
+            lock_duration_hours=lock_hours,
+            locked_until=locked_until,
+            status="active",
         )
+
+        # Also create a price-match request if local price is above online baseline
+        online_baseline = _online_baseline_price(offer.product)
+        if online_baseline is not None and float(offer.price) > online_baseline:
+            existing_pmr = PriceMatchRequest.objects.filter(
+                user=request.user, merchant=offer.merchant,
+                product=offer.product, status="pending",
+            ).first()
+            if not existing_pmr:
+                baseline_decimal = Decimal(str(online_baseline))
+                PriceMatchRequest.objects.create(
+                    user=request.user,
+                    merchant=offer.merchant,
+                    product=offer.product,
+                    requested_price=baseline_decimal,
+                    competitor_price=baseline_decimal,
+                    competitor_source=_online_baseline_source(offer.product) or "online",
+                    status="pending",
+                )
+
         UserActivity.objects.create(
             user=request.user,
-            activity_type="price_match_requested",
+            activity_type="deal_lock_created",
             product=offer.product,
             merchant=offer.merchant,
-            metadata={"price_match_request_id": request_record.id, "requested_price": float(baseline_decimal)},
+            metadata={"lock_id": lock.id, "locked_price": float(lock.locked_price), "hours": lock_hours},
         )
-        messages.success(request, "Deal-lock request created and sent to the merchant dashboard.")
-        return redirect("dashboard_deal_lock")
+        messages.success(
+            request,
+            f"Deal locked at Rs.{lock.locked_price} for {lock_hours} hour(s). Valid until {locked_until.strftime('%d %b %Y %I:%M %p')}."
+        )
+        return redirect("dashboard_deal_lock_product", product_id=product_id)
 
     def get_context_data(self, **kwargs):
+        from apps.core.models import DealLock
         context = super().get_context_data(**kwargs)
         product_id = kwargs.get("product_id")
         product_card = None
         local_offers = []
+        online_slots = []
 
         if product_id:
             details = ProductService.get_product_details(product_id, self.request.user)
@@ -1638,31 +1814,74 @@ class DealLockPageView(CustomerRequiredMixin, DashboardShellContextMixin, BaseSi
             baseline_price = _online_baseline_price(product)
             baseline_source = _online_baseline_source(product)
             product_card = _product_card(product)
+            pname = product.name or ""
+
             for offer in details["offers"]:
-                local_offers.append(
-                    SimpleNamespace(
-                        merchant_id=offer.merchant.id,
-                        shop_name=offer.merchant.shop_name,
-                        address=offer.merchant.address or "Location unavailable",
-                        price=float(offer.price),
-                        delivery_time_hours=offer.delivery_time_hours,
-                        beats_online=(baseline_price is not None and float(offer.price) <= baseline_price),
-                    )
-                )
+                lock = DealLock.objects.filter(
+                    user=self.request.user, offer_id=offer.id,
+                    status="active", locked_until__gt=timezone.now(),
+                ).first()
+                local_offers.append(SimpleNamespace(
+                    offer_id=offer.id,
+                    merchant_id=offer.merchant.id,
+                    shop_name=offer.merchant.shop_name,
+                    address=offer.merchant.address or "Location unavailable",
+                    price=float(offer.price),
+                    delivery_time_hours=offer.delivery_time_hours,
+                    beats_online=(baseline_price is not None and float(offer.price) <= baseline_price),
+                    savings=round(baseline_price - float(offer.price), 2) if baseline_price and float(offer.price) < baseline_price else None,
+                    active_lock=lock,
+                ))
+
+            # Online comparison slots
+            for src, label, delivery, url_fn in [
+                ("amazon", "Amazon", "24h", lambda: product.amazon_url or f"https://www.amazon.in/s?k={pname.replace(' ', '+')}"),
+                ("flipkart", "Flipkart", "48h", lambda: product.flipkart_url or f"https://www.flipkart.com/search?q={pname.replace(' ', '+')}"),
+                ("myntra", "Myntra", "36h", lambda: product.myntra_url or f"https://www.myntra.com/{pname.replace(' ', '-')}"),
+            ]:
+                price = getattr(product, f"{src}_price", None)
+                online_slots.append(SimpleNamespace(
+                    source=src,
+                    label=label,
+                    price=float(price) if price is not None else None,
+                    delivery=delivery,
+                    url=url_fn(),
+                    is_cheapest=False,
+                ))
+
+            # Mark cheapest online
+            priced = [s for s in online_slots if s.price is not None]
+            if priced:
+                cheapest = min(priced, key=lambda s: s.price)
+                cheapest.is_cheapest = True
+
             context["selected_product"] = product_card
             context["online_baseline_price"] = baseline_price
             context["online_baseline_source"] = baseline_source
+            context["online_slots"] = online_slots
 
-        requests = list(
-            self.request.user.price_match_requests.select_related("product", "merchant").order_by("-created_at")[:20]
+        # Active locks across all products for this user
+        all_active_locks = list(
+            DealLock.objects.filter(
+                user=self.request.user, status="active",
+                locked_until__gt=timezone.now(),
+            ).select_related("offer__product", "offer__merchant").order_by("locked_until")[:10]
         )
-        context.update(
-            {
-                "deal_lock_requests": requests,
-                "local_offers": local_offers,
-                "selected_product": product_card,
-            }
+
+        price_match_requests = list(
+            self.request.user.price_match_requests.select_related("product", "merchant").order_by("-created_at")[:10]
         )
+
+        context.update({
+            "local_offers": local_offers,
+            "selected_product": product_card,
+            "all_active_locks": all_active_locks,
+            "deal_lock_requests": price_match_requests,
+            "lock_duration_choices": [
+                (1, "1 hour"), (6, "6 hours"), (12, "12 hours"),
+                (24, "24 hours"), (48, "48 hours"), (72, "72 hours"),
+            ],
+        })
         return context
 
 

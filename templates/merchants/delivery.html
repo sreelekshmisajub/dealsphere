@@ -1,57 +1,368 @@
 {% extends 'merchants/dashboard_layout.html' %}
 
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #delivery-map {
+        height: 420px;
+        border-radius: 1.25rem;
+        overflow: hidden;
+        border: 1px solid rgba(15,23,42,0.08);
+        box-shadow: 0 4px 24px -8px rgba(15,23,42,0.12);
+        position: relative;
+        z-index: 0;
+    }
+
+    .map-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+        font-size: 0.82rem;
+    }
+
+    .map-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .map-info-bar {
+        background: #f8fafc;
+        border: 1px solid rgba(15,23,42,0.07);
+        border-radius: 1rem;
+        padding: 0.85rem 1rem;
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+        align-items: center;
+    }
+
+    .map-stat { display: flex; flex-direction: column; }
+    .map-stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; font-weight: 700; }
+    .map-stat-value { font-weight: 800; color: #0f172a; font-size: 1rem; }
+
+    .radius-ring {
+        fill: rgba(99,102,241,0.06);
+        stroke: #6366f1;
+        stroke-width: 1.5;
+        stroke-dasharray: 6 4;
+    }
+</style>
+{% endblock %}
+
 {% block merchant_content %}
 <div class="row g-4">
-    <div class="col-lg-7">
+
+    {# ── LEFT: Settings form ── #}
+    <div class="col-lg-5">
         <div class="merchant-section-card">
-            <form method="post" class="row g-4">
+            <h5 class="fw-bold mb-1">Delivery Settings</h5>
+            <p class="text-secondary small mb-4">Configure your delivery zone and radius. The map on the right shows your store location and delivery coverage.</p>
+            <form method="post" class="row g-3" id="delivery-settings-form">
                 {% csrf_token %}
-                <div class="col-md-6">
-                    <div class="form-check form-switch mt-4">
-                        <input class="form-check-input" type="checkbox" id="delivery_enabled" name="delivery_enabled" {% if merchant.delivery_enabled %}checked{% endif %}>
-                        <label class="form-check-label fw-semibold" for="delivery_enabled">Enable hyperlocal delivery</label>
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="delivery_enabled"
+                               name="delivery_enabled" {% if merchant.delivery_enabled %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold" for="delivery_enabled">
+                            Enable hyperlocal delivery
+                        </label>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label-premium">Delivery Radius (KM)</label>
-                    <input type="number" class="form-control" name="delivery_radius_km" value="{{ merchant.delivery_radius_km }}" min="0" required>
+                    <label class="form-label fw-semibold">Delivery Radius (KM)</label>
+                    <input type="number" class="form-control" name="delivery_radius_km"
+                           id="delivery_radius_km"
+                           value="{{ merchant.delivery_radius_km }}" min="0" required>
                 </div>
-                <div class="col-md-8">
-                    <label class="form-label-premium">Default Delivery Time for Active Offers (Hours)</label>
-                    <input type="number" class="form-control" name="default_delivery_time_hours" min="1" placeholder="Optional bulk update">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Default Delivery Time (Hours)</label>
+                    <input type="number" class="form-control" name="default_delivery_time_hours"
+                           min="1" placeholder="Optional bulk update">
                 </div>
-                <div class="col-md-4">
-                    <div class="form-check mt-4 pt-2">
-                        <input class="form-check-input" type="checkbox" id="apply_delivery_time_to_offers" name="apply_delivery_time_to_offers">
-                        <label class="form-check-label" for="apply_delivery_time_to_offers">Apply to all active offers</label>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox"
+                               id="apply_delivery_time_to_offers" name="apply_delivery_time_to_offers">
+                        <label class="form-check-label" for="apply_delivery_time_to_offers">
+                            Apply delivery time to all active offers
+                        </label>
                     </div>
                 </div>
-                <div class="col-12 d-flex gap-2">
-                    <button class="btn-premium btn-premium-primary" type="submit">Save Delivery Settings</button>
-                    <a href="{% url 'merchant_inventory' %}" class="btn-premium btn-premium-secondary">Review Inventory</a>
+
+                {# Hidden fields to save merchant location #}
+                <input type="hidden" name="merchant_lat" id="merchant_lat_input" value="{{ merchant.location_lat|default:'' }}">
+                <input type="hidden" name="merchant_lng" id="merchant_lng_input" value="{{ merchant.location_lng|default:'' }}">
+
+                <div class="col-12 d-flex flex-wrap gap-2">
+                    <button class="btn-premium btn-premium-primary" type="submit">Save Settings</button>
+                    <button class="btn-premium btn-premium-secondary" type="button" id="set-location-btn">
+                        <i class="fas fa-location-crosshairs"></i>Set My Location
+                    </button>
+                    <a href="{% url 'merchant_inventory' %}" class="btn-premium btn-premium-secondary">
+                        Inventory
+                    </a>
                 </div>
+                <div id="location-msg" class="col-12 small text-secondary" style="min-height:1.2rem;"></div>
             </form>
+        </div>
+
+        <div class="merchant-section-card mt-3">
+            <h5 class="fw-bold mb-3">Current Status</h5>
+            <div class="row g-2 text-center">
+                <div class="col-4">
+                    <div class="small text-secondary">Delivery</div>
+                    <div class="fw-bold {% if merchant.delivery_enabled %}text-success{% else %}text-danger{% endif %}">
+                        {% if merchant.delivery_enabled %}Enabled{% else %}Disabled{% endif %}
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="small text-secondary">Radius</div>
+                    <div class="fw-bold">{{ merchant.delivery_radius_km }} KM</div>
+                </div>
+                <div class="col-4">
+                    <div class="small text-secondary">Active Offers</div>
+                    <div class="fw-bold">{{ delivery_stats.active_offer_count }}</div>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="small text-secondary">Average Delivery Time</div>
+            <div class="fw-semibold">{{ delivery_stats.average_delivery_time }} hours</div>
         </div>
     </div>
 
-    <div class="col-lg-5">
-        <div class="merchant-section-card mb-4">
-            <h5 class="fw-bold mb-3">Current Delivery Status</h5>
-            <div class="small text-secondary">Enabled</div>
-            <div class="fw-semibold mb-3">{% if merchant.delivery_enabled %}Yes{% else %}No{% endif %}</div>
-            <div class="small text-secondary">Radius</div>
-            <div class="fw-semibold mb-3">{{ merchant.delivery_radius_km }} KM</div>
-            <div class="small text-secondary">Active Offer Count</div>
-            <div class="fw-semibold mb-0">{{ delivery_stats.active_offer_count }}</div>
-        </div>
-
+    {# ── RIGHT: Map ── #}
+    <div class="col-lg-7">
         <div class="merchant-section-card">
-            <h5 class="fw-bold mb-3">Offer Delivery Timing</h5>
-            <div class="small text-secondary">Average Delivery Time</div>
-            <div class="fw-semibold mb-3">{{ delivery_stats.average_delivery_time }} hours</div>
-            <div class="small text-secondary">Note</div>
-            <div class="text-secondary">Delivery ranking uses these merchant settings plus each offer's own delivery time.</div>
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Route Map</h5>
+                    <p class="text-secondary small mb-0">
+                        <i class="fas fa-circle me-1" style="color:#6366f1;font-size:0.7rem;"></i>Your store &nbsp;
+                        <i class="fas fa-circle me-1" style="color:#ef4444;font-size:0.7rem;"></i>Delivery destination (drag to update route)
+                    </p>
+                </div>
+                <button class="btn-premium btn-premium-secondary btn-sm" id="reset-destination-btn" style="font-size:0.78rem;">
+                    <i class="fas fa-rotate-left"></i>Reset
+                </button>
+            </div>
+
+            <div id="delivery-map"></div>
+
+            <div class="map-info-bar" id="map-info-bar" style="display:none!important;">
+                <div class="map-stat">
+                    <span class="map-stat-label">Distance</span>
+                    <span class="map-stat-value" id="route-distance">—</span>
+                </div>
+                <div class="map-stat">
+                    <span class="map-stat-label">Est. Drive Time</span>
+                    <span class="map-stat-value" id="route-duration">—</span>
+                </div>
+                <div class="map-stat">
+                    <span class="map-stat-label">In Delivery Zone</span>
+                    <span class="map-stat-value" id="route-in-zone">—</span>
+                </div>
+            </div>
+
+            <div class="map-legend mt-2">
+                <span class="map-legend-item">
+                    <span class="legend-dot" style="background:#6366f1;"></span>Store location
+                </span>
+                <span class="map-legend-item">
+                    <span class="legend-dot" style="background:#ef4444;"></span>Delivery point (drag)
+                </span>
+                <span class="map-legend-item">
+                    <span class="legend-dot" style="background:#6366f1;border:2px dashed #6366f1;background:transparent;width:16px;height:16px;border-radius:50%;"></span>Delivery radius
+                </span>
+                <span class="map-legend-item" id="route-legend" style="display:none;">
+                    <span class="legend-dot" style="background:#2563eb;border-radius:2px;width:18px;height:4px;"></span>Route
+                </span>
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    // ── Merchant stored location or India default ──
+    var storeLat  = parseFloat('{{ merchant.location_lat|default:"20.5937" }}') || 20.5937;
+    var storeLng  = parseFloat('{{ merchant.location_lng|default:"78.9629" }}') || 78.9629;
+    var radiusKm  = parseFloat('{{ merchant.delivery_radius_km|default:"5" }}') || 5;
+    var hasStoredLocation = {{ merchant.location_lat|default:"null" }} !== null;
+
+    // ── Map init ──
+    var map = L.map('delivery-map', { zoomControl: true }).setView([storeLat, storeLng], hasStoredLocation ? 13 : 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+    }).addTo(map);
+
+    // ── Custom icons ──
+    var storeIcon = L.divIcon({
+        html: '<div style="background:#6366f1;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(99,102,241,0.5);"></div>',
+        iconSize: [20, 20], iconAnchor: [10, 10], className: ''
+    });
+    var destIcon = L.divIcon({
+        html: '<div style="background:#ef4444;width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(239,68,68,0.5);cursor:grab;"></div>',
+        iconSize: [20, 20], iconAnchor: [10, 10], className: ''
+    });
+
+    // ── Store marker ──
+    var storeMarker = L.marker([storeLat, storeLng], { icon: storeIcon, draggable: false })
+        .addTo(map)
+        .bindPopup('<strong>Your Store</strong><br>' + (hasStoredLocation ? storeLat.toFixed(5) + ', ' + storeLng.toFixed(5) : 'Location not set — click "Set My Location"'));
+
+    // ── Delivery radius circle ──
+    var radiusCircle = L.circle([storeLat, storeLng], {
+        radius: radiusKm * 1000,
+        color: '#6366f1', weight: 2, dashArray: '6 4',
+        fillColor: '#6366f1', fillOpacity: 0.06,
+    }).addTo(map);
+
+    // Update radius when input changes
+    document.getElementById('delivery_radius_km').addEventListener('input', function () {
+        var r = parseFloat(this.value) || 0;
+        radiusCircle.setRadius(r * 1000);
+        checkInZone();
+    });
+
+    // ── Destination marker (draggable) ──
+    // Default destination: 2 km east of store
+    var defaultDestLat = storeLat;
+    var defaultDestLng = storeLng + (2 / (111.32 * Math.cos(storeLat * Math.PI / 180)));
+    var destMarker = L.marker([defaultDestLat, defaultDestLng], { icon: destIcon, draggable: true })
+        .addTo(map)
+        .bindPopup('<strong>Delivery Destination</strong><br>Drag to set delivery point');
+
+    // ── Route layer ──
+    var routeLayer = null;
+
+    function clearRoute() {
+        if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+    }
+
+    function fetchRoute(fromLat, fromLng, toLat, toLng) {
+        var url = 'https://router.project-osrm.org/route/v1/driving/'
+            + fromLng + ',' + fromLat + ';'
+            + toLng   + ',' + toLat
+            + '?overview=full&geometries=geojson';
+
+        fetch(url)
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                clearRoute();
+                if (!data || !data.routes || !data.routes.length) return;
+
+                var route = data.routes[0];
+                routeLayer = L.geoJSON(route.geometry, {
+                    style: { color: '#2563eb', weight: 4, opacity: 0.85 }
+                }).addTo(map);
+
+                // Fit map to route
+                map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+                // Update info bar
+                var distKm = (route.distance / 1000).toFixed(2);
+                var durMin = Math.round(route.duration / 60);
+                document.getElementById('route-distance').textContent = distKm + ' km';
+                document.getElementById('route-duration').textContent = durMin + ' min';
+                checkInZone();
+                document.getElementById('map-info-bar').style.removeProperty('display');
+                document.getElementById('route-legend').style.display = '';
+            })
+            .catch(function () {
+                clearRoute();
+            });
+    }
+
+    function checkInZone() {
+        var destLatLng = destMarker.getLatLng();
+        var dist = map.distance([storeLat, storeLng], [destLatLng.lat, destLatLng.lng]);
+        var r = (parseFloat(document.getElementById('delivery_radius_km').value) || 0) * 1000;
+        var inZone = r > 0 && dist <= r;
+        var el = document.getElementById('route-in-zone');
+        if (el) {
+            el.textContent = inZone ? 'Yes ✓' : 'No ✗';
+            el.style.color = inZone ? '#10b981' : '#ef4444';
+        }
+    }
+
+    function updateRoute() {
+        var dest = destMarker.getLatLng();
+        fetchRoute(storeLat, storeLng, dest.lat, dest.lng);
+    }
+
+    destMarker.on('dragend', updateRoute);
+
+    // Draw initial route if location is stored
+    if (hasStoredLocation) {
+        updateRoute();
+    }
+
+    // Reset destination button
+    document.getElementById('reset-destination-btn').addEventListener('click', function () {
+        destMarker.setLatLng([defaultDestLat, defaultDestLng]);
+        updateRoute();
+    });
+
+    // ── Set My Location ──
+    document.getElementById('set-location-btn').addEventListener('click', function () {
+        var msg = document.getElementById('location-msg');
+        if (!navigator.geolocation) {
+            msg.textContent = 'Geolocation is not supported by this browser.';
+            return;
+        }
+        msg.textContent = 'Detecting your location…';
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            storeLat = pos.coords.latitude;
+            storeLng = pos.coords.longitude;
+
+            // Update markers and circle
+            storeMarker.setLatLng([storeLat, storeLng]);
+            storeMarker.setPopupContent('<strong>Your Store</strong><br>' + storeLat.toFixed(5) + ', ' + storeLng.toFixed(5));
+            radiusCircle.setLatLng([storeLat, storeLng]);
+
+            // Update default destination
+            defaultDestLng = storeLng + (2 / (111.32 * Math.cos(storeLat * Math.PI / 180)));
+            defaultDestLat = storeLat;
+            destMarker.setLatLng([defaultDestLat, defaultDestLng]);
+
+            // Save to hidden inputs so the form POST includes the location
+            document.getElementById('merchant_lat_input').value = storeLat;
+            document.getElementById('merchant_lng_input').value = storeLng;
+
+            map.setView([storeLat, storeLng], 14);
+            msg.textContent = 'Location set: ' + storeLat.toFixed(5) + ', ' + storeLng.toFixed(5);
+            updateRoute();
+        }, function () {
+            msg.textContent = 'Location access denied or unavailable.';
+        });
+    });
+
+    // Click on map to move destination
+    map.on('click', function (e) {
+        destMarker.setLatLng(e.latlng);
+        updateRoute();
+    });
+
+})();
+</script>
 {% endblock %}

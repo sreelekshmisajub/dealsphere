@@ -5,46 +5,169 @@
 {% block extra_css %}
 {{ block.super }}
 <style>
-    .deal-lock-grid {
+    .dl-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1.1fr 0.9fr;
         gap: 1.5rem;
+        align-items: start;
     }
 
-    .deal-lock-card,
-    .deal-lock-request {
-        padding: 1.5rem;
-        border-radius: 1.5rem;
+    .dl-card {
         background: #ffffff;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        box-shadow: var(--shadow-sm);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(15,23,42,0.07);
+        box-shadow: 0 4px 24px -8px rgba(15,23,42,0.10);
+        padding: 1.5rem;
         min-width: 0;
     }
 
+    .dl-section-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6366f1;
+        margin-bottom: 0.4rem;
+    }
+
+    /* Online / Offline comparison strip */
+    .compare-strip {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin: 1rem 0;
+    }
+
+    .compare-slot {
+        border-radius: 1rem;
+        padding: 0.85rem 1rem;
+        border: 2px solid rgba(226,232,240,0.9);
+        background: #f8fafc;
+        position: relative;
+    }
+
+    .compare-slot--amazon   { border-color: #FF9900; }
+    .compare-slot--flipkart { border-color: #2874F0; }
+    .compare-slot--myntra   { border-color: #FF3F6C; }
+    .compare-slot--local    { border-color: #10b981; }
+    .compare-slot--cheapest { box-shadow: 0 0 0 3px rgba(16,185,129,0.25); }
+
+    .compare-slot-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .compare-slot-price {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+
+    .compare-slot-sub {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+
+    .cheapest-badge {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        background: #10b981;
+        color: #fff;
+        font-size: 0.62rem;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    /* Offer radio options */
     .offer-option {
         padding: 1rem;
         border-radius: 1rem;
         background: #f8fafc;
-        border: 1px solid rgba(15, 23, 42, 0.06);
-        margin-bottom: 1rem;
-        min-width: 0;
+        border: 1.5px solid rgba(15,23,42,0.07);
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+        transition: border-color 0.18s;
     }
 
-    .request-list {
-        display: grid;
+    .offer-option:has(input:checked),
+    .offer-option:hover {
+        border-color: #6366f1;
+        background: #f5f3ff;
+    }
+
+    /* Active lock card */
+    .lock-active-card {
+        border-radius: 1rem;
+        padding: 1rem 1.1rem;
+        background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+        border: 1.5px solid #6ee7b7;
+        margin-bottom: 0.75rem;
+        position: relative;
+    }
+
+    .lock-timer {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #059669;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.04em;
+    }
+
+    .lock-cancelled-card {
+        background: #fef2f2;
+        border-color: #fca5a5;
+    }
+
+    /* Duration selector */
+    .duration-chips {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .duration-chip input { display: none; }
+
+    .duration-chip label {
+        padding: 0.45rem 0.9rem;
+        border-radius: 999px;
+        border: 1.5px solid rgba(99,102,241,0.25);
+        font-weight: 700;
+        font-size: 0.82rem;
+        cursor: pointer;
+        color: #6366f1;
+        transition: all 0.15s;
+    }
+
+    .duration-chip input:checked + label {
+        background: #6366f1;
+        color: #fff;
+        border-color: #6366f1;
+    }
+
+    /* PMR list */
+    .pmr-row {
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
         gap: 1rem;
     }
 
-    .offer-option .d-flex,
-    .deal-lock-request .d-flex {
-        flex-wrap: wrap;
-        align-items: flex-start;
-    }
+    .pmr-row:last-child { border-bottom: 0; padding-bottom: 0; }
 
     @media (max-width: 991px) {
-        .deal-lock-grid {
-            grid-template-columns: 1fr;
-        }
+        .dl-grid { grid-template-columns: 1fr; }
+        .compare-strip { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -61,94 +184,231 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<section class="deal-lock-grid">
-    <article class="deal-lock-card">
+<div class="dl-grid">
+
+    {# ── LEFT: Deal-Lock form ── #}
+    <div>
         {% if selected_product %}
-        <div class="small text-secondary text-uppercase fw-bold mb-1">Selected Product</div>
-        <h4 class="fw-bold mb-2">{{ selected_product.name }}</h4>
-        <div class="text-secondary mb-3">{{ selected_product.category.name }}</div>
+        <article class="dl-card mb-3">
+            <div class="dl-section-label">Deal-Lock</div>
+            <h4 class="fw-bold mb-0">{{ selected_product.name }}</h4>
+            <div class="small text-secondary mb-3">{{ selected_product.category.name }}</div>
 
-        <div class="p-3 rounded-4 bg-light border mb-4">
-            <div class="small text-secondary">Cheapest online baseline</div>
-            <div class="h4 fw-bold mb-0">
-                {% if online_baseline_price %}
-                Rs.{{ online_baseline_price }}
-                {% else %}
-                Unavailable
-                {% endif %}
+            {# Online vs Offline comparison #}
+            <div class="dl-section-label mt-2">Online vs Offline Comparison</div>
+            <div class="compare-strip">
+                {% for slot in online_slots %}
+                <a href="{{ slot.url }}" target="_blank" rel="noopener noreferrer"
+                   class="compare-slot compare-slot--{{ slot.source }} {% if slot.is_cheapest %}compare-slot--cheapest{% endif %} text-decoration-none">
+                    {% if slot.is_cheapest %}<span class="cheapest-badge">Cheapest Online</span>{% endif %}
+                    <div class="compare-slot-label">
+                        {% if slot.source == 'amazon' %}<i class="fab fa-amazon me-1" style="color:#FF9900"></i>
+                        {% elif slot.source == 'flipkart' %}<i class="fas fa-bag-shopping me-1" style="color:#2874F0"></i>
+                        {% elif slot.source == 'myntra' %}<i class="fas fa-shirt me-1" style="color:#FF3F6C"></i>
+                        {% endif %}{{ slot.label }}
+                    </div>
+                    {% if slot.price %}
+                    <div class="compare-slot-price">Rs.{{ slot.price|floatformat:0 }}</div>
+                    <div class="compare-slot-sub"><i class="fas fa-truck-fast me-1"></i>{{ slot.delivery }}</div>
+                    {% else %}
+                    <div class="compare-slot-price" style="font-size:0.9rem;color:#94a3b8;">Not listed</div>
+                    <div class="compare-slot-sub">Tap to search</div>
+                    {% endif %}
+                </a>
+                {% endfor %}
             </div>
-            {% if online_baseline_source %}
-            <div class="small text-secondary mt-1">Source: {{ online_baseline_source }}</div>
+
+            {% if online_baseline_price %}
+            <div class="small p-2 rounded-3 mb-3" style="background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.15);">
+                <i class="fas fa-info-circle text-primary me-1"></i>
+                Cheapest online: <strong>Rs.{{ online_baseline_price }}</strong>
+                {% if online_baseline_source %}via {{ online_baseline_source }}{% endif %}
+            </div>
             {% endif %}
-        </div>
 
-        {% if local_offers %}
-        <form method="post">
-            {% csrf_token %}
-            <h5 class="fw-bold mb-3">Choose a merchant offer</h5>
-            {% for offer in local_offers %}
-            <label class="offer-option d-block">
-                <div class="d-flex justify-content-between align-items-start gap-3">
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <input class="form-check-input mt-0" type="radio" name="merchant_id" value="{{ offer.merchant_id }}" {% if forloop.first %}checked{% endif %}>
-                            <strong>{{ offer.shop_name }}</strong>
-                            {% if offer.beats_online %}
-                            <span class="badge bg-success-subtle text-success">Already beats online</span>
-                            {% endif %}
+            {# Lock form #}
+            {% if local_offers %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="dl-section-label mt-2">Choose Local Merchant</div>
+                {% for offer in local_offers %}
+                <label class="offer-option d-block">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div class="d-flex align-items-start gap-2">
+                            <input class="form-check-input mt-1 flex-shrink-0" type="radio"
+                                   name="merchant_id" value="{{ offer.merchant_id }}"
+                                   {% if forloop.first %}checked{% endif %}>
+                            <div>
+                                <div class="fw-bold">{{ offer.shop_name }}</div>
+                                <div class="small text-secondary">{{ offer.address }}</div>
+                                <div class="small text-secondary">
+                                    <i class="fas fa-truck-fast me-1"></i>{{ offer.delivery_time_hours }}h delivery
+                                </div>
+                                {% if offer.beats_online %}
+                                <span class="badge bg-success-subtle text-success mt-1">Already beats online price</span>
+                                {% elif offer.savings %}
+                                <span class="badge bg-danger-subtle text-danger mt-1">Rs.{{ offer.savings }} above online</span>
+                                {% endif %}
+                                {% if offer.active_lock %}
+                                <div class="mt-2 small fw-bold text-success">
+                                    <i class="fas fa-lock me-1"></i>
+                                    Locked at Rs.{{ offer.active_lock.locked_price }}
+                                    — expires {{ offer.active_lock.locked_until|timesince }} from now
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="small text-secondary">{{ offer.address }}</div>
-                        <div class="small text-secondary">Delivery {{ offer.delivery_time_hours }} hour(s)</div>
+                        <div class="text-end flex-shrink-0">
+                            <div class="fw-bold text-primary fs-5">Rs.{{ offer.price }}</div>
+                        </div>
                     </div>
-                    <div class="text-end">
-                        <div class="fw-bold text-primary">Rs.{{ offer.price }}</div>
-                    </div>
-                </div>
-            </label>
-            {% endfor %}
-            <button class="btn-premium btn-premium-primary" type="submit">
-                <i class="fas fa-ticket"></i>Request Deal-Lock
-            </button>
-        </form>
-        {% else %}
-        <p class="text-secondary mb-0">No local merchant offers are active for this product yet.</p>
-        {% endif %}
-        {% else %}
-        <h4 class="fw-bold mb-2">Open a product first</h4>
-        <p class="text-secondary mb-4">
-            Deal-Lock works after you select a product from search results or the product detail page. The request is then sent to the matching merchant with the current online baseline.
-        </p>
-        <a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-primary">Go to Search Results</a>
-        {% endif %}
-    </article>
+                </label>
+                {% endfor %}
 
-    <section class="deal-lock-card">
-        <h4 class="fw-bold mb-3">Recent Price Match Requests</h4>
-        <div class="request-list">
-            {% for request in deal_lock_requests %}
-            <article class="deal-lock-request">
-                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                    <div>
-                        <div class="fw-semibold">{{ request.product.name }}</div>
-                        <div class="small text-secondary">{{ request.merchant.shop_name }}</div>
-                    </div>
-                    <span class="badge {% if request.status == 'approved' %}bg-success-subtle text-success{% elif request.status == 'rejected' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
-                        {{ request.status|title }}
+                <div class="dl-section-label mt-3">Lock Duration</div>
+                <div class="duration-chips">
+                    {% for h, label in lock_duration_choices %}
+                    <span class="duration-chip">
+                        <input type="radio" name="lock_hours" id="lh_{{ h }}" value="{{ h }}"
+                               {% if h == 24 %}checked{% endif %}>
+                        <label for="lh_{{ h }}">{{ label }}</label>
                     </span>
+                    {% endfor %}
                 </div>
-                <div class="small text-secondary">Requested price: Rs.{{ request.requested_price }}</div>
-                {% if request.competitor_source %}
-                <div class="small text-secondary">Baseline source: {{ request.competitor_source }}</div>
-                {% endif %}
-                <div class="small text-secondary mt-1">{{ request.created_at|timesince }} ago</div>
-            </article>
-            {% empty %}
-            <div class="deal-lock-request">
-                <div class="fw-semibold mb-2">No requests yet</div>
-                <div class="text-secondary">Your pending, approved, and rejected deal-lock requests will appear here.</div>
+
+                <button class="btn-premium btn-premium-primary w-100" type="submit" name="action" value="lock">
+                    <i class="fas fa-lock me-1"></i>Lock This Deal
+                </button>
+            </form>
+            {% else %}
+            <div class="small text-secondary mt-3 p-3 bg-light rounded-3">
+                <i class="fas fa-store-slash me-1"></i>
+                No local merchant offers are active for this product.
+                Deal-Lock works with local store prices — online products can be accessed directly via the links above.
+            </div>
+            {% endif %}
+        </article>
+
+        {% else %}
+        <article class="dl-card">
+            <div class="dl-section-label">Deal-Lock</div>
+            <h4 class="fw-bold mb-2">Select a product first</h4>
+            <p class="text-secondary mb-4">
+                Deal-Lock reserves a local merchant's price for a fixed time so you can buy later at the same price.
+                Find a product in search results and click <strong>Request Local Price Match</strong> or open a product detail page.
+            </p>
+            <div class="p-3 rounded-3 mb-4" style="background:#f0fdf4;border:1.5px solid #6ee7b7;">
+                <div class="fw-bold mb-1"><i class="fas fa-bolt text-success me-1"></i>How Deal-Lock works</div>
+                <ol class="small text-secondary mb-0 ps-3">
+                    <li>Find a product with a local merchant offer</li>
+                    <li>Choose the merchant and lock duration (1h – 72h)</li>
+                    <li>The price is reserved for you until the timer expires</li>
+                    <li>Buy at the locked price anytime before it expires</li>
+                </ol>
+            </div>
+            <a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-primary">
+                <i class="fas fa-magnifying-glass me-1"></i>Browse Products
+            </a>
+        </article>
+        {% endif %}
+    </div>
+
+    {# ── RIGHT: Active locks + Price-Match Requests ── #}
+    <div>
+        {# Active Locks #}
+        <article class="dl-card mb-3">
+            <div class="dl-section-label">Active Locks</div>
+            <h5 class="fw-bold mb-3">Your Reserved Prices</h5>
+
+            {% if all_active_locks %}
+            {% for lock in all_active_locks %}
+            <div class="lock-active-card">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                    <div>
+                        <div class="fw-bold">{{ lock.offer.product.name|truncatechars:40 }}</div>
+                        <div class="small text-secondary">{{ lock.offer.merchant.shop_name }}</div>
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                        <div class="lock-timer" data-expires="{{ lock.locked_until.isoformat }}">--:--:--</div>
+                        <div class="small text-secondary">remaining</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-2 mt-2">
+                    <div>
+                        <span class="badge bg-success-subtle text-success">Locked Rs.{{ lock.locked_price }}</span>
+                        <span class="badge bg-light text-secondary ms-1">{{ lock.lock_duration_hours }}h lock</span>
+                    </div>
+                    <form method="post" action="{% url 'dashboard_deal_lock_product' lock.offer.product_id %}" class="mb-0">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="cancel">
+                        <input type="hidden" name="lock_id" value="{{ lock.id }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:0.6rem;font-size:0.75rem;padding:0.25rem 0.65rem;">
+                            Cancel
+                        </button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
-        </div>
-    </section>
-</section>
+            {% else %}
+            <p class="text-secondary small mb-0">No active locks. Lock a deal from the left panel.</p>
+            {% endif %}
+        </article>
+
+        {# Price-Match Requests #}
+        <article class="dl-card">
+            <div class="dl-section-label">Price-Match Requests</div>
+            <h5 class="fw-bold mb-3">Sent to Merchants</h5>
+            {% for req in deal_lock_requests %}
+            <div class="pmr-row">
+                <div>
+                    <div class="fw-semibold small">{{ req.product.name|truncatechars:35 }}</div>
+                    <div class="small text-secondary">{{ req.merchant.shop_name }}</div>
+                    <div class="small text-secondary">
+                        Requested Rs.{{ req.requested_price }}
+                        {% if req.competitor_source %} · vs {{ req.competitor_source }}{% endif %}
+                    </div>
+                    <div class="small text-secondary">{{ req.created_at|timesince }} ago</div>
+                </div>
+                <span class="badge flex-shrink-0
+                    {% if req.status == 'approved' %}bg-success-subtle text-success
+                    {% elif req.status == 'rejected' %}bg-danger-subtle text-danger
+                    {% elif req.status == 'expired' %}bg-secondary-subtle text-secondary
+                    {% else %}bg-warning-subtle text-warning{% endif %}">
+                    {{ req.status|title }}
+                </span>
+            </div>
+            {% empty %}
+            <p class="text-secondary small mb-0">No price-match requests yet.</p>
+            {% endfor %}
+        </article>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+// Countdown timers for active locks
+document.querySelectorAll('.lock-timer[data-expires]').forEach(function (el) {
+    var expires = new Date(el.dataset.expires);
+
+    function tick() {
+        var diff = expires - Date.now();
+        if (diff <= 0) {
+            el.textContent = 'Expired';
+            el.style.color = '#dc2626';
+            return;
+        }
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        el.textContent =
+            String(h).padStart(2, '0') + ':' +
+            String(m).padStart(2, '0') + ':' +
+            String(s).padStart(2, '0');
+    }
+    tick();
+    setInterval(tick, 1000);
+});
+</script>
 {% endblock %}

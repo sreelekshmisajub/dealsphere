@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 
 from apps.api.ai_services import RealAIService
 from apps.core.catalog_loader import CatalogBootstrapService
-from apps.core.models import Brand, Category, Merchant, Offer, Order, Product
+from apps.core.models import Brand, Category, Merchant, Offer, Order, OrderItem, Product
 from apps.users.services import ProductService
 
 
@@ -495,6 +495,7 @@ class FrontendSmokeTests(TestCase):
             "/dashboard/barcode/",
             "/dashboard/visual-search/",
             "/dashboard/basket/",
+            "/dashboard/orders/",
             "/dashboard/deal-lock/",
             "/dashboard/notifications/",
             "/dashboard/profile/",
@@ -696,6 +697,43 @@ class FrontendSmokeTests(TestCase):
         self.assertEqual(order.payment_method, "upi")
         self.assertEqual(order.payment_status, "redirect_required")
         self.assertTrue(order.payment_link.startswith("upi://pay?"))
+
+    def test_dashboard_orders_shows_live_delivery_map_for_local_orders(self):
+        self.user.location_lat = Decimal("10.12345678")
+        self.user.location_lng = Decimal("76.12345678")
+        self.user.save(update_fields=["location_lat", "location_lng"])
+        self.merchant.location_lat = Decimal("10.22345678")
+        self.merchant.location_lng = Decimal("76.22345678")
+        self.merchant.save(update_fields=["location_lat", "location_lng"])
+
+        order = Order.objects.create(
+            user=self.user,
+            total_amount=Decimal("450.00"),
+            delivery_cost=Decimal("0.00"),
+            status="shipped",
+            payment_method="cash_on_delivery",
+            payment_status="pending",
+            delivery_address="Test delivery address",
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=self.local_product,
+            merchant=self.merchant,
+            source="local",
+            source_name=self.merchant.shop_name,
+            quantity=1,
+            price=Decimal("450.00"),
+            delivery_time_hours=4,
+        )
+
+        self.client.login(username="frontend-user", password="CodexPass123!")
+        response = self.client.get("/dashboard/orders/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Live Delivery Map")
+        self.assertContains(response, "Courier is on the way")
+        self.assertContains(response, "Estimated courier position")
+        self.assertTrue(response.context["orders"][0].delivery_map.available)
+        self.assertEqual(response.context["orders"][0].delivery_map.progress_percent, 76)
 
     def test_merchant_and_admin_dashboards_render(self):
         self.client.login(username="frontend-merchant", password="CodexPass123!")
