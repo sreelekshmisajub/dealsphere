@@ -514,7 +514,6 @@ class DashboardShellContextMixin:
             ("deal_lock", "dashboard_deal_lock", "fa-ticket", "Deal-Lock"),
             ("notifications", "dashboard_notifications", "fa-bell", "Notifications"),
             ("profile", "dashboard_profile", "fa-user-gear", "Profile"),
-            ("logout", "logout", "fa-right-from-bracket", "Logout"),
         ]
         return [
             SimpleNamespace(
@@ -603,6 +602,7 @@ class HomePageView(BaseSiteView):
             (400, 499, "Rs.400 - 499"),
             (500, 999, "Rs.500 - 999"),
         ]
+        _results_url = reverse('dashboard_results') if self.request.user.is_authenticated else reverse('product_search')
         for min_price, max_price, display in price_ranges:
             hot_deal_buckets.append(
                 SimpleNamespace(
@@ -615,9 +615,9 @@ class HomePageView(BaseSiteView):
                         if (min_price is None or card.best_offer.price >= min_price) and card.best_offer.price <= max_price
                     ),
                     href=(
-                        f"{reverse('product_search')}?max_price={max_price}&sort_by=price_low"
+                        f"{_results_url}?max_price={max_price}&sort_by=price_low"
                         if min_price is None
-                        else f"{reverse('product_search')}?min_price={min_price}&max_price={max_price}&sort_by=price_low"
+                        else f"{_results_url}?min_price={min_price}&max_price={max_price}&sort_by=price_low"
                     ),
                 )
             )
@@ -640,7 +640,7 @@ class HomePageView(BaseSiteView):
                     threshold=threshold,
                     label=f"{threshold}%+ Off",
                     count=count,
-                    href=f"{reverse('product_search')}?verified_only=on&sort_by=price_low&min_discount={threshold}",
+                    href=f"{_results_url}?sort_by=price_low&min_discount={threshold}",
                 )
             )
 
@@ -927,12 +927,17 @@ class ProductDetailPageView(DashboardShellContextMixin, BaseSiteView):
                     address=candidate["merchant"].address if candidate["merchant"] else None,
                     match_type=match_type,
                     match_score=match_score,
-                    match_label="Exact product match" if match_type == "exact" else "Related catalog match",
+                    match_label="Exact product match" if match_type == "exact" else ("Search redirect" if match_type == "search_redirect" else "Related catalog match"),
                     match_note=(
                         "This price is attached to the same product row you opened."
                         if match_type == "exact"
-                        else f"Matched from a related catalog row: {candidate.get('product_name', product.name)}"
+                        else (
+                            f"No price in catalog — click to search on {candidate.get('source_name', 'this platform')}."
+                            if match_type == "search_redirect"
+                            else f"Matched from a related catalog row: {candidate.get('product_name', product.name)}"
+                        )
                     ),
+                    is_price_estimated=bool(candidate.get("is_price_estimated", False)),
                 )
             )
 

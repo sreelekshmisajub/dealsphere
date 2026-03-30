@@ -297,6 +297,55 @@ PRODUCT_PRICE_HISTORY_API_SETTINGS['enabled'] = bool(
     and PRODUCT_PRICE_HISTORY_API_SETTINGS['key']
 )
 
+REALTIME_PRODUCT_SEARCH_API_SETTINGS = {
+    'host': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_SEARCH_HOST',
+        PRODUCT_PRICE_HISTORY_API_SETTINGS['host'] or 'real-time-product-search.p.rapidapi.com',
+    ).strip(),
+    'key': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_SEARCH_KEY',
+        PRODUCT_PRICE_HISTORY_API_SETTINGS['key'],
+    ).strip(),
+    'search_endpoint': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_SEARCH_ENDPOINT',
+        'https://real-time-product-search.p.rapidapi.com/search-v2',
+    ).strip(),
+    'product_details_endpoint': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_DETAILS_ENDPOINT',
+        'https://real-time-product-search.p.rapidapi.com/product-details-v2',
+    ).strip(),
+    'product_offers_endpoint': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_OFFERS_ENDPOINT',
+        'https://real-time-product-search.p.rapidapi.com/product-offers-v2',
+    ).strip(),
+    'product_price_history_endpoint': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_PRICE_HISTORY_ENDPOINT',
+        PRODUCT_PRICE_HISTORY_API_SETTINGS['endpoint'],
+    ).strip(),
+    'deals_endpoint': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_DEALS_ENDPOINT',
+        'https://real-time-product-search.p.rapidapi.com/deals-v2',
+    ).strip(),
+    'default_country': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_SEARCH_DEFAULT_COUNTRY',
+        PRODUCT_PRICE_HISTORY_API_SETTINGS['default_country'],
+    ).strip().lower() or 'us',
+    'default_language': os.getenv(
+        'DEALSPHERE_REALTIME_PRODUCT_SEARCH_DEFAULT_LANGUAGE',
+        PRODUCT_PRICE_HISTORY_API_SETTINGS['default_language'],
+    ).strip().lower() or 'en',
+    'timeout_seconds': int(
+        os.getenv(
+            'DEALSPHERE_REALTIME_PRODUCT_SEARCH_TIMEOUT',
+            str(PRODUCT_PRICE_HISTORY_API_SETTINGS['timeout_seconds']),
+        ) or PRODUCT_PRICE_HISTORY_API_SETTINGS['timeout_seconds']
+    ),
+}
+REALTIME_PRODUCT_SEARCH_API_SETTINGS['enabled'] = bool(
+    REALTIME_PRODUCT_SEARCH_API_SETTINGS['host']
+    and REALTIME_PRODUCT_SEARCH_API_SETTINGS['key']
+)
+
 # RapidAPI: Real-time Flipkart / Amazon / Myntra / AJIO / Croma product details
 REALTIME_PRODUCT_API_SETTINGS = {
     'endpoint': 'https://realtime-flipkart-amazon-myntra-ajio-croma-product-details.p.rapidapi.com/product',

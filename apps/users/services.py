@@ -77,68 +77,83 @@ def _best_local_offer(product):
     return product.offers.filter(is_active=True).select_related("merchant").order_by("price").first()
 
 
+def _retailer_search_url(source: str, product_name: str) -> str:
+    from urllib.parse import quote as _quote
+    q = _quote(str(product_name).strip(), safe="")
+    if source == "amazon":
+        return f"https://www.amazon.in/s?k={q}"
+    if source == "flipkart":
+        return f"https://www.flipkart.com/search?q={q}"
+    if source == "myntra":
+        return f"https://www.myntra.com/{q.replace('%20', '-')}"
+    return ""
+
+
 def _product_offer_candidates(product):
     candidates = []
+    pname = product.name or ""
 
+    # --- Online sources from stored prices ---
     if product.amazon_price is not None:
-        candidates.append(
-            {
-                "source": "amazon",
-                "source_name": "Amazon",
-                "merchant": None,
-                "merchant_id": None,
-                "price": Decimal(str(product.amazon_price)),
-                "delivery_time_hours": 24,
-                "external_url": product.amazon_url,
-                "verified": True,
-                "rating": float(product.amazon_rating or 0),
-            }
-        )
+        candidates.append({
+            "source": "amazon",
+            "source_name": "Amazon",
+            "merchant": None,
+            "merchant_id": None,
+            "price": Decimal(str(product.amazon_price)),
+            "original_price": Decimal(str(product.amazon_price)),
+            "delivery_time_hours": 24,
+            "external_url": product.amazon_url or _retailer_search_url("amazon", pname),
+            "verified": True,
+            "rating": float(product.amazon_rating or 0),
+            "is_price_estimated": False,
+        })
 
     if product.flipkart_price is not None:
-        candidates.append(
-            {
-                "source": "flipkart",
-                "source_name": "Flipkart",
-                "merchant": None,
-                "merchant_id": None,
-                "price": Decimal(str(product.flipkart_price)),
-                "delivery_time_hours": 48,
-                "external_url": product.flipkart_url,
-                "verified": True,
-                "rating": float(product.flipkart_rating or 0),
-            }
-        )
+        candidates.append({
+            "source": "flipkart",
+            "source_name": "Flipkart",
+            "merchant": None,
+            "merchant_id": None,
+            "price": Decimal(str(product.flipkart_price)),
+            "original_price": Decimal(str(product.flipkart_price)),
+            "delivery_time_hours": 48,
+            "external_url": product.flipkart_url or _retailer_search_url("flipkart", pname),
+            "verified": True,
+            "rating": float(product.flipkart_rating or 0),
+            "is_price_estimated": False,
+        })
 
     if product.myntra_price is not None:
-        candidates.append(
-            {
-                "source": "myntra",
-                "source_name": "Myntra",
-                "merchant": None,
-                "merchant_id": None,
-                "price": Decimal(str(product.myntra_price)),
-                "delivery_time_hours": 36,
-                "external_url": product.myntra_url,
-                "verified": True,
-                "rating": float(product.myntra_rating or 0),
-            }
-        )
+        candidates.append({
+            "source": "myntra",
+            "source_name": "Myntra",
+            "merchant": None,
+            "merchant_id": None,
+            "price": Decimal(str(product.myntra_price)),
+            "original_price": Decimal(str(product.myntra_price)),
+            "delivery_time_hours": 36,
+            "external_url": product.myntra_url or _retailer_search_url("myntra", pname),
+            "verified": True,
+            "rating": float(product.myntra_rating or 0),
+            "is_price_estimated": False,
+        })
 
+    # --- Local merchant offers ---
     for offer in product.offers.filter(is_active=True).select_related("merchant").order_by("price"):
-        candidates.append(
-            {
-                "source": "local",
-                "source_name": offer.merchant.shop_name,
-                "merchant": offer.merchant,
-                "merchant_id": offer.merchant_id,
-                "price": Decimal(str(offer.price)),
-                "delivery_time_hours": int(offer.delivery_time_hours),
-                "external_url": None,
-                "verified": bool(offer.merchant.verified),
-                "rating": float(offer.merchant.rating or 0),
-            }
-        )
+        candidates.append({
+            "source": "local",
+            "source_name": offer.merchant.shop_name,
+            "merchant": offer.merchant,
+            "merchant_id": offer.merchant_id,
+            "price": Decimal(str(offer.price)),
+            "original_price": Decimal(str(offer.original_price)) if offer.original_price else Decimal(str(offer.price)),
+            "delivery_time_hours": int(offer.delivery_time_hours),
+            "external_url": None,
+            "verified": bool(offer.merchant.verified),
+            "rating": float(offer.merchant.rating or 0),
+            "is_price_estimated": False,
+        })
 
     candidates.sort(key=lambda item: (item["price"], item["delivery_time_hours"], item["source_name"]))
     return candidates
@@ -695,20 +710,62 @@ class ProductService:
                 exact_candidates.append(enriched)
 
             present_sources = {candidate["source"] for candidate in exact_candidates}
-            missing_sources = [
-                source for source in ("amazon", "flipkart", "myntra", "local") if source not in present_sources
-            ]
+            missing_online = [s for s in ("amazon", "flipkart", "myntra") if s not in present_sources]
+            missing_local = "local" not in present_sources
 
             related_candidates = []
+            missing_sources = missing_online + (["local"] if missing_local else [])
             if missing_sources:
                 related_candidates = ProductService.get_related_source_candidates(product, missing_sources)
+
+            # After catalog matching, inject search-URL placeholders for any online
+            # source still missing so the comparison table always shows all 3 platforms
+            still_missing_online = set(missing_online) - {c["source"] for c in related_candidates}
+            _SOURCE_META = {
+                "amazon":   ("Amazon",   24, "https://www.amazon.in/s?k="),
+                "flipkart": ("Flipkart", 48, "https://www.flipkart.com/search?q="),
+                "myntra":   ("Myntra",   36, "https://www.myntra.com/"),
+            }
+            from urllib.parse import quote as _quote
+            pname_q = _quote(str(product.name or "").strip(), safe="")
+            for source in still_missing_online:
+                label, delivery, base_url = _SOURCE_META[source]
+                ext_url = (
+                    f"https://www.myntra.com/{pname_q.replace('%20', '-')}"
+                    if source == "myntra"
+                    else f"{base_url}{pname_q}"
+                )
+                # Get local best offer price as reference; we won't show a price number for these
+                local_price = next(
+                    (c["price"] for c in exact_candidates if c["source"] == "local"),
+                    next((c["price"] for c in related_candidates if c["source"] == "local"), None),
+                )
+                if local_price is None:
+                    continue  # No price reference at all — skip
+                related_candidates.append({
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "source": source,
+                    "source_name": label,
+                    "merchant": None,
+                    "merchant_id": None,
+                    "price": local_price,  # use local price as a placeholder for sort
+                    "original_price": None,
+                    "delivery_time_hours": delivery,
+                    "external_url": ext_url,
+                    "verified": True,
+                    "rating": 0.0,
+                    "match_type": "search_redirect",
+                    "match_score": 0.0,
+                    "is_price_estimated": True,
+                })
 
             candidates = exact_candidates + related_candidates
             candidates.sort(
                 key=lambda item: (
+                    0 if item.get("match_type") == "exact" else (1 if item.get("match_type") == "catalog_match" else 2),
                     item["price"],
-                    0 if item["match_type"] == "exact" else 1,
-                    -(item["match_score"] or 0),
+                    -(item.get("match_score") or 0),
                     item["source_name"],
                 )
             )

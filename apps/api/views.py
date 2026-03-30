@@ -31,7 +31,11 @@ from .serializers import (
     AmazonProductReviewsSerializer,
     AmazonProductSnapshotSerializer,
     ExternalFemaleFootwearFeedSerializer,
+    ExternalProductSearchSerializer,
+    ExternalProductDetailsSerializer,
+    ExternalProductOffersSerializer,
     ExternalProductPriceHistorySerializer,
+    ExternalDealsSerializer,
     DealLockSerializer, PriceAlertSerializer,
     PriceMatchRequestSerializer, ProductOffersComparisonSerializer,
 )
@@ -436,6 +440,140 @@ class ExternalFemaleFootwearFeedView(APIView):
             return Response({'error': 'Failed to get female footwear feed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class ExternalProductSearchView(APIView):
+    """Search external products from the RapidAPI product-search provider."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(responses=ExternalProductSearchSerializer)
+    def get(self, request):
+        try:
+            query = str(request.query_params.get("q", "")).strip()
+            if not query:
+                return Response(
+                    {"error": "q query parameter is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            country = str(request.query_params.get("country", "")).strip().lower() or None
+            language = str(request.query_params.get("language", "")).strip().lower() or None
+            page = max(1, min(int(request.query_params.get("page", 1) or 1), 100))
+            limit = max(1, min(int(request.query_params.get("limit", 10) or 10), 100))
+            sort_by = str(request.query_params.get("sort_by", "BEST_MATCH") or "BEST_MATCH").strip() or "BEST_MATCH"
+            product_condition = str(
+                request.query_params.get("product_condition", "ANY") or "ANY"
+            ).strip() or "ANY"
+            return_filters = str(request.query_params.get("return_filters", "true")).strip().lower() not in {
+                "0",
+                "false",
+                "no",
+                "off",
+            }
+
+            result = RealTimeProductSearchService.search_products_v2(
+                query=query,
+                country=country,
+                language=language,
+                page=page,
+                limit=limit,
+                sort_by=sort_by,
+                product_condition=product_condition,
+                return_filters=return_filters,
+            )
+
+            response_status = (
+                status.HTTP_502_BAD_GATEWAY
+                if result.get("status") in {"api_error", "transport_error", "parse_error"}
+                else status.HTTP_200_OK
+            )
+            serializer = ExternalProductSearchSerializer(data=result)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=response_status)
+        except Exception as e:
+            logger.error(f"Error searching external products: {e}")
+            return Response(
+                {"error": "Failed to search external products"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ExternalProductDetailsView(APIView):
+    """Get normalized external product details from RapidAPI."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(responses=ExternalProductDetailsSerializer)
+    def get(self, request):
+        try:
+            provider_product_id = str(request.query_params.get("product_id", "")).strip()
+            if not provider_product_id:
+                return Response(
+                    {"error": "product_id query parameter is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            country = str(request.query_params.get("country", "")).strip().lower() or None
+            language = str(request.query_params.get("language", "")).strip().lower() or None
+            result = RealTimeProductSearchService.get_product_details_v2(
+                provider_product_id=provider_product_id,
+                country=country,
+                language=language,
+            )
+
+            response_status = (
+                status.HTTP_502_BAD_GATEWAY
+                if result.get("status") in {"api_error", "transport_error", "parse_error"}
+                else status.HTTP_200_OK
+            )
+            serializer = ExternalProductDetailsSerializer(data=result)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=response_status)
+        except Exception as e:
+            logger.error(f"Error getting external product details: {e}")
+            return Response(
+                {"error": "Failed to get external product details"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ExternalProductOffersView(APIView):
+    """Get normalized external product offers from RapidAPI."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(responses=ExternalProductOffersSerializer)
+    def get(self, request):
+        try:
+            provider_product_id = str(request.query_params.get("product_id", "")).strip()
+            if not provider_product_id:
+                return Response(
+                    {"error": "product_id query parameter is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            country = str(request.query_params.get("country", "")).strip().lower() or None
+            language = str(request.query_params.get("language", "")).strip().lower() or None
+            page = max(1, min(int(request.query_params.get("page", 1) or 1), 100))
+            result = RealTimeProductSearchService.get_product_offers_v2(
+                provider_product_id=provider_product_id,
+                page=page,
+                country=country,
+                language=language,
+            )
+
+            response_status = (
+                status.HTTP_502_BAD_GATEWAY
+                if result.get("status") in {"api_error", "transport_error", "parse_error"}
+                else status.HTTP_200_OK
+            )
+            serializer = ExternalProductOffersSerializer(data=result)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=response_status)
+        except Exception as e:
+            logger.error(f"Error getting external product offers: {e}")
+            return Response(
+                {"error": "Failed to get external product offers"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
 class ExternalProductPriceHistoryView(APIView):
     """Get normalized external product price history from RapidAPI."""
     permission_classes = [permissions.IsAuthenticated]
@@ -444,8 +582,8 @@ class ExternalProductPriceHistoryView(APIView):
     def get(self, request):
         try:
             provider_product_id = str(request.query_params.get("product_id", "")).strip()
-            country = str(request.query_params.get("country", "us")).strip().lower() or "us"
-            language = str(request.query_params.get("language", "en")).strip().lower() or "en"
+            country = str(request.query_params.get("country", "")).strip().lower() or None
+            language = str(request.query_params.get("language", "")).strip().lower() or None
 
             if not provider_product_id:
                 return Response(
@@ -471,6 +609,55 @@ class ExternalProductPriceHistoryView(APIView):
             logger.error(f"Error getting external product price history: {e}")
             return Response(
                 {"error": "Failed to get external product price history"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ExternalDealsView(APIView):
+    """Get normalized external deals from RapidAPI."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(responses=ExternalDealsSerializer)
+    def get(self, request):
+        try:
+            query = str(request.query_params.get("q", "")).strip()
+            if not query:
+                return Response(
+                    {"error": "q query parameter is required"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            country = str(request.query_params.get("country", "")).strip().lower() or None
+            language = str(request.query_params.get("language", "")).strip().lower() or None
+            page = max(1, min(int(request.query_params.get("page", 1) or 1), 100))
+            limit = max(1, min(int(request.query_params.get("limit", 10) or 10), 100))
+            sort_by = str(request.query_params.get("sort_by", "BEST_MATCH") or "BEST_MATCH").strip() or "BEST_MATCH"
+            product_condition = str(
+                request.query_params.get("product_condition", "ANY") or "ANY"
+            ).strip() or "ANY"
+
+            result = RealTimeProductSearchService.get_deals_v2(
+                query=query,
+                country=country,
+                language=language,
+                page=page,
+                limit=limit,
+                sort_by=sort_by,
+                product_condition=product_condition,
+            )
+
+            response_status = (
+                status.HTTP_502_BAD_GATEWAY
+                if result.get("status") in {"api_error", "transport_error", "parse_error"}
+                else status.HTTP_200_OK
+            )
+            serializer = ExternalDealsSerializer(data=result)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=response_status)
+        except Exception as e:
+            logger.error(f"Error getting external deals: {e}")
+            return Response(
+                {"error": "Failed to get external deals"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

@@ -24,6 +24,36 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 0.75rem;
+        background: transparent;
+        border: none;
+        color: rgba(15, 23, 42, 0.4);
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1rem;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+    }
+
+    .password-toggle:hover {
+        color: var(--primary);
+    }
+
+    .form-control.has-toggle {
+        padding-right: 3rem;
+    }
 </style>
 {% endblock %}
 
@@ -80,15 +110,30 @@
             <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label-premium">Current password</label>
-                    <input class="form-control" type="password" name="current_password">
+                    <div class="password-wrapper">
+                        <input class="form-control has-toggle" type="password" name="current_password" id="current_password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('current_password', this)" aria-label="Toggle current password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label-premium">New password</label>
-                    <input class="form-control" type="password" name="new_password">
+                    <div class="password-wrapper">
+                        <input class="form-control has-toggle" type="password" name="new_password" id="new_password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('new_password', this)" aria-label="Toggle new password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label-premium">Confirm new password</label>
-                    <input class="form-control" type="password" name="confirm_new_password">
+                    <div class="password-wrapper">
+                        <input class="form-control has-toggle" type="password" name="confirm_new_password" id="confirm_new_password">
+                        <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirm_new_password', this)" aria-label="Toggle confirm new password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="small text-secondary mt-3">
@@ -102,6 +147,20 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const locationButton = document.getElementById('profile-location-button');
     const latInput = document.getElementById('profile-location-lat');

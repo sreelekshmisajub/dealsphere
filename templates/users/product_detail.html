@@ -448,14 +448,28 @@
                         </div>
                         <div class="source-actions">
                             <div class="text-end">
+                                {% if option.is_price_estimated %}
+                                <div class="h5 fw-semibold text-secondary mb-0">Price not listed</div>
+                                <div class="small text-secondary mt-1">Search to see current price</div>
+                                {% else %}
                                 <div class="h3 fw-bold text-primary mb-0">Rs.{{ option.price|floatformat:0 }}</div>
                                 {% if slot.relative_delta_percent %}
                                 <div class="small text-danger mt-1">{{ slot.relative_delta_percent|floatformat:0 }}% above best price</div>
                                 {% else %}
                                 <div class="small text-success mt-1">Best available price</div>
                                 {% endif %}
+                                {% endif %}
                             </div>
-                            {% if user.is_authenticated and not user.is_staff and not user.is_merchant %}
+                            {% if option.is_price_estimated %}
+                            {# Search-redirect slot — no price stored, send user to platform search #}
+                            {% if option.external_url %}
+                            <a href="{{ option.external_url }}" target="_blank" rel="noopener noreferrer"
+                               class="btn-premium btn-premium-primary btn-sm text-center">
+                                <i class="fas fa-arrow-up-right-from-square me-1"></i>Search on {{ option.source_name }}
+                            </a>
+                            {% endif %}
+                            {% elif user.is_authenticated and not user.is_staff and not user.is_merchant %}
+                            {% if option.source != 'local' or not option.is_price_estimated %}
                             <form method="post" action="{% url 'dashboard_cart_add' %}" class="d-grid gap-2">
                                 {% csrf_token %}
                                 <input type="hidden" name="product_id" value="{{ option.product_id }}">
@@ -478,10 +492,11 @@
                                 <input type="hidden" name="next" value="{% url 'dashboard_checkout' %}">
                                 <button type="submit" class="btn-premium btn-premium-secondary btn-sm">Buy Now</button>
                             </form>
+                            {% endif %}
                             {% if option.source == 'local' %}
                             <a href="{% url 'dashboard_deal_lock_product' option.product_id %}" class="btn-premium btn-premium-secondary btn-sm text-center">Request price match</a>
                             {% elif option.external_url %}
-                            <a href="{{ option.external_url }}" target="_blank" rel="noopener" class="btn-premium btn-premium-secondary btn-sm text-center">Open Source</a>
+                            <a href="{{ option.external_url }}" target="_blank" rel="noopener" class="btn-premium btn-premium-secondary btn-sm text-center">Open on {{ option.source_name }}</a>
                             {% endif %}
                             {% else %}
                             <a href="{% url 'login' %}" class="btn-premium btn-premium-primary btn-sm text-center">Login to continue</a>

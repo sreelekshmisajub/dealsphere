@@ -36,6 +36,36 @@ def _product_price_history_api_config() -> Dict[str, object]:
     }
 
 
+def _real_time_product_search_api_config() -> Dict[str, object]:
+    config = getattr(settings, "REALTIME_PRODUCT_SEARCH_API_SETTINGS", {}) or {}
+    fallback = _product_price_history_api_config()
+    timeout = int(config.get("timeout_seconds", fallback["timeout_seconds"]) or fallback["timeout_seconds"])
+    return {
+        "host": str(config.get("host", fallback["host"])).strip(),
+        "key": str(config.get("key", fallback["key"])).strip(),
+        "search_endpoint": str(config.get("search_endpoint", "")).strip(),
+        "product_details_endpoint": str(config.get("product_details_endpoint", "")).strip(),
+        "product_offers_endpoint": str(config.get("product_offers_endpoint", "")).strip(),
+        "product_price_history_endpoint": str(
+            config.get("product_price_history_endpoint", fallback["endpoint"])
+        ).strip(),
+        "deals_endpoint": str(config.get("deals_endpoint", "")).strip(),
+        "default_country": str(
+            config.get("default_country", fallback["default_country"])
+        ).strip().lower()
+        or str(fallback["default_country"]),
+        "default_language": str(
+            config.get("default_language", fallback["default_language"])
+        ).strip().lower()
+        or str(fallback["default_language"]),
+        "timeout_seconds": max(timeout, 1),
+        "enabled": bool(config.get("enabled", False)) or bool(
+            str(config.get("host", fallback["host"])).strip()
+            and str(config.get("key", fallback["key"])).strip()
+        ),
+    }
+
+
 def _extract_price_value(value) -> float | None:
     if value in (None, ""):
         return None
@@ -110,6 +140,7 @@ def _normalize_history_points(raw_points, default_currency: str | None = None) -
                         or ""
                     ).strip()
                     or None,
+                    "store": None,
                     "label": str(
                         _first_non_empty(item, "label", "title", "note", "event") or ""
                     ).strip()
@@ -127,6 +158,7 @@ def _normalize_history_points(raw_points, default_currency: str | None = None) -
                     "date": str(item[0]).strip() or None,
                     "price": price,
                     "currency": default_currency,
+                    "store": None,
                     "label": None,
                 }
             )
@@ -200,28 +232,309 @@ class ExternalFashionFeedService:
 
 
 class RealTimeProductSearchService:
-    """Adapter for the RapidAPI real-time product search price-history endpoint."""
+    """Adapter for the RapidAPI real-time product search endpoints."""
+
+    SOURCE_NAME = "rapidapi_real_time_product_search"
+    NOT_CONFIGURED_MESSAGE = (
+        "Real-time product search API is not configured yet. "
+        "Set DEALSPHERE_REALTIME_PRODUCT_SEARCH_KEY or DEALSPHERE_PRODUCT_PRICE_HISTORY_KEY "
+        "in the backend environment."
+    )
 
     @classmethod
-    def get_product_price_history(
+    def _config(cls) -> Dict[str, object]:
+        return _real_time_product_search_api_config()
+
+    @staticmethod
+    def _clean_text(value) -> str | None:
+        text = str(value or "").strip()
+        return text or None
+
+    @classmethod
+    def _normalize_status(cls, payload: Dict | None, default: str = "ok") -> str:
+        if not isinstance(payload, dict):
+            return default
+        status_value = cls._clean_text(payload.get("status"))
+        return status_value.lower() if status_value else default
+
+    @staticmethod
+    def _extract_int(value) -> int | None:
+        if value in (None, "", [], {}):
+            return None
+        try:
+            return int(float(str(value).replace(",", "").strip()))
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _extract_rating(value) -> float | None:
+        if value in (None, "", [], {}):
+            return None
+        try:
+            return round(float(str(value).split("/")[0].replace(",", "").strip()), 2)
+        except (TypeError, ValueError, AttributeError):
+            return None
+
+    @classmethod
+    def _extract_string_list(cls, value) -> List[str]:
+        if value in (None, "", [], {}):
+            return []
+        if isinstance(value, str):
+            text = cls._clean_text(value)
+            return [text] if text else []
+
+        values: List[str] = []
+        for item in list(value):
+            if isinstance(item, dict):
+                text = cls._clean_text(
+                    _first_non_empty(item, "label", "title", "name", "value", "text")
+                )
+            else:
+                text = cls._clean_text(item)
+            if text:
+                values.append(text)
+        return values
+
+    @classmethod
+    def _extract_image_urls(cls, mapping: Dict | None) -> List[str]:
+        if not isinstance(mapping, dict):
+            return []
+
+        images: List[str] = []
+
+        def _append(value):
+            if isinstance(value, dict):
+                value = _first_non_empty(value, "url", "link", "src", "image", "photo")
+            text = cls._clean_text(value)
+            if text and text not in images:
+                images.append(text)
+
+        _append(
+            _first_non_empty(
+                mapping,
+                "product_photo",
+                "image_url",
+                "image",
+                "thumbnail",
+                "thumbnail_url",
+            )
+        )
+
+        gallery = _first_non_empty(
+            mapping,
+            "product_photos",
+            "photos",
+            "images",
+            "product_images",
+            "gallery",
+        )
+        if isinstance(gallery, (list, tuple)):
+            for item in gallery:
+                _append(item)
+        elif gallery not in (None, "", [], {}):
+            _append(gallery)
+
+        return images
+
+    @classmethod
+    def _extract_pricing(cls, *mappings: Dict | None) -> tuple[float | None, float | None, str | None]:
+        current_price = None
+        original_price = None
+        currency = None
+
+        for mapping in mappings:
+            if not isinstance(mapping, dict):
+                continue
+            if current_price is None:
+                current_price = _extract_price_value(
+                    _first_non_empty(
+                        mapping,
+                        "price",
+                        "current_price",
+                        "offer_price",
+                        "product_price",
+                        "sale_price",
+                        "selling_price",
+                        "extracted_price",
+                    )
+                )
+            if original_price is None:
+                original_price = _extract_price_value(
+                    _first_non_empty(
+                        mapping,
+                        "original_price",
+                        "list_price",
+                        "compare_at_price",
+                        "old_price",
+                        "market_price",
+                        "mrp",
+                        "typical_price",
+                    )
+                )
+            if not currency:
+                currency = cls._clean_text(
+                    _first_non_empty(
+                        mapping,
+                        "currency",
+                        "currency_code",
+                        "currency_symbol",
+                        "price_symbol",
+                    )
+                )
+
+        return current_price, original_price, currency
+
+    @classmethod
+    def _normalize_filters(cls, raw_filters) -> List[Dict]:
+        groups: List[Dict] = []
+        if isinstance(raw_filters, dict):
+            iterable = [
+                {"key": key, "label": str(key).replace("_", " ").title(), "options": value}
+                for key, value in raw_filters.items()
+            ]
+        else:
+            iterable = list(raw_filters or [])
+
+        for raw_group in iterable:
+            if not isinstance(raw_group, dict):
+                continue
+            group_key = cls._clean_text(
+                _first_non_empty(raw_group, "key", "id", "filter_name", "name", "label", "title")
+            )
+            group_label = cls._clean_text(
+                _first_non_empty(raw_group, "label", "name", "title", "filter_name")
+            ) or group_key
+            raw_options = _first_non_empty(raw_group, "options", "values", "items", "filter_values") or []
+            if isinstance(raw_options, dict):
+                raw_options = [
+                    {"value": key, "label": str(key), "count": value}
+                    for key, value in raw_options.items()
+                ]
+
+            options = []
+            for option in list(raw_options):
+                if isinstance(option, dict):
+                    value = cls._clean_text(
+                        _first_non_empty(option, "value", "id", "key", "name", "label", "text")
+                    )
+                    label = cls._clean_text(
+                        _first_non_empty(option, "label", "name", "text", "value")
+                    ) or value
+                    count = cls._extract_int(
+                        _first_non_empty(option, "count", "product_count", "results", "total")
+                    )
+                else:
+                    value = cls._clean_text(option)
+                    label = value
+                    count = None
+                if value or label:
+                    options.append({"value": value, "label": label, "count": count})
+
+            groups.append({"key": group_key, "label": group_label, "options": options})
+
+        return groups
+
+    @classmethod
+    def _normalize_product_item(cls, item: Dict | None) -> Dict | None:
+        if not isinstance(item, dict):
+            return None
+
+        offer = item.get("offer") if isinstance(item.get("offer"), dict) else {}
+        merchant = item.get("merchant") if isinstance(item.get("merchant"), dict) else {}
+        seller = item.get("seller") if isinstance(item.get("seller"), dict) else {}
+        current_price, original_price, currency = cls._extract_pricing(offer, merchant, seller, item)
+        images = cls._extract_image_urls(item)
+
+        return {
+            "product_id": cls._clean_text(
+                _first_non_empty(item, "product_id", "id", "offer_id", "docid", "item_id")
+            ),
+            "title": cls._clean_text(
+                _first_non_empty(item, "product_title", "title", "name", "product_name")
+            ),
+            "brand": cls._clean_text(_first_non_empty(item, "brand", "product_brand")),
+            "store": cls._clean_text(
+                _first_non_empty(offer, "store_name", "store", "merchant", "source", "seller_name")
+                or _first_non_empty(item, "store_name", "store", "merchant", "source")
+            ),
+            "seller": cls._clean_text(
+                _first_non_empty(seller, "name", "seller_name", "title")
+                or _first_non_empty(item, "seller_name", "seller")
+            ),
+            "current_price": current_price,
+            "original_price": original_price,
+            "currency": currency,
+            "rating": cls._extract_rating(
+                _first_non_empty(item, "rating", "product_rating", "average_rating", "stars")
+            ),
+            "reviews_count": cls._extract_int(
+                _first_non_empty(
+                    item,
+                    "reviews_count",
+                    "review_count",
+                    "ratings_total",
+                    "rating_count",
+                    "num_reviews",
+                    "reviews",
+                )
+            ),
+            "availability": cls._clean_text(
+                _first_non_empty(offer, "availability", "stock_status", "in_stock")
+                or _first_non_empty(item, "availability", "stock_status", "in_stock")
+            ),
+            "product_condition": cls._clean_text(
+                _first_non_empty(offer, "product_condition", "condition")
+                or _first_non_empty(item, "product_condition", "condition")
+            ),
+            "product_url": cls._clean_text(
+                _first_non_empty(offer, "offer_page_url", "url", "product_url", "page_url")
+                or _first_non_empty(
+                    item,
+                    "product_page_url",
+                    "product_url",
+                    "url",
+                    "offer_page_url",
+                    "page_url",
+                )
+            ),
+            "image_url": images[0] if images else None,
+            "badges": cls._extract_string_list(_first_non_empty(item, "badges", "labels", "tags")),
+            "raw_offer_count": cls._extract_int(
+                _first_non_empty(item, "offers_count", "offer_count", "total_offers")
+            ),
+        }
+
+    @classmethod
+    def _perform_request(
         cls,
-        provider_product_id: str,
-        country: str | None = None,
-        language: str | None = None,
+        endpoint: str,
+        params: Dict[str, object],
+        *,
+        context: Dict | None = None,
+        message: str | None = None,
     ) -> Dict:
-        config = _product_price_history_api_config()
+        config = cls._config()
+        response_base = dict(context or {})
+
         if not config["enabled"]:
             return {
                 "status": "not_configured",
-                "message": "Product price history API is not configured yet. Set DEALSPHERE_PRODUCT_PRICE_HISTORY_KEY in the backend environment.",
-                "product_id": provider_product_id,
-                "history": [],
-                "point_count": 0,
+                "message": cls.NOT_CONFIGURED_MESSAGE,
+                **response_base,
             }
 
-        normalized_country = str(country or config["default_country"]).strip().lower() or str(config["default_country"])
-        normalized_language = str(language or config["default_language"]).strip().lower() or str(config["default_language"])
-        request_url = f"{config['endpoint']}?{urlencode({'product_id': provider_product_id, 'country': normalized_country, 'language': normalized_language})}"
+        if not endpoint:
+            return {
+                "status": "not_configured",
+                "message": message or "Real-time product search endpoint is not configured.",
+                **response_base,
+            }
+
+        query_string = urlencode(
+            {key: value for key, value in params.items() if value not in (None, "")},
+            doseq=True,
+        )
+        request_url = f"{endpoint}?{query_string}" if query_string else endpoint
         request = Request(
             request_url,
             headers={
@@ -243,47 +556,465 @@ class RealTimeProductSearchService:
                 error_body = ""
             return {
                 "status": "api_error",
-                "message": "Product price history provider returned an error response.",
-                "product_id": provider_product_id,
-                "country": normalized_country,
-                "language": normalized_language,
-                "history": [],
-                "point_count": 0,
+                "message": "Real-time product search provider returned an error response.",
+                **response_base,
                 "provider_status_code": exc.code,
                 "provider_error": error_body[:500],
             }
         except URLError as exc:
             return {
                 "status": "transport_error",
-                "message": "Product price history provider could not be reached from the backend.",
-                "product_id": provider_product_id,
-                "country": normalized_country,
-                "language": normalized_language,
-                "history": [],
-                "point_count": 0,
+                "message": "Real-time product search provider could not be reached from the backend.",
+                **response_base,
                 "provider_error": str(exc.reason or exc),
             }
         except (OSError, json.JSONDecodeError) as exc:
             return {
                 "status": "parse_error",
-                "message": "Product price history provider returned an unreadable response.",
-                "product_id": provider_product_id,
-                "country": normalized_country,
-                "language": normalized_language,
-                "history": [],
-                "point_count": 0,
+                "message": "Real-time product search provider returned an unreadable response.",
+                **response_base,
                 "provider_error": str(exc),
             }
 
-        return cls._normalize_price_history_payload(
-            payload=payload,
+        return {
+            "status": "ok",
+            "payload": payload,
+            "config": config,
+            **response_base,
+        }
+
+    @classmethod
+    def search_products_v2(
+        cls,
+        query: str,
+        country: str | None = None,
+        language: str | None = None,
+        page: int = 1,
+        limit: int = 10,
+        sort_by: str = "BEST_MATCH",
+        product_condition: str = "ANY",
+        return_filters: bool = True,
+    ) -> Dict:
+        config = cls._config()
+        normalized_country = cls._clean_text(country) or str(config["default_country"])
+        normalized_language = cls._clean_text(language) or str(config["default_language"])
+        normalized_page = max(int(page or 1), 1)
+        normalized_limit = max(int(limit or 10), 1)
+        request_result = cls._perform_request(
+            str(config["search_endpoint"]),
+            {
+                "q": query,
+                "country": normalized_country,
+                "language": normalized_language,
+                "page": normalized_page,
+                "limit": normalized_limit,
+                "sort_by": sort_by,
+                "product_condition": product_condition,
+                "return_filters": str(bool(return_filters)).lower(),
+            },
+            context={
+                "query": query,
+                "country": normalized_country,
+                "language": normalized_language,
+                "page": normalized_page,
+                "limit": normalized_limit,
+                "sort_by": sort_by,
+                "product_condition": product_condition,
+                "products": [],
+                "filters": [],
+                "count": 0,
+            },
+        )
+        if request_result.get("status") != "ok":
+            return request_result
+        return cls._normalize_search_payload(
+            payload=request_result["payload"],
+            query=query,
+            country=normalized_country,
+            language=normalized_language,
+            page=normalized_page,
+            limit=normalized_limit,
+            sort_by=sort_by,
+            product_condition=product_condition,
+        )
+
+    @classmethod
+    def get_product_details_v2(
+        cls,
+        provider_product_id: str,
+        country: str | None = None,
+        language: str | None = None,
+    ) -> Dict:
+        config = cls._config()
+        normalized_country = cls._clean_text(country) or str(config["default_country"])
+        normalized_language = cls._clean_text(language) or str(config["default_language"])
+        request_result = cls._perform_request(
+            str(config["product_details_endpoint"]),
+            {
+                "product_id": provider_product_id,
+                "country": normalized_country,
+                "language": normalized_language,
+            },
+            context={
+                "product_id": provider_product_id,
+                "country": normalized_country,
+                "language": normalized_language,
+                "images": [],
+                "features": [],
+                "specifications": None,
+            },
+        )
+        if request_result.get("status") != "ok":
+            return request_result
+        return cls._normalize_product_details_payload(
+            payload=request_result["payload"],
             provider_product_id=provider_product_id,
             country=normalized_country,
             language=normalized_language,
         )
 
-    @staticmethod
+    @classmethod
+    def get_product_offers_v2(
+        cls,
+        provider_product_id: str,
+        page: int = 1,
+        country: str | None = None,
+        language: str | None = None,
+    ) -> Dict:
+        config = cls._config()
+        normalized_country = cls._clean_text(country) or str(config["default_country"])
+        normalized_language = cls._clean_text(language) or str(config["default_language"])
+        normalized_page = max(int(page or 1), 1)
+        request_result = cls._perform_request(
+            str(config["product_offers_endpoint"]),
+            {
+                "product_id": provider_product_id,
+                "page": normalized_page,
+                "country": normalized_country,
+                "language": normalized_language,
+            },
+            context={
+                "product_id": provider_product_id,
+                "country": normalized_country,
+                "language": normalized_language,
+                "page": normalized_page,
+                "offers": [],
+                "offers_count": 0,
+            },
+        )
+        if request_result.get("status") != "ok":
+            return request_result
+        return cls._normalize_product_offers_payload(
+            payload=request_result["payload"],
+            provider_product_id=provider_product_id,
+            country=normalized_country,
+            language=normalized_language,
+            page=normalized_page,
+        )
+
+    @classmethod
+    def get_product_price_history(
+        cls,
+        provider_product_id: str,
+        country: str | None = None,
+        language: str | None = None,
+    ) -> Dict:
+        config = cls._config()
+        normalized_country = cls._clean_text(country) or str(config["default_country"])
+        normalized_language = cls._clean_text(language) or str(config["default_language"])
+        request_result = cls._perform_request(
+            str(config["product_price_history_endpoint"]),
+            {
+                "product_id": provider_product_id,
+                "country": normalized_country,
+                "language": normalized_language,
+            },
+            context={
+                "product_id": provider_product_id,
+                "country": normalized_country,
+                "language": normalized_language,
+                "history": [],
+                "series": [],
+                "point_count": 0,
+            },
+        )
+        if request_result.get("status") != "ok":
+            return request_result
+        return cls._normalize_price_history_payload(
+            payload=request_result["payload"],
+            provider_product_id=provider_product_id,
+            country=normalized_country,
+            language=normalized_language,
+        )
+
+    @classmethod
+    def get_deals_v2(
+        cls,
+        query: str,
+        country: str | None = None,
+        language: str | None = None,
+        page: int = 1,
+        limit: int = 10,
+        sort_by: str = "BEST_MATCH",
+        product_condition: str = "ANY",
+    ) -> Dict:
+        config = cls._config()
+        normalized_country = cls._clean_text(country) or str(config["default_country"])
+        normalized_language = cls._clean_text(language) or str(config["default_language"])
+        normalized_page = max(int(page or 1), 1)
+        normalized_limit = max(int(limit or 10), 1)
+        request_result = cls._perform_request(
+            str(config["deals_endpoint"]),
+            {
+                "q": query,
+                "country": normalized_country,
+                "language": normalized_language,
+                "page": normalized_page,
+                "limit": normalized_limit,
+                "sort_by": sort_by,
+                "product_condition": product_condition,
+            },
+            context={
+                "query": query,
+                "country": normalized_country,
+                "language": normalized_language,
+                "page": normalized_page,
+                "limit": normalized_limit,
+                "sort_by": sort_by,
+                "product_condition": product_condition,
+                "deals": [],
+                "count": 0,
+            },
+        )
+        if request_result.get("status") != "ok":
+            return request_result
+        return cls._normalize_deals_payload(
+            payload=request_result["payload"],
+            query=query,
+            country=normalized_country,
+            language=normalized_language,
+            page=normalized_page,
+            limit=normalized_limit,
+            sort_by=sort_by,
+            product_condition=product_condition,
+        )
+
+    @classmethod
+    def _normalize_search_payload(
+        cls,
+        payload: Dict,
+        query: str,
+        country: str,
+        language: str,
+        page: int,
+        limit: int,
+        sort_by: str,
+        product_condition: str,
+    ) -> Dict:
+        data = payload.get("data") if isinstance(payload, dict) and "data" in payload else payload
+        raw_items = []
+        raw_filters = []
+        count = 0
+        if isinstance(data, dict):
+            raw_items = (
+                _first_non_empty(
+                    data,
+                    "products",
+                    "results",
+                    "items",
+                    "shopping_results",
+                    "search_results",
+                )
+                or []
+            )
+            raw_filters = _first_non_empty(data, "filters", "available_filters") or []
+            count = cls._extract_int(
+                _first_non_empty(
+                    data,
+                    "total_products",
+                    "total_results",
+                    "count",
+                    "total_count",
+                    "result_count",
+                )
+            ) or 0
+        elif isinstance(data, list):
+            raw_items = data
+
+        products = [item for item in (cls._normalize_product_item(entry) for entry in list(raw_items or [])) if item]
+        return {
+            "status": cls._normalize_status(payload),
+            "message": cls._clean_text(payload.get("message") if isinstance(payload, dict) else None) or "",
+            "query": query,
+            "country": country,
+            "language": language,
+            "page": page,
+            "limit": limit,
+            "sort_by": sort_by,
+            "product_condition": product_condition,
+            "provider_request_id": payload.get("request_id") if isinstance(payload, dict) else None,
+            "count": count or len(products),
+            "products": products,
+            "filters": cls._normalize_filters(raw_filters),
+            "source": cls.SOURCE_NAME,
+        }
+
+    @classmethod
+    def _normalize_product_details_payload(
+        cls,
+        payload: Dict,
+        provider_product_id: str,
+        country: str,
+        language: str,
+    ) -> Dict:
+        data = payload.get("data") if isinstance(payload, dict) and "data" in payload else payload
+        if isinstance(data, list):
+            data = data[0] if data else {}
+        if not isinstance(data, dict):
+            data = {}
+
+        offer = data.get("offer") if isinstance(data.get("offer"), dict) else {}
+        current_price, original_price, currency = cls._extract_pricing(offer, data)
+        images = cls._extract_image_urls(data)
+
+        return {
+            "status": cls._normalize_status(payload),
+            "message": cls._clean_text(payload.get("message") if isinstance(payload, dict) else None) or "",
+            "product_id": provider_product_id,
+            "country": country,
+            "language": language,
+            "provider_request_id": payload.get("request_id") if isinstance(payload, dict) else None,
+            "title": cls._clean_text(
+                _first_non_empty(data, "product_title", "title", "name", "product_name")
+            ),
+            "brand": cls._clean_text(_first_non_empty(data, "brand", "product_brand")),
+            "description": cls._clean_text(
+                _first_non_empty(data, "description", "product_description", "about_this_item")
+            ),
+            "current_price": current_price,
+            "original_price": original_price,
+            "currency": currency,
+            "rating": cls._extract_rating(
+                _first_non_empty(data, "rating", "product_rating", "average_rating", "stars")
+            ),
+            "reviews_count": cls._extract_int(
+                _first_non_empty(
+                    data,
+                    "reviews_count",
+                    "review_count",
+                    "ratings_total",
+                    "rating_count",
+                    "num_reviews",
+                )
+            ),
+            "availability": cls._clean_text(
+                _first_non_empty(offer, "availability", "stock_status", "in_stock")
+                or _first_non_empty(data, "availability", "stock_status", "in_stock")
+            ),
+            "store": cls._clean_text(
+                _first_non_empty(offer, "store_name", "store", "merchant")
+                or _first_non_empty(data, "store_name", "store", "merchant")
+            ),
+            "product_condition": cls._clean_text(
+                _first_non_empty(offer, "product_condition", "condition")
+                or _first_non_empty(data, "product_condition", "condition")
+            ),
+            "product_url": cls._clean_text(
+                _first_non_empty(
+                    data,
+                    "product_page_url",
+                    "product_url",
+                    "url",
+                    "offer_page_url",
+                    "page_url",
+                )
+            ),
+            "image_url": images[0] if images else None,
+            "images": images,
+            "features": cls._extract_string_list(
+                _first_non_empty(data, "features", "feature_bullets", "highlights")
+            ),
+            "specifications": _first_non_empty(
+                data,
+                "specifications",
+                "product_specifications",
+                "attributes",
+                "specs",
+            ),
+            "source": cls.SOURCE_NAME,
+        }
+
+    @classmethod
+    def _normalize_product_offers_payload(
+        cls,
+        payload: Dict,
+        provider_product_id: str,
+        country: str,
+        language: str,
+        page: int,
+    ) -> Dict:
+        data = payload.get("data") if isinstance(payload, dict) and "data" in payload else payload
+        if not isinstance(data, dict):
+            data = {}
+
+        raw_offers = (
+            _first_non_empty(data, "offers", "product_offers", "buying_options", "results")
+            or []
+        )
+        if isinstance(raw_offers, dict):
+            raw_offers = list(raw_offers.values())
+
+        offers = []
+        for item in list(raw_offers or []):
+            if not isinstance(item, dict):
+                continue
+            current_price, original_price, currency = cls._extract_pricing(item)
+            offers.append(
+                {
+                    "store": cls._clean_text(
+                        _first_non_empty(item, "store_name", "store", "merchant", "seller_name")
+                    ),
+                    "seller": cls._clean_text(_first_non_empty(item, "seller_name", "seller", "merchant")),
+                    "current_price": current_price,
+                    "original_price": original_price,
+                    "currency": currency,
+                    "availability": cls._clean_text(
+                        _first_non_empty(item, "availability", "stock_status", "in_stock")
+                    ),
+                    "shipping": cls._clean_text(
+                        _first_non_empty(item, "shipping", "shipping_text", "delivery", "shipping_cost")
+                    ),
+                    "offer_url": cls._clean_text(
+                        _first_non_empty(item, "offer_page_url", "product_url", "url", "page_url")
+                    ),
+                    "product_condition": cls._clean_text(
+                        _first_non_empty(item, "product_condition", "condition")
+                    ),
+                }
+            )
+
+        return {
+            "status": cls._normalize_status(payload),
+            "message": cls._clean_text(payload.get("message") if isinstance(payload, dict) else None) or "",
+            "product_id": provider_product_id,
+            "country": country,
+            "language": language,
+            "page": page,
+            "provider_request_id": payload.get("request_id") if isinstance(payload, dict) else None,
+            "title": cls._clean_text(
+                _first_non_empty(data, "product_title", "title", "name", "product_name")
+            ),
+            "offers_count": cls._extract_int(
+                _first_non_empty(data, "offers_count", "offer_count", "total_offers")
+            )
+            or len(offers),
+            "offers": offers,
+            "source": cls.SOURCE_NAME,
+        }
+
+    @classmethod
     def _normalize_price_history_payload(
+        cls,
         payload: Dict,
         provider_product_id: str,
         country: str,
@@ -325,7 +1056,28 @@ class RealTimeProductSearchService:
         elif isinstance(data, list):
             raw_history = data
 
-        history = _normalize_history_points(raw_history, default_currency=str(currency or "").strip() or None)
+        history = []
+        series = []
+        if raw_history and all(isinstance(item, dict) and _first_non_empty(item, "prices", "history") for item in list(raw_history)):
+            for group in list(raw_history):
+                store_name = cls._clean_text(
+                    _first_non_empty(group, "store", "store_name", "merchant", "seller", "source")
+                )
+                group_points = _normalize_history_points(
+                    _first_non_empty(group, "prices", "history", "price_history", "items") or [],
+                    default_currency=str(currency or "").strip() or None,
+                )
+                for point in group_points:
+                    point["store"] = store_name
+                    point["label"] = point.get("label") or store_name
+                    history.append(point)
+                series.append({"store": store_name, "prices": group_points})
+        else:
+            history = _normalize_history_points(
+                raw_history,
+                default_currency=str(currency or "").strip() or None,
+            )
+
         if latest_price is None and history:
             latest_price = history[-1]["price"]
 
@@ -334,21 +1086,65 @@ class RealTimeProductSearchService:
         highest_price = max(prices) if prices else latest_price
 
         return {
-            "status": str(payload.get("status") or "ok").lower() if isinstance(payload, dict) else "ok",
-            "message": "",
+            "status": cls._normalize_status(payload),
+            "message": cls._clean_text(payload.get("message") if isinstance(payload, dict) else None) or "",
             "product_id": provider_product_id,
             "country": country,
             "language": language,
             "provider_request_id": payload.get("request_id") if isinstance(payload, dict) else None,
-            "title": str(title or "").strip() or None,
-            "brand": str(brand or "").strip() or None,
+            "title": cls._clean_text(title),
+            "brand": cls._clean_text(brand),
             "latest_price": latest_price,
             "lowest_price": lowest_price,
             "highest_price": highest_price,
             "currency": str(currency or "").strip() or (history[0]["currency"] if history and history[0].get("currency") else None),
             "point_count": len(history),
             "history": history,
-            "source": "rapidapi_real_time_product_search",
+            "series": series,
+            "source": cls.SOURCE_NAME,
+        }
+
+    @classmethod
+    def _normalize_deals_payload(
+        cls,
+        payload: Dict,
+        query: str,
+        country: str,
+        language: str,
+        page: int,
+        limit: int,
+        sort_by: str,
+        product_condition: str,
+    ) -> Dict:
+        data = payload.get("data") if isinstance(payload, dict) and "data" in payload else payload
+        raw_items = []
+        count = 0
+        if isinstance(data, dict):
+            raw_items = (
+                _first_non_empty(data, "deals", "products", "results", "items", "shopping_results")
+                or []
+            )
+            count = cls._extract_int(
+                _first_non_empty(data, "total_deals", "total_products", "count", "total_count")
+            ) or 0
+        elif isinstance(data, list):
+            raw_items = data
+
+        deals = [item for item in (cls._normalize_product_item(entry) for entry in list(raw_items or [])) if item]
+        return {
+            "status": cls._normalize_status(payload),
+            "message": cls._clean_text(payload.get("message") if isinstance(payload, dict) else None) or "",
+            "query": query,
+            "country": country,
+            "language": language,
+            "page": page,
+            "limit": limit,
+            "sort_by": sort_by,
+            "product_condition": product_condition,
+            "provider_request_id": payload.get("request_id") if isinstance(payload, dict) else None,
+            "count": count or len(deals),
+            "deals": deals,
+            "source": cls.SOURCE_NAME,
         }
 
 

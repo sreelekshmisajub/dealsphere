@@ -113,6 +113,193 @@ def _mock_female_footwear_response(request, timeout=None):
     )
 
 
+TEST_REALTIME_PRODUCT_SEARCH_SETTINGS = {
+    "host": "real-time-product-search.p.rapidapi.com",
+    "key": "test-key",
+    "search_endpoint": "https://real-time-product-search.p.rapidapi.com/search-v2",
+    "product_details_endpoint": "https://real-time-product-search.p.rapidapi.com/product-details-v2",
+    "product_offers_endpoint": "https://real-time-product-search.p.rapidapi.com/product-offers-v2",
+    "product_price_history_endpoint": "https://real-time-product-search.p.rapidapi.com/product-price-history",
+    "deals_endpoint": "https://real-time-product-search.p.rapidapi.com/deals-v2",
+    "default_country": "in",
+    "default_language": "en",
+    "timeout_seconds": 12,
+    "enabled": True,
+}
+
+
+def _mock_real_time_product_search_response(request, timeout=None):
+    request_url = getattr(request, "full_url", str(request))
+
+    if "search-v2" in request_url:
+        return _MockUrlOpenResponse(
+            {
+                "status": "OK",
+                "request_id": "req-search",
+                "data": {
+                    "total_products": 1,
+                    "products": [
+                        {
+                            "product_id": "catalogid:shoe-1",
+                            "product_title": "Nike Pegasus 40",
+                            "brand": "Nike",
+                            "product_page_url": "https://example.com/products/nike-pegasus-40",
+                            "product_photo": "https://example.com/images/nike-pegasus-40.jpg",
+                            "product_condition": "NEW",
+                            "rating": "4.6",
+                            "review_count": 128,
+                            "badges": ["Best Match"],
+                            "offer": {
+                                "store_name": "Nike",
+                                "price": "₹7,495",
+                                "original_price": "₹8,995",
+                                "currency": "INR",
+                                "availability": "In stock",
+                            },
+                        }
+                    ],
+                    "filters": [
+                        {
+                            "key": "brand",
+                            "label": "Brand",
+                            "options": [
+                                {"value": "Nike", "label": "Nike", "count": 10},
+                            ],
+                        }
+                    ],
+                },
+            }
+        )
+
+    if "product-details-v2" in request_url:
+        return _MockUrlOpenResponse(
+            {
+                "status": "OK",
+                "request_id": "req-details",
+                "data": {
+                    "product_id": "catalogid:shoe-1",
+                    "product_title": "Nike Pegasus 40",
+                    "brand": "Nike",
+                    "description": "Responsive running shoes for daily training.",
+                    "product_page_url": "https://example.com/products/nike-pegasus-40",
+                    "product_photos": [
+                        "https://example.com/images/nike-pegasus-40.jpg",
+                        "https://example.com/images/nike-pegasus-40-side.jpg",
+                    ],
+                    "rating": "4.6",
+                    "review_count": 128,
+                    "store_name": "Nike",
+                    "availability": "In stock",
+                    "product_condition": "NEW",
+                    "offer": {
+                        "price": "₹7,495",
+                        "original_price": "₹8,995",
+                        "currency": "INR",
+                    },
+                    "features": ["React foam midsole", "Breathable mesh upper"],
+                    "specifications": {"Color": "Black/White", "Gender": "Men"},
+                },
+            }
+        )
+
+    if "product-offers-v2" in request_url:
+        return _MockUrlOpenResponse(
+            {
+                "status": "OK",
+                "request_id": "req-offers",
+                "data": {
+                    "product_id": "catalogid:shoe-1",
+                    "product_title": "Nike Pegasus 40",
+                    "offers": [
+                        {
+                            "store_name": "Nike",
+                            "seller_name": "Nike Store",
+                            "price": "₹7,495",
+                            "original_price": "₹8,995",
+                            "currency": "INR",
+                            "availability": "In stock",
+                            "shipping": "Free delivery",
+                            "offer_page_url": "https://example.com/offers/nike-store",
+                            "product_condition": "NEW",
+                        },
+                        {
+                            "store_name": "Flipkart",
+                            "seller_name": "Sportz",
+                            "price": "₹7,299",
+                            "original_price": "₹8,499",
+                            "currency": "INR",
+                            "availability": "Limited stock",
+                            "shipping": "Delivery by tomorrow",
+                            "offer_page_url": "https://example.com/offers/flipkart-sportz",
+                            "product_condition": "NEW",
+                        },
+                    ],
+                },
+            }
+        )
+
+    if "product-price-history" in request_url:
+        return _MockUrlOpenResponse(
+            {
+                "status": "OK",
+                "request_id": "req-history",
+                "data": {
+                    "product_id": "catalogid:shoe-1",
+                    "product_title": "Nike Pegasus 40",
+                    "brand": "Nike",
+                    "currency": "INR",
+                    "price_history": [
+                        {
+                            "store": "Nike",
+                            "prices": [
+                                {"date": "2026-03-28", "price": "₹7,495"},
+                                {"date": "2026-03-29", "price": "₹7,299"},
+                            ],
+                        },
+                        {
+                            "store": "Flipkart",
+                            "prices": [
+                                {"date": "2026-03-28", "price": "₹7,399"},
+                            ],
+                        },
+                    ],
+                },
+            }
+        )
+
+    if "deals-v2" in request_url:
+        return _MockUrlOpenResponse(
+            {
+                "status": "OK",
+                "request_id": "req-deals",
+                "data": {
+                    "total_deals": 1,
+                    "deals": [
+                        {
+                            "product_id": "deal-laptop-1",
+                            "product_title": "Lenovo IdeaPad Gaming Laptop",
+                            "brand": "Lenovo",
+                            "product_page_url": "https://example.com/deals/lenovo-ideapad",
+                            "product_photo": "https://example.com/images/lenovo-ideapad.jpg",
+                            "product_condition": "NEW",
+                            "rating": "4.4",
+                            "review_count": 240,
+                            "offer": {
+                                "store_name": "Amazon",
+                                "price": "₹59,990",
+                                "original_price": "₹72,990",
+                                "currency": "INR",
+                                "availability": "In stock",
+                            },
+                        }
+                    ],
+                },
+            }
+        )
+
+    raise AssertionError(f"Unexpected request URL for product search mock: {request_url}")
+
+
 class FrontendSmokeTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -719,6 +906,90 @@ class FrontendSmokeTests(TestCase):
         self.assertEqual(len(payload["items"]), 2)
         self.assertEqual(payload["items"][0]["brand"], "Campus")
         self.assertEqual(payload["items"][0]["price_value"], 1010.0)
+
+    @override_settings(REALTIME_PRODUCT_SEARCH_API_SETTINGS=TEST_REALTIME_PRODUCT_SEARCH_SETTINGS)
+    @patch("apps.api.external_feeds.urlopen")
+    def test_external_product_search_is_normalized(self, mock_urlopen):
+        mock_urlopen.side_effect = _mock_real_time_product_search_response
+
+        self.client.login(username="frontend-user", password="CodexPass123!")
+        response = self.client.get(
+            "/api/v1/external/product-search/?q=Nike%20shoes&country=in&language=en&page=1&limit=10&sort_by=BEST_MATCH&product_condition=ANY&return_filters=true"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["products"][0]["title"], "Nike Pegasus 40")
+        self.assertEqual(payload["products"][0]["current_price"], 7495.0)
+        self.assertEqual(payload["filters"][0]["key"], "brand")
+
+    @override_settings(REALTIME_PRODUCT_SEARCH_API_SETTINGS=TEST_REALTIME_PRODUCT_SEARCH_SETTINGS)
+    @patch("apps.api.external_feeds.urlopen")
+    def test_external_product_details_is_normalized(self, mock_urlopen):
+        mock_urlopen.side_effect = _mock_real_time_product_search_response
+
+        self.client.login(username="frontend-user", password="CodexPass123!")
+        response = self.client.get(
+            "/api/v1/external/product-details/?product_id=catalogid%3Ashoe-1&country=in&language=en"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["brand"], "Nike")
+        self.assertEqual(payload["current_price"], 7495.0)
+        self.assertEqual(len(payload["images"]), 2)
+        self.assertEqual(payload["features"][0], "React foam midsole")
+
+    @override_settings(REALTIME_PRODUCT_SEARCH_API_SETTINGS=TEST_REALTIME_PRODUCT_SEARCH_SETTINGS)
+    @patch("apps.api.external_feeds.urlopen")
+    def test_external_product_offers_is_normalized(self, mock_urlopen):
+        mock_urlopen.side_effect = _mock_real_time_product_search_response
+
+        self.client.login(username="frontend-user", password="CodexPass123!")
+        response = self.client.get(
+            "/api/v1/external/product-offers/?product_id=catalogid%3Ashoe-1&page=1&country=in&language=en"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["offers_count"], 2)
+        self.assertEqual(payload["offers"][1]["store"], "Flipkart")
+        self.assertEqual(payload["offers"][1]["current_price"], 7299.0)
+
+    @override_settings(REALTIME_PRODUCT_SEARCH_API_SETTINGS=TEST_REALTIME_PRODUCT_SEARCH_SETTINGS)
+    @patch("apps.api.external_feeds.urlopen")
+    def test_external_product_price_history_flattens_store_series(self, mock_urlopen):
+        mock_urlopen.side_effect = _mock_real_time_product_search_response
+
+        self.client.login(username="frontend-user", password="CodexPass123!")
+        response = self.client.get(
+            "/api/v1/external/product-price-history/?product_id=catalogid%3Ashoe-1&country=in&language=en"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["point_count"], 3)
+        self.assertEqual(len(payload["series"]), 2)
+        self.assertEqual(payload["series"][0]["store"], "Nike")
+        self.assertEqual(payload["history"][0]["store"], "Nike")
+        self.assertEqual(payload["lowest_price"], 7299.0)
+
+    @override_settings(REALTIME_PRODUCT_SEARCH_API_SETTINGS=TEST_REALTIME_PRODUCT_SEARCH_SETTINGS)
+    @patch("apps.api.external_feeds.urlopen")
+    def test_external_deals_is_normalized(self, mock_urlopen):
+        mock_urlopen.side_effect = _mock_real_time_product_search_response
+
+        self.client.login(username="frontend-user", password="CodexPass123!")
+        response = self.client.get(
+            "/api/v1/external/deals/?q=Laptop&country=in&language=en&page=1&limit=10&sort_by=BEST_MATCH&product_condition=ANY"
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["deals"][0]["brand"], "Lenovo")
+        self.assertEqual(payload["deals"][0]["current_price"], 59990.0)
 
     def test_frontend_registration_redirects_to_login_without_auto_login(self):
         response = self.client.post(

@@ -83,6 +83,36 @@
         color: #94a3b8;
         font-size: 0.9rem;
     }
+
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-toggle {
+        position: absolute;
+        right: 0.75rem;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1rem;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+    }
+
+    .password-toggle:hover {
+        color: #ffffff;
+    }
+
+    .auth-input.has-toggle {
+        padding-right: 3rem;
+    }
 </style>
 {% endblock %}
 
@@ -139,14 +169,24 @@
                                 <label class="auth-label" for="phone">Phone number</label>
                                 <input id="phone" class="auth-input" type="text" name="phone" value="{{ request.POST.phone|default:'' }}" pattern="[6-9][0-9]{9}" maxlength="10" required>
                             </div>
-                            <div class="col-md-6">
+                             <div class="col-md-6">
                                 <label class="auth-label" for="password">Password</label>
-                                <input id="password" class="auth-input" type="password" name="password" required>
+                                <div class="password-wrapper">
+                                    <input id="password" class="auth-input has-toggle" type="password" name="password" required>
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                                 <div class="inline-note mt-2">Minimum 8 characters, 1 uppercase, 1 number, 1 special character.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="auth-label" for="confirm_password">Confirm password</label>
-                                <input id="confirm_password" class="auth-input" type="password" name="confirm_password" required>
+                                <div class="password-wrapper">
+                                    <input id="confirm_password" class="auth-input has-toggle" type="password" name="confirm_password" required>
+                                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirm_password', this)" aria-label="Toggle confirm password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -220,6 +260,20 @@
 
 {% block extra_js %}
 <script>
+function togglePasswordVisibility(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const pills = document.querySelectorAll('.type-pill');
     const merchantFields = document.getElementById('merchant-fields');

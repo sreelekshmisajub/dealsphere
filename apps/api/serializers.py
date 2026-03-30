@@ -352,7 +352,14 @@ class ExternalProductPriceHistoryPointSerializer(serializers.Serializer):
     date = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     price = serializers.FloatField()
     currency = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    store = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     label = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ExternalProductPriceHistorySeriesSerializer(serializers.Serializer):
+    """Store-specific normalized price-history series."""
+    store = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    prices = ExternalProductPriceHistoryPointSerializer(many=True, required=False)
 
 
 class ExternalProductPriceHistorySerializer(serializers.Serializer):
@@ -371,6 +378,139 @@ class ExternalProductPriceHistorySerializer(serializers.Serializer):
     currency = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     point_count = serializers.IntegerField(required=False)
     history = ExternalProductPriceHistoryPointSerializer(many=True, required=False)
+    series = ExternalProductPriceHistorySeriesSerializer(many=True, required=False)
+    source = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_status_code = serializers.IntegerField(required=False)
+    provider_error = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ExternalProductSearchItemSerializer(serializers.Serializer):
+    """Normalized real-time product search row."""
+    product_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    brand = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    store = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    seller = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    current_price = serializers.FloatField(required=False, allow_null=True)
+    original_price = serializers.FloatField(required=False, allow_null=True)
+    currency = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    rating = serializers.FloatField(required=False, allow_null=True)
+    reviews_count = serializers.IntegerField(required=False, allow_null=True)
+    availability = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_condition = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    badges = serializers.ListField(child=serializers.CharField(), required=False)
+    raw_offer_count = serializers.IntegerField(required=False, allow_null=True)
+
+
+class ExternalProductSearchFilterOptionSerializer(serializers.Serializer):
+    """Single normalized filter option."""
+    value = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    label = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    count = serializers.IntegerField(required=False, allow_null=True)
+
+
+class ExternalProductSearchFilterSerializer(serializers.Serializer):
+    """Normalized filter group."""
+    key = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    label = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    options = ExternalProductSearchFilterOptionSerializer(many=True, required=False)
+
+
+class ExternalProductSearchSerializer(serializers.Serializer):
+    """Normalized product search payload."""
+    status = serializers.CharField()
+    message = serializers.CharField(required=False, allow_blank=True)
+    query = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    country = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    language = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    page = serializers.IntegerField(required=False)
+    limit = serializers.IntegerField(required=False)
+    sort_by = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_condition = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    count = serializers.IntegerField(required=False)
+    products = ExternalProductSearchItemSerializer(many=True, required=False)
+    filters = ExternalProductSearchFilterSerializer(many=True, required=False)
+    source = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_status_code = serializers.IntegerField(required=False)
+    provider_error = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ExternalProductDetailsSerializer(serializers.Serializer):
+    """Normalized product details payload."""
+    status = serializers.CharField()
+    message = serializers.CharField(required=False, allow_blank=True)
+    product_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    country = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    language = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    brand = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    current_price = serializers.FloatField(required=False, allow_null=True)
+    original_price = serializers.FloatField(required=False, allow_null=True)
+    currency = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    rating = serializers.FloatField(required=False, allow_null=True)
+    reviews_count = serializers.IntegerField(required=False, allow_null=True)
+    availability = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    store = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_condition = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    images = serializers.ListField(child=serializers.CharField(), required=False)
+    features = serializers.ListField(child=serializers.CharField(), required=False)
+    specifications = serializers.JSONField(required=False, allow_null=True)
+    source = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_status_code = serializers.IntegerField(required=False)
+    provider_error = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ExternalProductOfferItemSerializer(serializers.Serializer):
+    """Single normalized product offer row."""
+    store = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    seller = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    current_price = serializers.FloatField(required=False, allow_null=True)
+    original_price = serializers.FloatField(required=False, allow_null=True)
+    currency = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    availability = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    shipping = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    offer_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_condition = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ExternalProductOffersSerializer(serializers.Serializer):
+    """Normalized product offers payload."""
+    status = serializers.CharField()
+    message = serializers.CharField(required=False, allow_blank=True)
+    product_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    country = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    language = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    page = serializers.IntegerField(required=False)
+    provider_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    title = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    offers_count = serializers.IntegerField(required=False)
+    offers = ExternalProductOfferItemSerializer(many=True, required=False)
+    source = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_status_code = serializers.IntegerField(required=False)
+    provider_error = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class ExternalDealsSerializer(serializers.Serializer):
+    """Normalized deals payload."""
+    status = serializers.CharField()
+    message = serializers.CharField(required=False, allow_blank=True)
+    query = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    country = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    language = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    page = serializers.IntegerField(required=False)
+    limit = serializers.IntegerField(required=False)
+    sort_by = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    product_condition = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    provider_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    count = serializers.IntegerField(required=False)
+    deals = ExternalProductSearchItemSerializer(many=True, required=False)
     source = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     provider_status_code = serializers.IntegerField(required=False)
     provider_error = serializers.CharField(required=False, allow_blank=True, allow_null=True)

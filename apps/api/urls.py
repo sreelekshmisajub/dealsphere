@@ -20,7 +20,11 @@ urlpatterns = [
     path('products/<int:product_id>/offers/', views.ProductOffersView.as_view(), name='product_offers'),
     path('products/<int:product_id>/ranking/', views.ProductRankingView.as_view(), name='product_ranking'),
     path('external/female-footwear/', views.ExternalFemaleFootwearFeedView.as_view(), name='external_female_footwear'),
+    path('external/product-search/', views.ExternalProductSearchView.as_view(), name='external_product_search'),
+    path('external/product-details/', views.ExternalProductDetailsView.as_view(), name='external_product_details'),
+    path('external/product-offers/', views.ExternalProductOffersView.as_view(), name='external_product_offers'),
     path('external/product-price-history/', views.ExternalProductPriceHistoryView.as_view(), name='external_product_price_history'),
+    path('external/deals/', views.ExternalDealsView.as_view(), name='external_deals'),
 
     # AI/ML Features
     path('ai/identify/', views.ProductIdentificationView.as_view(), name='product_identification'),
