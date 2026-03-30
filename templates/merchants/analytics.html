@@ -1,0 +1,87 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Total Sales</div>
+            <div class="h3 fw-bold">Rs.{{ analytics.sales.total_sales|default:0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Total Orders</div>
+            <div class="h3 fw-bold">{{ analytics.sales.total_orders|default:0 }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Approval Rate</div>
+            <div class="h3 fw-bold">{{ analytics.price_matches.approval_rate|default:0 }}%</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Average Order Value</div>
+            <div class="h3 fw-bold">Rs.{{ analytics.sales.average_order_value|default:0 }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="merchant-section-card mb-4">
+            <h5 class="fw-bold mb-3">Top Products</h5>
+            {% for product in analytics.top_products %}
+            <div class="border-top pt-3 mt-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="fw-semibold">{{ product.product__name }}</div>
+                        <div class="small text-secondary">Quantity sold: {{ product.quantity_sold|default:0 }}</div>
+                    </div>
+                    <div class="fw-semibold">Rs.{{ product.total_sales|default:0 }}</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-secondary">No product performance data exists yet.</div>
+            {% endfor %}
+        </div>
+
+        <div class="merchant-section-card">
+            <h5 class="fw-bold mb-3">Recent Activity</h5>
+            {% for activity in analytics.recent_activities %}
+            <div class="border-top pt-3 mt-3">
+                <div class="fw-semibold">{{ activity.activity_type }}</div>
+                <div class="small text-secondary">Count: {{ activity.count }}</div>
+            </div>
+            {% empty %}
+            <div class="text-secondary">No recent merchant activity is available.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="merchant-section-card mb-4">
+            <h5 class="fw-bold mb-3">Sales Window</h5>
+            <div class="small text-secondary">Last 7 Days Revenue</div>
+            <div class="fw-semibold mb-3">Rs.{{ analytics.sales.recent_week_sales|default:0 }}</div>
+            <div class="small text-secondary">Units Sold in 7 Days</div>
+            <div class="fw-semibold mb-3">{{ analytics.sales.recent_week_quantity|default:0 }}</div>
+            <div class="small text-secondary">Last Updated</div>
+            <div class="fw-semibold">{{ analytics.last_updated|default:"N/A" }}</div>
+        </div>
+
+        <div class="merchant-section-card">
+            <h5 class="fw-bold mb-3">Recent Notifications</h5>
+            {% for notification in recent_notifications %}
+            <div class="border-top pt-3 mt-3">
+                <div class="fw-semibold">{{ notification.title }}</div>
+                <div class="small text-secondary">{{ notification.message }}</div>
+            </div>
+            {% empty %}
+            <div class="text-secondary">No recent notifications.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,304 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Visual Search - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .visual-grid {
+        display: grid;
+        grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .visual-card,
+    .visual-result-card,
+    .visual-product-card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        min-width: 0;
+    }
+
+    .visual-stack {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .upload-dropzone {
+        display: grid;
+        gap: 0.85rem;
+        padding: 1.25rem;
+        border-radius: 1.25rem;
+        border: 1px dashed rgba(99, 102, 241, 0.28);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(14, 165, 233, 0.05));
+    }
+
+    .visual-kpi-grid,
+    .visual-prediction-grid,
+    .visual-product-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .visual-kpi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        margin-top: 1rem;
+    }
+
+    .visual-prediction-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .visual-product-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    .visual-kpi,
+    .visual-prediction,
+    .visual-reference {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .visual-product-card {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .visual-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--primary);
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .confidence-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.2);
+        overflow: hidden;
+    }
+
+    .confidence-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2563eb, #7c3aed);
+    }
+
+    .visual-reference-list {
+        display: grid;
+        gap: 0.85rem;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 991px) {
+        .visual-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-magnifying-glass"></i>Search Results
+</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="visual-grid">
+    <article class="visual-card">
+        <h4 class="fw-bold mb-2">Image Upload Search</h4>
+        <p class="text-secondary mb-4">
+            Upload a product image and DealSphere will use the local retail-image dataset to predict the closest category, then fetch real catalog matches from your loaded products.
+        </p>
+
+        <form method="post" enctype="multipart/form-data" class="d-grid gap-3">
+            {% csrf_token %}
+            <div class="upload-dropzone">
+                <div class="visual-pill">
+                    <i class="fas fa-camera"></i>Dataset-backed visual match
+                </div>
+                <div>
+                    <label class="form-label-premium">Choose image</label>
+                    <input class="form-control" type="file" name="image" accept="image/png,image/jpeg,image/webp" required>
+                </div>
+                <div class="small text-secondary">
+                    Accepted: JPG, PNG, WEBP. The page uses the same real identification service already exposed at <strong>/api/v1/ai/identify/</strong>.
+                </div>
+            </div>
+
+            <button class="btn-premium btn-premium-primary" type="submit">
+                <i class="fas fa-wand-magic-sparkles"></i>Run Visual Search
+            </button>
+        </form>
+
+        {% if uploaded_image_name %}
+        <div class="small text-secondary mt-3">
+            Last upload: <strong>{{ uploaded_image_name }}</strong>
+        </div>
+        {% endif %}
+
+        {% if visual_error %}
+        <div class="alert alert-warning mt-3 mb-0">
+            {{ visual_error }}
+        </div>
+        {% endif %}
+    </article>
+
+    <section class="visual-stack">
+        {% if visual_result %}
+        <article class="visual-result-card">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                <div>
+                    <div class="small text-secondary text-uppercase fw-bold mb-1">Detection Summary</div>
+                    <h4 class="fw-bold mb-1">
+                        {% if visual_result.predicted_category %}
+                        {{ visual_result.predicted_category|title }}
+                        {% else %}
+                        No confident match
+                        {% endif %}
+                    </h4>
+                    <div class="text-secondary">
+                        {% if visual_result.predicted_supercategory %}
+                        Supercategory: {{ visual_result.predicted_supercategory|title }}
+                        {% else %}
+                        The upload did not map cleanly to a catalog supercategory.
+                        {% endif %}
+                    </div>
+                </div>
+                <span class="badge {% if visual_result.status == 'ok' %}bg-success-subtle text-success{% elif visual_result.status == 'no_match' %}bg-warning-subtle text-warning{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                    {{ visual_result.status|default:"idle" }}
+                </span>
+            </div>
+
+            <div class="visual-kpi-grid">
+                <div class="visual-kpi">
+                    <div class="small text-secondary">Confidence</div>
+                    <div class="fw-bold fs-4">{% widthratio visual_result.confidence 1 100 %}%</div>
+                </div>
+                <div class="visual-kpi">
+                    <div class="small text-secondary">Reference Images</div>
+                    <div class="fw-bold fs-4">{{ visual_result.dataset_reference_images|default:0 }}</div>
+                </div>
+                <div class="visual-kpi">
+                    <div class="small text-secondary">Catalog Matches</div>
+                    <div class="fw-bold fs-4">{{ matching_cards|length }}</div>
+                </div>
+            </div>
+        </article>
+
+        {% if prediction_rows %}
+        <article class="visual-result-card">
+            <h5 class="fw-bold mb-3">Top Prediction Buckets</h5>
+            <div class="visual-prediction-grid">
+                {% for prediction in prediction_rows %}
+                <div class="visual-prediction">
+                    <div class="fw-semibold">{{ prediction.category|title }}</div>
+                    <div class="small text-secondary mb-2">{{ prediction.supercategory|title }}</div>
+                    <div class="confidence-bar mb-2">
+                        <span style="width:{% widthratio prediction.confidence 1 100 %}%"></span>
+                    </div>
+                    <div class="small text-secondary">
+                        Confidence {% widthratio prediction.confidence 1 100 %}% • {{ prediction.supporting_matches }} supporting match{{ prediction.supporting_matches|pluralize }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+        {% endif %}
+
+        {% if matching_cards %}
+        <article class="visual-result-card">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Matching Catalog Products</h5>
+                    <div class="small text-secondary">These are real catalog products returned by the existing search service for the detected category.</div>
+                </div>
+                {% if visual_result.predicted_category %}
+                <a href="{% url 'dashboard_results' %}?q={{ visual_result.predicted_category|urlencode }}" class="btn-premium btn-premium-secondary btn-sm">
+                    <i class="fas fa-arrow-up-right-from-square"></i>Browse Similar
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="visual-product-grid">
+                {% for product in matching_cards %}
+                <article class="visual-product-card">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <span class="visual-pill">{{ product.category.name }}</span>
+                        {% if product.best_offer %}
+                        <strong class="text-primary">Rs.{{ product.best_offer.price|floatformat:0 }}</strong>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="fw-semibold mb-1">{{ product.name }}</div>
+                        {% if product.brand_name %}
+                        <div class="small text-secondary">Brand: {{ product.brand_name }}</div>
+                        {% endif %}
+                        {% if product.best_offer %}
+                        <div class="small text-secondary mt-1">
+                            {{ product.best_offer.merchant }} • {{ product.best_offer.delivery_time_hours }}h delivery
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ product.detail_url }}" class="btn-premium btn-premium-primary btn-sm">Open Product</a>
+                        <a href="{% url 'dashboard_results' %}?q={{ product.name|urlencode }}" class="btn-premium btn-premium-secondary btn-sm">Search Similar</a>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </article>
+        {% elif visual_result.status == 'ok' or visual_result.status == 'no_match' %}
+        <article class="visual-result-card">
+            <h5 class="fw-bold mb-2">No catalog products matched yet</h5>
+            <p class="text-secondary mb-0">
+                The image category was detected, but no current product rows matched strongly enough in the loaded catalog. Try another image or continue with text search.
+            </p>
+        </article>
+        {% endif %}
+
+        {% if reference_rows %}
+        <article class="visual-result-card">
+            <h5 class="fw-bold mb-2">Closest Dataset Reference Matches</h5>
+            <div class="small text-secondary mb-3">
+                These are the nearest retail-image references used to support the current prediction.
+            </div>
+            <div class="visual-reference-list">
+                {% for item in reference_rows %}
+                <div class="visual-reference">
+                    <div class="fw-semibold">{{ item.category_name|title }}</div>
+                    <div class="small text-secondary mb-2">{{ item.supercategory|title }} • {{ item.reference_image }}</div>
+                    <div class="confidence-bar mb-2">
+                        <span style="width:{% widthratio item.similarity 1 100 %}%"></span>
+                    </div>
+                    <div class="small text-secondary">Similarity {% widthratio item.similarity 1 100 %}%</div>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+        {% endif %}
+        {% else %}
+        <article class="visual-result-card">
+            <h5 class="fw-bold mb-2">No upload run yet</h5>
+            <p class="text-secondary mb-0">
+                Upload a product image to see predicted retail categories, supporting dataset references, and real catalog products you can continue comparing.
+            </p>
+        </article>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

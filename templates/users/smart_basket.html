@@ -1,0 +1,219 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Smart Basket - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .basket-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 1.5rem;
+    }
+
+    .basket-card,
+    .plan-card {
+        background: #ffffff;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .basket-card {
+        padding: 1.5rem;
+        min-width: 0;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+    }
+
+    .list-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid #eef2f7;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .list-row > * {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+
+    .list-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .merchant-group {
+        padding: 1rem 1.1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 991px) {
+        .basket-grid,
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-magnifying-glass"></i>Continue Shopping
+</a>
+{% if items and not basket_checkout_blocked %}
+<a href="{% url 'dashboard_checkout' %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-credit-card"></i>Checkout
+</a>
+{% elif items %}
+<span class="btn-premium btn-premium-secondary opacity-75">
+    <i class="fas fa-shuffle"></i>Split Cart Before Checkout
+</span>
+{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+{% if items %}
+<section class="summary-grid">
+    <div class="summary-card">
+        <div class="small text-secondary">Tracked Items</div>
+        <div class="h4 fw-bold mb-0">{{ total_items }}</div>
+    </div>
+    <div class="summary-card">
+        <div class="small text-secondary">Current Total</div>
+        <div class="h4 fw-bold mb-0">Rs.{{ total }}</div>
+    </div>
+    <div class="summary-card">
+        <div class="small text-secondary">Optimized Total</div>
+        <div class="h4 fw-bold mb-0">Rs.{{ optimized_total }}</div>
+    </div>
+    <div class="summary-card">
+        <div class="small text-secondary">Potential Extra Savings</div>
+        <div class="h4 fw-bold text-success mb-0">Rs.{{ current_cart_savings|default:0 }}</div>
+    </div>
+</section>
+
+<section class="basket-grid">
+    <article class="basket-card">
+        <h4 class="fw-bold mb-3">Tracked Cart Items</h4>
+        {% for item in items %}
+        <div class="list-row">
+            <div>
+                <div class="fw-semibold">{{ item.product.name }}</div>
+                <div class="small text-secondary">{{ item.source_name }} | {{ item.source|title }} | Qty {{ item.quantity }}</div>
+                <div class="small text-secondary">Delivery {{ item.delivery_time_hours }} hour(s)</div>
+            </div>
+            <div class="text-end">
+                <div class="fw-semibold">Rs.{{ item.total_price }}</div>
+                <div class="small text-secondary">Unit Rs.{{ item.unit_price }}</div>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-2 mb-3">
+            <form method="post" action="{% url 'dashboard_cart_update' item.product.id %}" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="number" min="1" name="quantity" value="{{ item.quantity }}" class="form-control form-control-sm" style="max-width: 88px;">
+                <button type="submit" class="btn-premium btn-premium-secondary btn-sm">Update</button>
+            </form>
+            <form method="post" action="{% url 'dashboard_cart_remove' item.product.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-premium btn-premium-secondary btn-sm">Remove</button>
+            </form>
+            {% if item.external_url %}
+            <a href="{{ item.external_url }}" target="_blank" rel="noopener" class="btn-premium btn-premium-secondary btn-sm">Source Link</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </article>
+
+    <section class="basket-card">
+        <h4 class="fw-bold mb-3">Optimized Split Strategy</h4>
+        {% if has_external_items and has_local_items %}
+        <div class="alert alert-warning">
+            Mixed local-store and online-source items are in the same cart. Split them before checkout because local orders and external redirects use different payment routes.
+        </div>
+        {% endif %}
+        {% if optimization.best_option %}
+        <div class="small text-secondary mb-3">
+            Current cart total: <strong>Rs.{{ total }}</strong><br>
+            Optimized latest-source total: <strong>Rs.{{ optimization.best_option.total_cost }}</strong><br>
+            Baseline online-only total: <strong>Rs.{{ optimization.baseline_cost }}</strong>
+        </div>
+        {% for recommendation in optimization.recommendations %}
+        <div class="small text-primary fw-semibold mb-2">{{ recommendation }}</div>
+        {% endfor %}
+        {% if current_cart_savings > 0 %}
+        <div class="alert alert-success mt-3 mb-0">
+            Switching the cart to the current best-priced sources can save up to <strong>Rs.{{ current_cart_savings }}</strong>.
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            {% for group in optimized_groups %}
+            <div class="merchant-group">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>{{ group.merchant }}</strong>
+                    <span class="fw-bold">Rs.{{ group.total }}</span>
+                </div>
+                {% for item in group.items %}
+                <div class="list-row">
+                    <div>
+                        <div class="fw-semibold">{{ item.product_name }}</div>
+                        <div class="small text-secondary">Qty {{ item.quantity }} | {{ item.source|title }}</div>
+                    </div>
+                    <div class="fw-semibold">Rs.{{ item.line_total }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-secondary mb-0">The optimizer could not build a split strategy from the current cart contents.</p>
+        {% endif %}
+    </section>
+</section>
+
+<section class="basket-card mt-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <h4 class="fw-bold mb-1">Payment Step</h4>
+            {% if basket_checkout_blocked %}
+            <p class="text-secondary mb-0">This cart mixes local and marketplace items. Remove one group or split the purchase before proceeding to checkout.</p>
+            {% else %}
+            <p class="text-secondary mb-0">After adding products to cart, continue to checkout to choose the payment route and place the order.</p>
+            {% endif %}
+        </div>
+        {% if basket_checkout_blocked %}
+        <span class="btn-premium btn-premium-secondary opacity-75">
+            <i class="fas fa-circle-exclamation"></i>Checkout Blocked for Mixed Cart
+        </span>
+        {% else %}
+        <a href="{% url 'dashboard_checkout' %}" class="btn-premium btn-premium-primary">
+            <i class="fas fa-credit-card"></i>Proceed to Payment
+        </a>
+        {% endif %}
+    </div>
+</section>
+{% else %}
+<section class="basket-card">
+    <h4 class="fw-bold mb-2">Your smart basket is empty</h4>
+    <p class="text-secondary mb-4">Add products through search results first, then return here to compare a split-purchase strategy across online and local sources.</p>
+    <a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-primary">Search products</a>
+</section>
+{% endif %}
+{% endblock %}

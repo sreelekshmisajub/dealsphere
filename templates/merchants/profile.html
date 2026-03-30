@@ -1,0 +1,69 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_content %}
+<div class="merchant-section-card">
+    <form method="post" class="row g-4">
+        {% csrf_token %}
+        <div class="col-md-6">
+            <label class="form-label-premium">First Name</label>
+            <input type="text" class="form-control" name="first_name" value="{{ merchant_profile_form_values.first_name }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-premium">Last Name</label>
+            <input type="text" class="form-control" name="last_name" value="{{ merchant_profile_form_values.last_name }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-premium">Email</label>
+            <input type="email" class="form-control" name="email" value="{{ merchant_profile_form_values.email }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-premium">Phone</label>
+            <input type="text" class="form-control" name="phone" value="{{ merchant_profile_form_values.phone }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-premium">Shop Name</label>
+            <input type="text" class="form-control" name="shop_name" value="{{ merchant_profile_form_values.shop_name }}" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label-premium">Business Category</label>
+            <input type="text" class="form-control" name="business_category" value="{{ merchant_profile_form_values.business_category }}" required>
+        </div>
+        <div class="col-md-12">
+            <label class="form-label-premium">Address</label>
+            <textarea class="form-control" name="address" rows="3" required>{{ merchant_profile_form_values.address }}</textarea>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">GSTIN</label>
+            <input type="text" class="form-control" name="gstin" value="{{ merchant_profile_form_values.gstin }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Latitude</label>
+            <input type="text" class="form-control" name="location_lat" value="{{ merchant_profile_form_values.location_lat }}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Longitude</label>
+            <input type="text" class="form-control" name="location_lng" value="{{ merchant_profile_form_values.location_lng }}" required>
+        </div>
+
+        <div class="col-12"><hr></div>
+
+        <div class="col-md-4">
+            <label class="form-label-premium">Current Password</label>
+            <input type="password" class="form-control" name="current_password">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">New Password</label>
+            <input type="password" class="form-control" name="new_password">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Confirm New Password</label>
+            <input type="password" class="form-control" name="confirm_new_password">
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button class="btn-premium btn-premium-primary" type="submit">Save Profile</button>
+            <a href="{% url 'merchant_delivery' %}" class="btn-premium btn-premium-secondary">Delivery Settings</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

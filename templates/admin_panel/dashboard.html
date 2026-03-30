@@ -1,0 +1,150 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Dashboard - DealSphere{% endblock %}
+
+{% block admin_actions %}
+<a href="{% url 'swagger-ui' %}" class="btn-premium btn-premium-secondary">API Docs</a>
+<a href="{% url 'admin_data' %}" class="btn-premium btn-premium-primary">Refresh Data</a>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="label">Total Users</div>
+            <div class="value">{{ overview.total_users|default:0 }}</div>
+            <div class="small text-secondary">All registered accounts across customers, merchants, and admins.</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="label">Total Merchants</div>
+            <div class="value">{{ overview.total_merchants|default:0 }}</div>
+            <div class="small text-secondary">{{ pending_merchant_approvals }} merchant approval(s) pending.</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="label">Catalog Products</div>
+            <div class="value">{{ overview.total_products|default:0 }}</div>
+            <div class="small text-secondary">Dataset-backed products loaded into the search catalog.</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="label">Active Deals</div>
+            <div class="value">{{ active_deals_count|default:0 }}</div>
+            <div class="small text-secondary">Live merchant offers currently visible to users.</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Quick Control Summary</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="admin-stat-card">
+                        <div class="label">Users</div>
+                        <div class="value">{{ user_stats.active|default:0 }}</div>
+                        <div class="small text-secondary">Active of {{ user_stats.total|default:0 }} total users.</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="admin-stat-card">
+                        <div class="label">Merchant Trust</div>
+                        <div class="value">{{ merchant_stats.verified|default:0 }}</div>
+                        <div class="small text-secondary">Verified merchants of {{ merchant_stats.total|default:0 }} total.</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="admin-stat-card">
+                        <div class="label">Offer Density</div>
+                        <div class="value">{{ offer_stats.total|default:0 }}</div>
+                        <div class="small text-secondary">Active offers with avg price {{ offer_stats.avg_price|floatformat:2 }}.</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="admin-stat-card">
+                        <div class="label">Price Match Queue</div>
+                        <div class="value">{{ price_match_stats.pending|default:0 }}</div>
+                        <div class="small text-secondary">Approval rate {{ price_match_stats.approval_rate|default:0 }}%.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Recent Platform Activity</h5>
+                <span class="small text-secondary">{{ system_activities|length }} recent event(s)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Activity</th>
+                            <th>User</th>
+                            <th>Entity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in system_activities %}
+                        <tr>
+                            <td>{{ activity.created_at|date:"M d, Y H:i" }}</td>
+                            <td>{{ activity.activity_type|title }}</td>
+                            <td>{{ activity.user.get_full_name|default:activity.user.username }}</td>
+                            <td>
+                                {% if activity.product %}{{ activity.product.name }}{% elif activity.merchant %}{{ activity.merchant.shop_name }}{% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-secondary">No activity rows available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">System Health</h5>
+            <div class="admin-kpi-list">
+                <div class="admin-shell-metric">
+                    <span class="small text-secondary">Overall</span>
+                    <strong class="text-capitalize">{{ system_health.overall_status|default:"unknown" }}</strong>
+                </div>
+                <div class="admin-shell-metric">
+                    <span class="small text-secondary">Database</span>
+                    <strong class="text-capitalize">{{ system_health.database|default:"unknown" }}</strong>
+                </div>
+                <div class="admin-shell-metric">
+                    <span class="small text-secondary">Recent Activity</span>
+                    <strong>{{ system_health.recent_activity_count|default:0 }}</strong>
+                </div>
+                <div class="admin-shell-metric">
+                    <span class="small text-secondary">Storage</span>
+                    <strong>{{ storage_usage_mb }} MB</strong>
+                </div>
+            </div>
+            <p class="small text-secondary mt-3 mb-0">Health values come from the current local workspace and database, not mock telemetry.</p>
+        </div>
+
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Navigation Priorities</h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'admin_merchants' %}" class="btn btn-outline-primary text-start">Review merchant approvals</a>
+                <a href="{% url 'admin_products' %}" class="btn btn-outline-primary text-start">Audit product catalog</a>
+                <a href="{% url 'admin_deals' %}" class="btn btn-outline-primary text-start">Inspect deal requests</a>
+                <a href="{% url 'admin_ml' %}" class="btn btn-outline-primary text-start">Tune ranking weights</a>
+                <a href="{% url 'admin_logs' %}" class="btn btn-outline-primary text-start">Check logs and security</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

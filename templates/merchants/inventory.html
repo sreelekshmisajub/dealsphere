@@ -1,0 +1,188 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_actions %}
+<a href="{% url 'merchant_add_product' %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-plus"></i>Add Product
+</a>
+{% endblock %}
+
+{% block merchant_content %}
+<div class="merchant-section-card mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label-premium">Search</label>
+            <input type="text" class="form-control" name="q" value="{{ inventory_filters.q }}" placeholder="Product name, barcode, brand">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-premium">Category</label>
+            <select class="form-select" name="category">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if inventory_filters.category == category.id|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Status</label>
+            <select class="form-select" name="status">
+                <option value="all" {% if inventory_filters.status == 'all' %}selected{% endif %}>All</option>
+                <option value="active" {% if inventory_filters.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if inventory_filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn-premium btn-premium-secondary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Total Listings</div>
+            <div class="h3 fw-bold">{{ inventory_summary.total }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Active</div>
+            <div class="h3 fw-bold">{{ inventory_summary.active }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Inactive</div>
+            <div class="h3 fw-bold">{{ inventory_summary.inactive }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Low Stock</div>
+            <div class="h3 fw-bold">{{ inventory_summary.low_stock }}</div>
+        </div>
+    </div>
+</div>
+
+{% for row in inventory_rows %}
+<div class="merchant-section-card mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div class="d-flex align-items-center gap-3">
+            {% if row.product.image_url %}
+            <img src="{{ row.product.image_url }}" alt="{{ row.product.name }}" class="rounded shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+            {% else %}
+            <div class="rounded bg-secondary d-flex align-items-center justify-content-center text-white-50" style="width: 60px; height: 60px;">
+                <i class="fas fa-image"></i>
+            </div>
+            {% endif %}
+            <div>
+                <div class="fw-bold">{{ row.product.name }}</div>
+                <div class="small text-secondary">
+                    {{ row.product.category.name|default:"Uncategorized" }}
+                    {% if row.product.brand %}| {{ row.product.brand.name }}{% endif %}
+                    {% if row.product.barcode %}| Barcode {{ row.product.barcode }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end">
+            <span class="badge {% if row.offer.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                {% if row.offer.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+            {% if row.is_low_stock %}
+            <span class="badge bg-warning text-dark">Low Stock</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="small text-secondary">Competitor Listings</div>
+            <div class="fw-semibold">{{ row.competitor_count }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Units Sold</div>
+            <div class="fw-semibold">{{ row.usage_count }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Price</div>
+            <div class="fw-semibold">Rs.{{ row.offer.price }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Stock</div>
+            <div class="fw-semibold">{{ row.offer.stock_quantity }}</div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="row g-3 align-items-end">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_listing">
+        <input type="hidden" name="offer_id" value="{{ row.offer.id }}">
+        <div class="col-md-4">
+            <label class="form-label-premium">Product Name</label>
+            <input type="text" class="form-control" name="name" value="{{ row.product.name }}" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Category</label>
+            <select class="form-select" name="category_id">
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if row.product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Barcode</label>
+            <input type="text" class="form-control" name="barcode" value="{{ row.product.barcode|default:'' }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Price</label>
+            <input type="number" step="0.01" class="form-control" name="price" value="{{ row.offer.price }}" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Original Price</label>
+            <input type="number" step="0.01" class="form-control" name="original_price" value="{{ row.offer.original_price|default:'' }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Stock</label>
+            <input type="number" class="form-control" name="stock_quantity" value="{{ row.offer.stock_quantity }}" min="0" required>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label-premium">Delivery (Hours)</label>
+            <input type="number" class="form-control" name="delivery_time_hours" value="{{ row.offer.delivery_time_hours }}" min="1" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Update Image</label>
+            <input type="file" class="form-control" name="image" accept="image/*">
+        </div>
+
+
+        <div class="col-md-8 d-flex flex-wrap gap-2">
+            <button class="btn-premium btn-premium-primary" type="submit">Save Changes</button>
+        </div>
+    </form>
+
+    <div class="d-flex flex-wrap gap-2 mt-3">
+        {% if row.offer.is_active %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="deactivate_listing">
+            <input type="hidden" name="offer_id" value="{{ row.offer.id }}">
+            <button class="btn-premium btn-premium-secondary" type="submit">Deactivate Listing</button>
+        </form>
+        {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reactivate_listing">
+            <input type="hidden" name="offer_id" value="{{ row.offer.id }}">
+            <button class="btn-premium btn-premium-primary" type="submit">Reactivate Listing</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="merchant-section-card">
+    <h5 class="fw-bold mb-2">No inventory items found</h5>
+    <p class="text-secondary mb-3">Add your first real product listing to start appearing in search results.</p>
+    <a href="{% url 'merchant_add_product' %}" class="btn-premium btn-premium-primary">Add Product</a>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,30 @@
+Traceback (most recent call last):
+  File "C:\Users\ADMIN\Desktop\DEALSPHERE\manage.py", line 22, in <module>
+    main()
+  File "C:\Users\ADMIN\Desktop\DEALSPHERE\manage.py", line 18, in main
+    execute_from_command_line(sys.argv)
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\management\__init__.py", line 442, in execute_from_command_line
+    utility.execute()
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\django\core\management\__init__.py", line 416, in execute
+    django.setup()
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\django\apps\registry.py", line 116, in populate
+    app_config.import_models()
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\django\apps\config.py", line 269, in import_models
+    self.models_module = import_module(models_module_name)
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\importlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "C:\Users\ADMIN\Desktop\DEALSPHERE\apps\ai_engine\models\__init__.py", line 7, in <module>
+    from .computer_vision import ComputerVision
+  File "C:\Users\ADMIN\Desktop\DEALSPHERE\apps\ai_engine\models\computer_vision.py", line 12, in <module>
+    import torch
+  File "C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\torch\__init__.py", line 34, in <module>
+    from typing_extensions import ParamSpec as _ParamSpec, TypeIs as _TypeIs
+ImportError: cannot import name 'TypeIs' from 'typing_extensions' (C:\Users\ADMIN\AppData\Local\Programs\Python\Python310\lib\site-packages\typing_extensions.py)

@@ -1,0 +1,68 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_actions %}
+<a href="{% url 'merchant_inventory' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-arrow-left"></i>Back to Inventory
+</a>
+{% endblock %}
+
+{% block merchant_content %}
+<div class="merchant-section-card">
+    <form method="post" enctype="multipart/form-data" class="row g-4">
+        {% csrf_token %}
+        <div class="col-12">
+            <label class="form-label-premium">Product Image</label>
+            <div class="image-upload-wrapper">
+                <input type="file" class="form-control" name="image" accept="image/*">
+                <p class="text-secondary small mt-1">Upload a clear photo of the product for better search visibility.</p>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <label class="form-label-premium">Product Name</label>
+            <input type="text" class="form-control" name="name" value="{{ add_product_form_values.name }}" required>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Category</label>
+            <select class="form-select" name="category_id" required>
+                <option value="">Select category</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if add_product_form_values.category_id == category.id|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Brand</label>
+            <input type="text" class="form-control" name="brand" value="{{ add_product_form_values.brand }}" placeholder="Optional brand">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Barcode</label>
+            <input type="text" class="form-control" name="barcode" value="{{ add_product_form_values.barcode }}" placeholder="Optional barcode">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label-premium">Delivery Time (Hours)</label>
+            <input type="number" class="form-control" name="delivery_time_hours" value="{{ add_product_form_values.delivery_time_hours }}" min="1" required>
+        </div>
+        <div class="col-12">
+            <label class="form-label-premium">Description</label>
+            <textarea class="form-control" name="description" rows="4">{{ add_product_form_values.description }}</textarea>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-premium">Store Price</label>
+            <input type="number" step="0.01" class="form-control" name="price" value="{{ add_product_form_values.price }}" required>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-premium">Original Price</label>
+            <input type="number" step="0.01" class="form-control" name="original_price" value="{{ add_product_form_values.original_price }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label-premium">Stock Quantity</label>
+            <input type="number" class="form-control" name="stock_quantity" value="{{ add_product_form_values.stock_quantity }}" min="0" required>
+        </div>
+        <div class="col-md-3 d-grid">
+            <label class="form-label-premium">&nbsp;</label>
+            <button class="btn-premium btn-premium-primary" type="submit">Save Product</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

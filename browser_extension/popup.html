@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 380px;
+            min-height: 500px;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+        }
+        
+        .popup-header {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .popup-header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .popup-header h1 img {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        
+        .popup-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            color: #FF6B35;
+            border-bottom: 2px solid #FF6B35;
+        }
+        
+        .tab-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 16px;
+            background: white;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tracked-product {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: white;
+        }
+        
+        .tracked-product:hover {
+            border-color: #FF6B35;
+            box-shadow: 0 2px 8px rgba(255,107,53,0.1);
+        }
+        
+        .product-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #333;
+        }
+        
+        .product-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: #FF6B35;
+            margin-bottom: 4px;
+        }
+        
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .price-change {
+            font-weight: 600;
+        }
+        
+        .price-up {
+            color: #DC3545;
+        }
+        
+        .price-down {
+            color: #28A745;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+        
+        .empty-state img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #FF6B35;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #F7931E;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FF6B35;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        
+        .settings-label {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .toggle.active {
+            background: #FF6B35;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .toggle.active::after {
+            transform: translateX(20px);
+        }
+        
+        .quick-track {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #FF6B35;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="popup-header">
+        <h1>
+            <img src="icons/icon32.png" alt="DealSphere">
+            DealSphere
+        </h1>
+    </div>
+    
+    <div class="popup-tabs">
+        <button class="tab-btn active" onclick="switchTab('tracked')">Tracked</button>
+        <button class="tab-btn" onclick="switchTab('alerts')">Alerts</button>
+        <button class="tab-btn" onclick="switchTab('stats')">Stats</button>
+        <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+    </div>
+    
+    <!-- Tracked Products Tab -->
+    <div id="tracked-tab" class="tab-content active">
+        <div class="quick-track">
+            <div style="font-weight: 600; margin-bottom: 8px;">Quick Track</div>
+            <div class="input-group">
+                <input type="text" id="quick-track-url" placeholder="Paste product URL...">
+                <button class="btn btn-primary btn-sm" onclick="quickTrack()">Track</button>
+            </div>
+        </div>
+        
+        <div id="tracked-products">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading tracked products...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alerts Tab -->
+    <div id="alerts-tab" class="tab-content">
+        <div id="price-alerts">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading alerts...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Tab -->
+    <div id="stats-tab" class="tab-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-tracked">0</div>
+                <div class="stat-label">Products Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-alerts">0</div>
+                <div class="stat-label">Active Alerts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-savings">₹0</div>
+                <div class="stat-label">Total Savings</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="price-drops">0</div>
+                <div class="stat-label">Price Drops</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px;">
+            <button class="btn btn-primary" onclick="exportData()">Export Data</button>
+        </div>
+    </div>
+    
+    <!-- Settings Tab -->
+    <div id="settings-tab" class="tab-content">
+        <div class="settings-item">
+            <span class="settings-label">Enable Notifications</span>
+            <div class="toggle active" id="notifications-toggle" onclick="toggleSetting('notifications')"></div>
+        </div>
+        
+        <div class="settings-item">
+            <span class="settings-label">Auto-track Products</span>
+            <div class="toggle active" id="auto-track-toggle" onclick="toggleSetting('autoTrack')"></div>
+        </div>
+        
+        <div class="settings-item">
+            <span class="settings-label">Price Drop Threshold</span>
+            <select id="threshold-select" onchange="updateThreshold()" style="padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                <option value="5">5%</option>
+                <option value="10">10%</option>
+                <option value="15">15%</option>
+                <option value="20">20%</option>
+            </select>
+        </div>
+        
+        <div class="settings-item">
+            <span class="settings-label">Currency</span>
+            <select id="currency-select" onchange="updateCurrency()" style="padding: 4px 8px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                <option value="INR">₹ INR</option>
+                <option value="USD">$ USD</option>
+                <option value="EUR">€ EUR</option>
+            </select>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="btn btn-secondary" onclick="clearData()">Clear All Data</button>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,766 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}DealSphere - Smart Online and Offline Deal Comparison{% endblock %}
+
+{% block extra_css %}
+<style>
+    .deal-home {
+        background: linear-gradient(180deg, #f5f7ff 0%, #ffffff 20%, #f8fbff 100%);
+        padding-bottom: 4rem;
+    }
+
+    .deal-hero {
+        padding: 0.9rem 0 1.5rem;
+    }
+
+    .deal-hero-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0 0 2rem 2rem;
+        padding: 2rem 1rem 1.2rem;
+        background:
+            radial-gradient(circle at center, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 18%, transparent 58%),
+            linear-gradient(135deg, #3420db 0%, #4835e4 54%, #5a48ff 100%);
+        box-shadow: 0 28px 52px rgba(51, 36, 157, 0.24);
+        color: #ffffff;
+    }
+
+    .deal-hero-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-conic-gradient(from -12deg at 50% 46%, rgba(255, 255, 255, 0.08) 0deg, rgba(255, 255, 255, 0.015) 8deg, rgba(255, 255, 255, 0) 15deg);
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .deal-hero-inner {
+        position: relative;
+        z-index: 1;
+    }
+
+    .deal-hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 0.86rem;
+        font-weight: 700;
+    }
+
+    .deal-hero-title {
+        margin: 1rem 0 0.7rem;
+        font-size: clamp(2.25rem, 10vw, 4.6rem);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+        text-align: center;
+        color: #ffffff;
+    }
+
+    .deal-hero-title .accent {
+        color: #2ddc66;
+    }
+
+    .deal-hero-copy {
+        max-width: 720px;
+        margin: 0 auto 1.35rem;
+        color: rgba(255, 255, 255, 0.92);
+        text-align: center;
+        font-size: 1rem;
+    }
+
+    .deal-hero-search {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.38rem;
+        margin: 0 auto;
+        max-width: 860px;
+        border-radius: 999px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        background: rgba(248, 250, 255, 0.98);
+        box-shadow: 0 20px 40px rgba(20, 14, 81, 0.22);
+    }
+
+    .deal-hero-search-main {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        padding: 0 0.35rem 0 0.85rem;
+        color: #72819a;
+        min-width: 0;
+    }
+
+    .deal-hero-search-input {
+        flex: 1 1 auto;
+        min-height: 56px;
+        border: 0;
+        background: transparent;
+        color: #1f2740;
+        font-size: 1rem;
+        font-weight: 600;
+        outline: none;
+        min-width: 0;
+    }
+
+    .deal-hero-search-input::placeholder {
+        color: #75829a;
+        opacity: 1;
+    }
+
+    .deal-hero-voice-btn {
+        width: 42px;
+        height: 42px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: #6f7a8f;
+        flex-shrink: 0;
+    }
+
+    .deal-hero-voice-btn:hover,
+    .deal-hero-voice-btn.active {
+        background: rgba(86, 70, 246, 0.08);
+        color: #5646f6;
+    }
+
+    .deal-hero-search-btn {
+        min-width: 124px;
+        min-height: 56px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #5d4ef3, #483ce1);
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+
+    .deal-hero-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        justify-content: center;
+        margin-top: 1rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .deal-hero-chip,
+    .deal-tool-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.72rem 0.95rem;
+        border-radius: 999px;
+        border: 1px solid rgba(223, 229, 245, 0.95);
+        background: #ffffff;
+        color: #24304b;
+        font-size: 0.9rem;
+        font-weight: 700;
+        box-shadow: 0 10px 20px rgba(35, 49, 85, 0.06);
+    }
+
+    .deal-tool-row {
+        display: flex;
+        gap: 0.8rem;
+        overflow-x: auto;
+        padding: 0.95rem 0 0.15rem;
+        scrollbar-width: none;
+    }
+
+    .deal-tool-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    .deal-tool-chip {
+        white-space: nowrap;
+        background: #f4f7ff;
+    }
+
+    .deal-metric-strip {
+        margin-top: 1rem;
+        padding: 0.95rem 1rem;
+        border-radius: 1.5rem;
+        background: #261d62;
+        color: rgba(255, 255, 255, 0.96);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.65rem;
+    }
+
+    .deal-metric-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.55rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .deal-section {
+        padding-top: 1.9rem;
+    }
+
+    .deal-section-head {
+        text-align: center;
+        margin-bottom: 1.1rem;
+    }
+
+    .deal-section-title {
+        font-size: clamp(1.8rem, 6vw, 2.8rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+        margin-bottom: 0.45rem;
+        color: #16233e;
+    }
+
+    .deal-section-copy {
+        max-width: 760px;
+        margin: 0 auto;
+        color: #6f7c96;
+        font-size: 0.98rem;
+    }
+
+    .deal-grid-tiles {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.95rem;
+    }
+
+    .deal-tile {
+        border-radius: 1.35rem;
+        border: 1px solid #dfe5f5;
+        background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+        box-shadow: 0 16px 28px rgba(35, 49, 85, 0.06);
+        padding: 1.2rem 0.95rem;
+        text-align: center;
+    }
+
+    .deal-tile.discount {
+        background: linear-gradient(180deg, #fff1ea 0%, #ffffff 100%);
+    }
+
+    .deal-tile-eyebrow {
+        color: #574bd6;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .deal-tile-value {
+        margin: 0.35rem 0 0.3rem;
+        font-size: clamp(1.55rem, 7vw, 2.35rem);
+        line-height: 1;
+        color: #4c40e8;
+        font-weight: 800;
+    }
+
+    .deal-tile-meta {
+        color: #6f7c96;
+        font-size: 0.9rem;
+    }
+
+    .deal-card-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .deal-card {
+        border-radius: 1.45rem;
+        border: 1px solid #dfe5f5;
+        background: #ffffff;
+        box-shadow: 0 18px 30px rgba(35, 49, 85, 0.06);
+        padding: 1.15rem;
+    }
+
+    .deal-card-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.85rem;
+        padding: 0.4rem 0.72rem;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #5646f6;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .deal-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .deal-card-title {
+        font-size: 1.08rem;
+        line-height: 1.2;
+        font-weight: 800;
+        color: #182741;
+        margin-bottom: 0.35rem;
+    }
+
+    .deal-card-copy,
+    .deal-card-meta {
+        color: #6f7c96;
+        font-size: 0.94rem;
+    }
+
+    .deal-card-price {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #4c40e8;
+        white-space: nowrap;
+    }
+
+    .deal-card-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-top: 0.8rem;
+        padding: 0.42rem 0.75rem;
+        border-radius: 999px;
+        background: #f4f7ff;
+        color: #4c40e8;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .deal-card-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-top: 1rem;
+        color: #5646f6;
+        font-weight: 800;
+    }
+
+    .deal-store-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.95rem 0.7rem;
+        justify-items: center;
+    }
+
+    .deal-store-item {
+        text-align: center;
+    }
+
+    .deal-store-badge {
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 0.55rem;
+        border-radius: 999px;
+        border: 1px solid #dfe5f5;
+        background: #ffffff;
+        box-shadow: 0 14px 24px rgba(35, 49, 85, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #2a3551;
+    }
+
+    .deal-store-name {
+        font-size: 0.82rem;
+        color: #55627d;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .deal-faq-shell .accordion-item {
+        border: 1px solid #dfe5f5;
+        border-radius: 1.1rem !important;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 12px 24px rgba(35, 49, 85, 0.05);
+        margin-bottom: 0.85rem;
+    }
+
+    .deal-faq-shell .accordion-button {
+        font-weight: 700;
+        color: #1f2740;
+        background: #ffffff;
+        box-shadow: none;
+        padding: 1rem 1.05rem;
+    }
+
+    .deal-faq-shell .accordion-button:not(.collapsed) {
+        color: #4c40e8;
+        background: #f7f9ff;
+    }
+
+    .deal-faq-shell .accordion-body {
+        color: #65738e;
+        font-size: 0.95rem;
+        padding-top: 0.2rem;
+    }
+
+    .deal-empty {
+        padding: 1.6rem;
+        border-radius: 1.35rem;
+        background: #f7f8fe;
+        border: 1px dashed #d7dff4;
+        text-align: center;
+        color: #6f7c96;
+    }
+
+    @media (min-width: 768px) {
+        .deal-hero-card {
+            padding: 2.8rem 2rem 1.6rem;
+            border-radius: 0 0 2.5rem 2.5rem;
+        }
+
+        .deal-grid-tiles {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .deal-card-grid.two-up {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .deal-store-grid {
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+        }
+    }
+
+    @media (min-width: 992px) {
+        .deal-home {
+            padding-bottom: 5rem;
+        }
+
+        .deal-hero {
+            padding-top: 1.2rem;
+        }
+
+        .deal-card-grid.three-up {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .deal-card-grid.four-up {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .deal-store-grid {
+            grid-template-columns: repeat(8, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .deal-home .container {
+            padding-left: 0.9rem;
+            padding-right: 0.9rem;
+        }
+
+        .deal-hero-card {
+            border-radius: 0 0 1.8rem 1.8rem;
+            padding-top: 1.75rem;
+        }
+
+        .deal-hero-search {
+            flex-wrap: wrap;
+            border-radius: 1.6rem;
+            padding: 0.55rem;
+        }
+
+        .deal-hero-search-main {
+            width: 100%;
+            padding-right: 0.75rem;
+        }
+
+        .deal-hero-search-input {
+            min-height: 46px;
+            font-size: 0.95rem;
+        }
+
+        .deal-hero-search-btn {
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 48px;
+        }
+
+        .deal-store-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="deal-home">
+    <section class="deal-hero">
+        <div class="container">
+            <div class="deal-hero-card">
+                <div class="deal-hero-inner text-center">
+                    <div class="deal-hero-kicker"><i class="fas fa-wand-magic-sparkles"></i>Price History &amp; Tracker</div>
+                    <h1 class="deal-hero-title">Find <span class="accent">Real Deals</span><br>Skip the Fake Ones</h1>
+                    <p class="deal-hero-copy">Track genuine price drops, compare across online marketplaces and verified local stores, and shop smarter every day.</p>
+
+                    <form class="deal-hero-search" method="get" action="{% url 'product_search' %}">
+                        <div class="deal-hero-search-main">
+                            <i class="fas fa-magnifying-glass"></i>
+                            <input class="deal-hero-search-input" type="search" name="q" placeholder="Paste an Amazon / Flipkart link or search a product" value="{{ request.GET.q }}">
+                        </div>
+                        <button class="deal-hero-voice-btn" type="button" aria-label="Voice search"><i class="fas fa-microphone-lines"></i></button>
+                        <button class="deal-hero-search-btn" type="submit">Search</button>
+                    </form>
+
+                    {% if hero_search_examples %}
+                    <div class="deal-hero-chip-row">
+                        {% for example in hero_search_examples|slice:":4" %}
+                        <a class="deal-hero-chip" href="{% url 'product_search' %}?q={{ example|urlencode }}"><i class="fas fa-arrow-up-right-from-square"></i>{{ example|truncatechars:28 }}</a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="deal-tool-row">
+                <a class="deal-tool-chip" href="{% url 'deals' %}"><i class="fas fa-bolt"></i>Hot Deals</a>
+                <a class="deal-tool-chip" href="{% url 'spending_analysis' %}"><i class="fas fa-wallet"></i>Spend Lens</a>
+                <a class="deal-tool-chip" href="{% url 'price_alert' %}"><i class="fas fa-bell"></i>Price Alert</a>
+                <a class="deal-tool-chip" href="{% url 'product_search' %}?category=Grocery"><i class="fas fa-basket-shopping"></i>Grocery Comparison</a>
+            </div>
+
+            <div class="deal-metric-strip">
+                {% for metric in hero_metrics %}
+                <span class="deal-metric-pill"><strong>{{ metric.value }}</strong> {{ metric.label }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="deal-section">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Hot Deals</h2>
+                <p class="deal-section-copy">These ranges are computed from the live searchable catalog, not hard-coded mock counts.</p>
+            </div>
+            <div class="deal-grid-tiles">
+                {% for bucket in hot_deal_buckets %}
+                <a class="deal-tile" href="{{ bucket.href }}">
+                    <div class="deal-tile-eyebrow">Deals Under</div>
+                    <div class="deal-tile-value">{{ bucket.display }}</div>
+                    <div class="deal-tile-meta">{{ bucket.count }} live result(s)</div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="deal-section">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Best Discounts</h2>
+                <p class="deal-section-copy">Discount bands are derived from real active offers with original-price coverage.</p>
+            </div>
+            <div class="deal-grid-tiles">
+                {% for bucket in discount_buckets %}
+                <a class="deal-tile discount" href="{{ bucket.href }}">
+                    <div class="deal-tile-eyebrow">Min. Discount</div>
+                    <div class="deal-tile-value">{{ bucket.threshold }}%</div>
+                    <div class="deal-tile-meta">{{ bucket.count }} discounted offer(s)</div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="deal-section">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Shop by Categories</h2>
+                <p class="deal-section-copy">Each card links into a real searchable category path already backed by Django and the dataset loader.</p>
+            </div>
+            {% if category_spotlights %}
+            <div class="deal-card-grid four-up">
+                {% for spotlight in category_spotlights %}
+                <a class="deal-card" href="{% url 'product_search' %}?q={{ spotlight.product.name|urlencode }}&category={{ spotlight.name|urlencode }}">
+                    <span class="deal-card-kicker"><i class="fas fa-layer-group"></i>Category Spotlight</span>
+                    <div class="deal-card-top">
+                        <div>
+                            <div class="deal-card-title">{{ spotlight.name }}</div>
+                            <div class="deal-card-meta">{{ spotlight.product.name }}</div>
+                        </div>
+                        {% if spotlight.product.best_offer %}
+                        <div class="deal-card-price">Rs.{{ spotlight.product.best_offer.price }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="deal-card-copy">{{ spotlight.product_count }} product(s) currently loaded</div>
+                    {% if spotlight.product.best_offer %}
+                    <div class="deal-card-tag"><i class="{{ spotlight.product.best_offer.source_icon }}"></i>{{ spotlight.product.best_offer.merchant }}</div>
+                    {% endif %}
+                    <div class="deal-card-cta">Search category <i class="fas fa-arrow-right"></i></div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="deal-empty">No category spotlight data is available yet.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="deal-section">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Why Use DealSphere?</h2>
+                <p class="deal-section-copy">Tools designed around the live project: online + offline comparison, verified merchants, and AI-supported ranking.</p>
+            </div>
+            <div class="deal-card-grid four-up">
+                {% for item in why_cards %}
+                <article class="deal-card">
+                    <span class="deal-card-kicker"><i class="fas fa-sparkles"></i>Core Capability</span>
+                    <div class="deal-card-title">{{ item.title }}</div>
+                    <div class="deal-card-copy">{{ item.copy }}</div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="deal-section">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Live Catalog Preview</h2>
+                <p class="deal-section-copy">These cards are rendered from the real searchable catalog and current best offer records only.</p>
+            </div>
+            {% if catalog_preview %}
+            <div class="deal-card-grid three-up">
+                {% for product in catalog_preview|slice:":6" %}
+                <article class="deal-card">
+                    <span class="deal-card-kicker"><i class="fas fa-bag-shopping"></i>Catalog Product</span>
+                    <div class="deal-card-title">{{ product.name }}</div>
+                    <div class="deal-card-meta">{{ product.category.name|default:"General" }}</div>
+                    {% if product.best_offer %}
+                    <div class="deal-card-tag"><i class="{{ product.best_offer.source_icon }}"></i>{{ product.best_offer.merchant }}</div>
+                    <div class="deal-card-top mt-3 mb-0">
+                        <div class="deal-card-copy">Best current source</div>
+                        <div class="deal-card-price">Rs.{{ product.best_offer.price }}</div>
+                    </div>
+                    {% endif %}
+                    <a class="deal-card-cta" href="{% url 'product_search' %}?q={{ product.name|urlencode }}">View matching results <i class="fas fa-arrow-right"></i></a>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="deal-empty">No catalog products are available yet.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="deal-section" id="supported-stores">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Stores Supported</h2>
+                <p class="deal-section-copy">These labels come from the current online sources and verified merchant records already present in the database.</p>
+            </div>
+            <div class="deal-store-grid">
+                {% for source in supported_sources|slice:":16" %}
+                <div class="deal-store-item">
+                    <div class="deal-store-badge">{{ source|slice:":2"|upper }}</div>
+                    <div class="deal-store-name">{{ source }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="deal-section">
+        <div class="container">
+            <div class="deal-section-head">
+                <h2 class="deal-section-title">Frequently Asked Questions</h2>
+                <p class="deal-section-copy">Clear answers based on the real project modules and current frontend flow.</p>
+            </div>
+            <div class="accordion deal-faq-shell" id="dealFaq">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faqOneBody" aria-expanded="true" aria-controls="faqOneBody">
+                            How does DealSphere compare prices?
+                        </button>
+                    </h2>
+                    <div id="faqOneBody" class="accordion-collapse collapse show" aria-labelledby="faqOne" data-bs-parent="#dealFaq">
+                        <div class="accordion-body">The backend pulls from the loaded catalog, merchant offers, and source-linked product rows, then ranks available options through the existing comparison flow.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqTwoBody" aria-expanded="false" aria-controls="faqTwoBody">
+                            Are local merchants part of the same flow?
+                        </button>
+                    </h2>
+                    <div id="faqTwoBody" class="accordion-collapse collapse" aria-labelledby="faqTwo" data-bs-parent="#dealFaq">
+                        <div class="accordion-body">Yes. Verified merchant offers are already part of the same product comparison, basket, checkout, and dashboard flows without needing a separate frontend path.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqThreeBody" aria-expanded="false" aria-controls="faqThreeBody">
+                            Does the homepage use real data?
+                        </button>
+                    </h2>
+                    <div id="faqThreeBody" class="accordion-collapse collapse" aria-labelledby="faqThree" data-bs-parent="#dealFaq">
+                        <div class="accordion-body">Yes. The homepage sections are driven by live catalog counts, active offers, verified merchants, and real category/product records already loaded in Django.</div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faqFour">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqFourBody" aria-expanded="false" aria-controls="faqFourBody">
+                            What happens after I search from the hero bar?
+                        </button>
+                    </h2>
+                    <div id="faqFourBody" class="accordion-collapse collapse" aria-labelledby="faqFour" data-bs-parent="#dealFaq">
+                        <div class="accordion-body">The form still submits into the existing search route, where the current backend search, filter, comparison, and product-detail logic continues exactly as before.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const voiceButton = document.querySelector('.deal-hero-voice-btn');
+    const searchInput = document.querySelector('.deal-hero-search-input');
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!voiceButton || !searchInput) return;
+    if (!SpeechRecognition) {
+        voiceButton.disabled = true;
+        voiceButton.title = 'Voice search is not supported in this browser.';
+        return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    voiceButton.addEventListener('click', function () {
+        voiceButton.classList.add('active');
+        recognition.start();
+    });
+    recognition.addEventListener('result', function (event) {
+        const transcript = event.results[0][0].transcript.trim();
+        if (transcript) searchInput.value = transcript;
+    });
+    recognition.addEventListener('end', function () {
+        voiceButton.classList.remove('active');
+    });
+    recognition.addEventListener('error', function () {
+        voiceButton.classList.remove('active');
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Data - DealSphere{% endblock %}
+
+{% block admin_actions %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="reload_catalog">
+    <button class="btn-premium btn-premium-primary" type="submit">Reload Catalog</button>
+</form>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Products</div><div class="value">{{ catalog_summary.products }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Active Offers</div><div class="value">{{ catalog_summary.offers }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Merchants</div><div class="value">{{ catalog_summary.merchants }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Products With History</div><div class="value">{{ catalog_summary.price_history_records }}</div></div>
+    </div>
+</div>
+
+{% if reload_summary %}
+<div class="admin-section-card">
+    <h5 class="fw-bold mb-3">Latest Reload Summary</h5>
+    <div class="row g-3">
+        {% for key, value in reload_summary.items %}
+        <div class="col-md-4">
+            <div class="admin-shell-metric">
+                <span class="small text-secondary">{{ key|title }}</span>
+                <strong>{{ value }}</strong>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="admin-section-card">
+    <h5 class="fw-bold mb-3">Dataset Folder</h5>
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Tracked As</th>
+                    <th>Type</th>
+                    <th>Size (MB)</th>
+                    <th>Modified</th>
+                    <th>Path</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in dataset_entries %}
+                <tr>
+                    <td>{{ entry.name }}</td>
+                    <td>{% if entry.tracked_as %}{{ entry.tracked_as|join:", " }}{% else %}-{% endif %}</td>
+                    <td>{% if entry.is_file %}File{% else %}Directory{% endif %}</td>
+                    <td>{{ entry.size_mb }}</td>
+                    <td>{{ entry.modified_at|date:"M d, Y H:i" }}</td>
+                    <td class="small text-secondary">{{ entry.path }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-secondary">No dataset entries found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_actions %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="mark_all_read">
+    <button class="btn-premium btn-premium-secondary" type="submit">
+        <i class="fas fa-check-double"></i>Mark All Read
+    </button>
+</form>
+{% endblock %}
+
+{% block merchant_content %}
+<div class="merchant-section-card mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label-premium">Filter</label>
+            <select class="form-select" name="filter">
+                <option value="all" {% if notification_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="unread" {% if notification_filter == 'unread' %}selected{% endif %}>Unread</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn-premium btn-premium-secondary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+{% for notification in merchant_notifications %}
+<div class="merchant-section-card mb-3">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+        <div>
+            <div class="fw-semibold">{{ notification.title }}</div>
+            <div class="small text-secondary mb-2">{{ notification.message }}</div>
+            <div class="small text-secondary">{{ notification.created_at|date:"d M Y, H:i" }}</div>
+        </div>
+        <div class="d-flex flex-column align-items-end gap-2">
+            <span class="badge {% if notification.is_read %}bg-secondary{% else %}bg-primary{% endif %}">
+                {% if notification.is_read %}Read{% else %}Unread{% endif %}
+            </span>
+            {% if not notification.is_read %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="mark_read">
+                <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                <button class="btn-premium btn-premium-primary" type="submit">Mark Read</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="merchant-section-card">
+    <div class="text-secondary">No merchant notifications match the current filter.</div>
+</div>
+{% endfor %}
+{% endblock %}

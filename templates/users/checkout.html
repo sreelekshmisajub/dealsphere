@@ -1,0 +1,326 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Checkout - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 1.5rem;
+    }
+
+    .checkout-card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        min-width: 0;
+    }
+
+    .checkout-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid #eef2f7;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .checkout-row:last-child {
+        border-bottom: 0;
+    }
+
+    .payment-option {
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: #f8fafc;
+        min-width: 0;
+    }
+
+    .checkout-row > *,
+    .payment-option > * {
+        min-width: 0;
+    }
+
+    .modal-body,
+    .modal-body * {
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 991px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_basket' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-arrow-left"></i>Back to Basket
+</a>
+{% if checkout_items %}
+<button class="btn-premium btn-premium-primary" form="checkout-form" type="submit">
+    <i class="fas fa-bag-shopping"></i>Place Order
+</button>
+{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+{% if created_order %}
+<section class="checkout-card mb-4">
+    <h4 class="fw-bold mb-2">Order Created</h4>
+    <p class="text-secondary mb-2">Order <strong>{{ created_order.id }}</strong> was created successfully.</p>
+    <div class="small text-secondary mb-3">
+        Status: {{ created_order.status|title }} | Payment: {{ created_order.payment_method|title }} | Payment Status: {{ created_order.payment_status|title }}
+    </div>
+    {% if created_order.payment_reference %}
+    <div class="small text-secondary mb-3">Reference: <strong>{{ created_order.payment_reference }}</strong></div>
+    {% endif %}
+    {% if created_order.payment_link %}
+    <div class="alert alert-info border-0 shadow-sm" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="fas {% if created_order.payment_method == 'upi' %}fa-qrcode{% else %}fa-credit-card{% endif %}"></i>
+            </div>
+            <h5 class="fw-bold mb-0">
+                {% if created_order.payment_method == 'upi' %}
+                Scan to Pay with UPI
+                {% else %}
+                Complete Online Payment
+                {% endif %}
+            </h5>
+        </div>
+        
+        {% if created_order.payment_method == 'upi' %}
+        <div class="text-center mb-3 p-3 bg-white rounded-4 d-inline-block shadow-sm">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ created_order.payment_link|urlencode }}" alt="UPI QR Code" class="img-fluid" style="border-radius: 0.5rem;">
+            <div class="mt-2 small text-dark fw-bold">Scan with any UPI App</div>
+        </div>
+        <p class="text-secondary small mb-3">
+            Open your preferred UPI app (BHIM, Google Pay, PhonePe, Paytm) and scan the code above to pay <strong>Rs.{{ created_order.total_amount }}</strong>.
+        </p>
+        {% else %}
+        <p class="text-secondary mb-3">
+            Online payment redirect generated. Open the link below to continue payment securely via our gateway.
+        </p>
+        {% endif %}
+
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ created_order.payment_link }}" target="_blank" rel="noopener" class="btn-premium btn-premium-primary">
+                {% if created_order.payment_method == 'upi' %}
+                <i class="fas fa-mobile-screen-button me-2"></i>Pay via App
+                {% else %}
+                <i class="fas fa-external-link-alt me-2"></i>Open Payment Gateway
+                {% endif %}
+            </a>
+            {% if created_order.payment_method == 'upi' %}
+            <button class="btn btn-outline-primary rounded-pill px-4" onclick="navigator.clipboard.writeText('{{ created_order.payment_link }}'); alert('Payment link copied!')">
+                <i class="fas fa-copy me-2"></i>Copy Link
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if external_checkout_links %}
+    <div class="alert alert-info mb-0">
+        These items still require external checkout at the original marketplace:
+        <div class="mt-2 d-flex flex-column gap-2">
+            {% for item in external_checkout_links %}
+            <a href="{{ item.url }}" target="_blank" rel="noopener" class="fw-semibold">{{ item.product_name }} -> {{ item.source }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if checkout_items %}
+<section class="checkout-grid">
+    <form method="post" id="checkout-form" class="checkout-card">
+        {% csrf_token %}
+        <h4 class="fw-bold mb-3">Delivery and Payment</h4>
+        <div class="mb-3">
+            <label class="form-label-premium">Delivery Address</label>
+            <textarea class="form-control" name="delivery_address" rows="5" required>{{ user.get_full_name }}{% if user.location_lat and user.location_lng %} | Coordinates: {{ user.location_lat }}, {{ user.location_lng }}{% endif %}</textarea>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label-premium">Payment Method</label>
+        </div>
+        {% for option in payment_choices %}
+        <label class="payment-option d-block {% if not option.enabled %}opacity-50{% endif %}">
+            <input class="form-check-input me-2" type="radio" name="payment_method" value="{{ option.value }}" {% if forloop.first and option.enabled %}checked{% endif %} {% if not option.enabled %}disabled{% endif %}>
+            <strong>{{ option.label }}</strong>
+            <div class="small text-secondary mt-1">{{ option.note }}</div>
+        </label>
+        {% endfor %}
+
+        {% if not payment_choices and not has_external_items and not has_local_items %}
+        <div class="alert alert-secondary mb-0">
+            Add products to the cart first to see payment methods.
+        </div>
+        {% endif %}
+
+        {% if has_local_items and not has_external_items %}
+        <div class="small text-secondary mt-3">
+            {% if not payment_config.upi_enabled %}
+            UPI is not active yet. Set `DEALSPHERE_UPI_ID` in the environment to enable it.<br>
+            {% endif %}
+            {% if not payment_config.gateway_enabled %}
+            Online prepaid gateway is not active yet. Set `DEALSPHERE_PAYMENT_GATEWAY_URL` to enable it.
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if has_external_items and has_local_items %}
+        <div class="alert alert-warning mb-0">
+            Split the cart before checkout. Local-store items and Amazon, Flipkart, or Myntra items use different payment flows.
+        </div>
+        {% endif %}
+    </form>
+
+    <section class="checkout-card">
+        <h4 class="fw-bold mb-3">Order Summary</h4>
+        {% for item in checkout_items %}
+        <div class="checkout-row">
+            <div>
+                <div class="fw-semibold">{{ item.product_name }}</div>
+                <div class="small text-secondary">{{ item.source_name }} | {{ item.source|title }} | Qty {{ item.quantity }}</div>
+            </div>
+            <div class="text-end">
+                <div class="fw-semibold">Rs.{{ item.line_total }}</div>
+                <div class="small text-secondary">Unit Rs.{{ item.unit_price }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="checkout-row mt-3">
+            <strong>Total</strong>
+            <strong class="text-primary">Rs.{{ checkout_total }}</strong>
+        </div>
+    </section>
+</section>
+{% else %}
+<section class="checkout-card">
+    <h4 class="fw-bold mb-2">No checkout items</h4>
+    <p class="text-secondary mb-4">Add a product to the cart from search results or a product detail page first.</p>
+    <a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-primary">Search Products</a>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if created_order and created_order.payment_method == 'upi' %}
+        const paymentModal = new bootstrap.Modal(document.getElementById('upiPaymentModal'));
+        paymentModal.show();
+        {% endif %}
+    });
+</script>
+
+<!-- UPI Payment Summary Modal -->
+<div class="modal fade" id="upiPaymentModal" tabindex="-1" aria-labelledby="upiPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 bg-primary text-white p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                        <i class="fas fa-bolt-lightning fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="upiPaymentModalLabel">UPI Payment Summary</h5>
+                        <p class="mb-0 small opacity-75">Order: #{{ created_order.id|stringformat:"s"|slice:":8"|upper }}</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div id="upi-payment-form">
+                    <div class="mb-4">
+                        <div class="text-secondary small fw-bold text-uppercase mb-1">Total Amount</div>
+                        <div class="display-5 fw-bold text-primary">₹ {{ created_order.total_amount }}</div>
+                    </div>
+
+                    <div class="bg-light rounded-4 p-4 mb-4">
+                        <div class="text-center">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ created_order.payment_link|urlencode }}" alt="UPI QR Code" class="img-fluid rounded-3 shadow-sm mb-3" style="border: 4px solid #fff; max-width: 180px;">
+                            <div class="fw-bold text-dark">Scan to Pay</div>
+                            <div class="small text-secondary">Works with Google Pay, PhonePe, Paytm, BHIM</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        <button class="btn-premium btn-premium-primary py-3" onclick="simulateUPIVerification()">
+                            <i class="fas fa-check-double me-2"></i>Verify Payment
+                        </button>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ created_order.payment_link }}" class="btn btn-outline-primary w-100 rounded-pill py-2">
+                                <i class="fas fa-mobile-screen-button me-2"></i>Pay via App
+                            </a>
+                            <button class="btn btn-outline-secondary w-100 rounded-pill py-2" onclick="navigator.clipboard.writeText('{{ created_order.payment_link }}'); alert('Link copied!')">
+                                <i class="fas fa-copy me-2"></i>Copy Link
+                            </button>
+                        </div>
+                        <div class="small text-secondary">
+                            <i class="fas fa-shield-halved me-1 text-success"></i> Secure Transaction Verified
+                        </div>
+                    </div>
+                </div>
+
+                <div id="upi-verification-loading" class="d-none py-5">
+                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="fw-bold">Verifying Payment...</h5>
+                    <p class="text-secondary">Checking transaction status with your bank.</p>
+                </div>
+
+                <div id="upi-verification-success" class="d-none py-4">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h3 class="fw-bold text-success mb-2">Payment Successful!</h3>
+                    <p class="text-secondary mb-4">Your order <strong>#{{ created_order.id|stringformat:"s"|slice:":8"|upper }}</strong> has been confirmed.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dashboard_orders' %}" class="btn-premium btn-premium-primary py-3">
+                            <i class="fas fa-receipt me-2"></i>View Order Details
+                        </a>
+                        <button class="btn btn-link text-decoration-none text-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function simulateUPIVerification() {
+        const form = document.getElementById('upi-payment-form');
+        const loading = document.getElementById('upi-verification-loading');
+        const success = document.getElementById('upi-verification-success');
+
+        form.classList.add('d-none');
+        loading.classList.remove('d-none');
+
+        // Simulate network delay
+        setTimeout(() => {
+            loading.classList.add('d-none');
+            success.classList.remove('d-none');
+            
+            // Premium haptic-like vibration for mobile
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 30, 100]);
+            }
+        }, 2500);
+    }
+</script>
+{% endblock %}

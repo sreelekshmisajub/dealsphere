@@ -1,0 +1,113 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Analytics - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="admin-stat-card">
+            <div class="label">Active Users</div>
+            <div class="value">{{ active_user_count }}</div>
+            <div class="small text-secondary">Currently active non-admin accounts.</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-stat-card">
+            <div class="label">Search Activities</div>
+            <div class="value">{{ search_activity_count }}</div>
+            <div class="small text-secondary">User activity rows tagged as search events.</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-stat-card">
+            <div class="label">New Users This Week</div>
+            <div class="value">{{ dashboard.user_stats.new_this_week|default:0 }}</div>
+            <div class="small text-secondary">Week-over-week account growth.</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">User Growth (Last 30 Days)</h5>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead><tr><th>Date</th><th>New Users</th></tr></thead>
+                    <tbody>
+                        {% for row in analytics.user_growth %}
+                        <tr><td>{{ row.date }}</td><td>{{ row.new_users }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-secondary">No growth data available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Merchant Performance</h5>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead><tr><th>Merchant</th><th>Sales</th><th>Orders</th><th>Rating</th></tr></thead>
+                    <tbody>
+                        {% for row in analytics.merchant_performance %}
+                        <tr>
+                            <td>{{ row.shop_name }}</td>
+                            <td>{{ row.total_sales|floatformat:2 }}</td>
+                            <td>{{ row.total_orders }}</td>
+                            <td>{{ row.rating|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-secondary">No merchant performance rows available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Category Distribution</h5>
+            <div class="row g-3">
+                {% for row in analytics.category_distribution %}
+                <div class="col-md-6">
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">{{ row.category_name }}</span>
+                        <strong>{{ row.product_count }}</strong>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-secondary">No category data available.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Price-Match Trends</h5>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead><tr><th>Date</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Pending</th></tr></thead>
+                    <tbody>
+                        {% for row in analytics.price_match_trends|slice:":15" %}
+                        <tr>
+                            <td>{{ row.date }}</td>
+                            <td>{{ row.total_requests }}</td>
+                            <td>{{ row.approved }}</td>
+                            <td>{{ row.rejected }}</td>
+                            <td>{{ row.pending }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-secondary">No price-match trend rows available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

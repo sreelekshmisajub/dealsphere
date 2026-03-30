@@ -1,0 +1,67 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}{{ dashboard_title }} - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .status-card {
+        padding: 2rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .status-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--primary);
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .status-points {
+        display: grid;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+    }
+
+    .status-point {
+        padding: 0.95rem 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="status-card">
+    <div class="status-icon">
+        <i class="fas {{ status_icon }}"></i>
+    </div>
+    <h3 class="fw-bold mb-2">{{ status_title }}</h3>
+    <p class="text-secondary mb-0">{{ status_copy }}</p>
+
+    {% if status_points %}
+    <div class="status-points">
+        {% for point in status_points %}
+        <div class="status-point">
+            <strong class="d-block mb-1">Workflow note</strong>
+            <span class="text-secondary">{{ point }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <a href="{{ status_cta_url }}" class="btn-premium btn-premium-primary">
+        <i class="fas fa-arrow-right"></i>{{ status_cta_label }}
+    </a>
+</section>
+{% endblock %}

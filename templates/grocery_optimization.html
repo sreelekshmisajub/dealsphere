@@ -1,0 +1,575 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}Automated Grocery Cart Optimization - DealSphere{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Automated Grocery Cart Optimization</h1>
+                <p class="lead mb-4">Save time and money with grocery carts generated from your previous orders. We'll find the best platform—be it Amazon Fresh, BigBasket, or local stores—and even place the order for you.</p>
+                
+                <!-- Quick Optimization -->
+                <div class="bg-white rounded-3 p-4 shadow-lg">
+                    <h5 class="mb-3">Quick Cart Optimization</h5>
+                    <div class="mb-3">
+                        <textarea class="form-control" id="groceryList" rows="3" placeholder="Enter your grocery list (one item per line)..."></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <select class="form-select" id="platform">
+                                <option value="all">All Platforms</option>
+                                <option value="amazon">Amazon Fresh</option>
+                                <option value="bigbasket">BigBasket</option>
+                                <option value="local">Local Stores</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-primary-custom w-100" onclick="optimizeCart()">
+                                <i class="fas fa-magic me-2"></i>Optimize Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <img src="https://via.placeholder.com/500x400/FF6B35/FFFFFF?text=Smart+Grocery+Optimization" alt="Grocery Optimization" class="img-fluid rounded-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Previous Orders Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🛒 Your Previous Grocery Orders</h2>
+        <div class="row g-4">
+            <!-- Previous Order 1 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="mb-1">Weekly Groceries</h6>
+                                <p class="text-muted small mb-0">BigBasket • 7 days ago</p>
+                            </div>
+                            <span class="badge bg-success">₹1,234 saved</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-sm mb-1">
+                                <span>15 items</span>
+                                <span>₹2,456 total</span>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: 67%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Items: Rice, Atta, Oil, Vegetables, Fruits, Dairy...</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="reorderItems('order1')">
+                                <i class="fas fa-redo me-2"></i>Reorder Same Items
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="optimizePrevious('order1')">
+                                <i class="fas fa-magic me-2"></i>Optimize This Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Previous Order 2 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="mb-1">Monthly Stock</h6>
+                                <p class="text-muted small mb-0">Amazon Fresh • 15 days ago</p>
+                            </div>
+                            <span class="badge bg-warning">₹892 saved</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-sm mb-1">
+                                <span>28 items</span>
+                                <span>₹4,567 total</span>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-warning" style="width: 80%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Items: Groceries, Cleaning supplies, Personal care...</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="reorderItems('order2')">
+                                <i class="fas fa-redo me-2"></i>Reorder Same Items
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="optimizePrevious('order2')">
+                                <i class="fas fa-magic me-2"></i>Optimize This Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Previous Order 3 -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h6 class="mb-1">Quick Essentials</h6>
+                                <p class="text-muted small mb-0">Local Store • 3 days ago</p>
+                            </div>
+                            <span class="badge bg-info">₹456 saved</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between text-sm mb-1">
+                                <span>8 items</span>
+                                <span>₹789 total</span>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar bg-info" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Items: Milk, Bread, Eggs, Butter, Vegetables...</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="reorderItems('order3')">
+                                <i class="fas fa-redo me-2"></i>Reorder Same Items
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" onclick="optimizePrevious('order3')">
+                                <i class="fas fa-magic me-2"></i>Optimize This Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary" onclick="loadMoreOrders()">
+                <i class="fas fa-history me-2"></i>Load More Orders
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Optimization Results -->
+<section class="py-5 bg-light" id="optimizationResults" style="display: none;">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🎯 Optimization Results</h2>
+        
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Platform Comparison</h5>
+                        <canvas id="platformChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Best Deal</h5>
+                        <div class="text-center mb-3">
+                            <div class="display-4 text-success mb-2">BigBasket</div>
+                            <div class="h5 text-success">₹1,845 total</div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Original cost:</span>
+                                <span>₹2,456</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>You save:</span>
+                                <span class="text-success fw-bold">₹611</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Delivery time:</span>
+                                <span>2 hours</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-success w-100" onclick="placeOrder()">
+                            <i class="fas fa-shopping-cart me-2"></i>Place Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Item-by-Item Breakdown -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="mb-4">Item-by-Item Breakdown</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Amazon Fresh</th>
+                                <th>BigBasket</th>
+                                <th>Local Store</th>
+                                <th>Best Choice</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBreakdown">
+                            <!-- Items will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Smart Suggestions -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🤖 Smart Shopping Suggestions</h2>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
+                            <h5>Schedule Delivery</h5>
+                        </div>
+                        <p class="text-muted">Based on your consumption patterns, we recommend ordering every 7 days for maximum freshness and savings.</p>
+                        <div class="text-center">
+                            <button class="btn btn-primary" onclick="setSchedule()">
+                                <i class="fas fa-clock me-2"></i>Set Schedule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-tags fa-3x text-success mb-3"></i>
+                            <h5>Deal Alerts</h5>
+                        </div>
+                        <p class="text-muted">3 items in your cart have ongoing deals. Switch to BigBasket to save an additional ₹234.</p>
+                        <div class="text-center">
+                            <button class="btn btn-success" onclick="viewDeals()">
+                                <i class="fas fa-percentage me-2"></i>View Deals
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-bolt fa-3x text-warning mb-3"></i>
+                            <h5>Quick Reorder</h5>
+                        </div>
+                        <p class="text-muted">Running low on essentials? We can automatically create a cart based on your typical weekly needs.</p>
+                        <div class="text-center">
+                            <button class="btn btn-warning" onclick="quickReorder()">
+                                <i class="fas fa-magic me-2"></i>Quick Reorder
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Platform Features -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🛍️ Platform Features & Benefits</h2>
+        <div class="row g-4">
+            <!-- Amazon Fresh -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fab fa-amazon fa-2x"></i>
+                        </div>
+                        <h5 class="mb-3">Amazon Fresh</h5>
+                        <ul class="list-unstyled text-start small">
+                            <li class="mb-2">✓ Same-day delivery</li>
+                            <li class="mb-2">✓ Prime benefits</li>
+                            <li class="mb-2">✓ Wide selection</li>
+                            <li class="mb-2">✓ Easy returns</li>
+                            <li class="mb-2">✓ Quality guarantee</li>
+                        </ul>
+                        <div class="mt-3">
+                            <small class="text-muted">Avg. delivery: 4 hours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- BigBasket -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-shopping-basket fa-2x"></i>
+                        </div>
+                        <h5 class="mb-3">BigBasket</h5>
+                        <ul class="list-unstyled text-start small">
+                            <li class="mb-2">✓ Best prices</li>
+                            <li class="mb-2">✓ Fresh produce</li>
+                            <li class="mb-2">✓ Membership deals</li>
+                            <li class="mb-2">✓ Express delivery</li>
+                            <li class="mb-2">✓ Smart basket</li>
+                        </ul>
+                        <div class="mt-3">
+                            <small class="text-muted">Avg. delivery: 2 hours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Local Stores -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-store fa-2x"></i>
+                        </div>
+                        <h5 class="mb-3">Local Stores</h5>
+                        <ul class="list-unstyled text-start small">
+                            <li class="mb-2">✓ Support local</li>
+                            <li class="mb-2">✓ Fresh produce</li>
+                            <li class="mb-2">✓ No delivery fee</li>
+                            <li class="mb-2">✓ Personal service</li>
+                            <li class="mb-2">✓ Immediate pickup</li>
+                        </ul>
+                        <div class="mt-3">
+                            <small class="text-muted">Avg. pickup: 30 mins</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blinkit -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-bolt fa-2x"></i>
+                        </div>
+                        <h5 class="mb-3">Blinkit</h5>
+                        <ul class="list-unstyled text-start small">
+                            <li class="mb-2">✓ 10-minute delivery</li>
+                            <li class="mb-2">✓ 24/7 service</li>
+                            <li class="mb-2">✓ Emergency orders</li>
+                            <li class="mb-2">✓ Live tracking</li>
+                            <li class="mb-2">✓ No minimum order</li>
+                        </ul>
+                        <div class="mt-3">
+                            <small class="text-muted">Avg. delivery: 10 mins</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let platformChart = null;
+
+function optimizeCart() {
+    const groceryList = document.getElementById('groceryList').value.trim();
+    const platform = document.getElementById('platform').value;
+    
+    if (!groceryList) {
+        alert('Please enter your grocery list');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Optimizing...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        // Show optimization results
+        document.getElementById('optimizationResults').style.display = 'block';
+        
+        // Initialize platform comparison chart
+        initializePlatformChart();
+        
+        // Populate items breakdown
+        populateItemsBreakdown(groceryList);
+        
+        // Scroll to results
+        document.getElementById('optimizationResults').scrollIntoView({ behavior: 'smooth' });
+        
+        button.innerHTML = '<i class="fas fa-magic me-2"></i>Optimize Cart';
+        button.disabled = false;
+        
+        // Show success message
+        showNotification('Cart optimized! You can save ₹611 with BigBasket', 'success');
+    }, 2000);
+}
+
+function initializePlatformChart() {
+    const ctx = document.getElementById('platformChart').getContext('2d');
+    
+    if (platformChart) {
+        platformChart.destroy();
+    }
+    
+    platformChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Amazon Fresh', 'BigBasket', 'Local Store', 'Blinkit'],
+            datasets: [{
+                label: 'Total Price (₹)',
+                data: [2145, 1845, 2234, 2456],
+                backgroundColor: [
+                    '#FF9900',
+                    '#28A745',
+                    '#17A2B8',
+                    '#FFC107'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function populateItemsBreakdown(groceryList) {
+    const items = groceryList.split('\n').filter(item => item.trim());
+    const tbody = document.getElementById('itemsBreakdown');
+    
+    const samplePrices = {
+        'Rice': { amazon: 245, bigbasket: 234, local: 256 },
+        'Atta': { amazon: 189, bigbasket: 178, local: 195 },
+        'Oil': { amazon: 234, bigbasket: 225, local: 245 },
+        'Vegetables': { amazon: 156, bigbasket: 134, local: 145 },
+        'Fruits': { amazon: 289, bigbasket: 267, local: 234 },
+        'Milk': { amazon: 56, bigbasket: 54, local: 58 },
+        'Bread': { amazon: 45, bigbasket: 42, local: 48 },
+        'Eggs': { amazon: 89, bigbasket: 85, local: 92 }
+    };
+    
+    tbody.innerHTML = items.map(item => {
+        const itemName = item.trim();
+        const prices = samplePrices[itemName] || {
+            amazon: Math.floor(Math.random() * 200) + 50,
+            bigbasket: Math.floor(Math.random() * 200) + 50,
+            local: Math.floor(Math.random() * 200) + 50
+        };
+        
+        const bestPrice = Math.min(prices.amazon, prices.bigbasket, prices.local);
+        const bestPlatform = prices.amazon === bestPrice ? 'Amazon Fresh' : 
+                           prices.bigbasket === bestPrice ? 'BigBasket' : 'Local Store';
+        
+        return `
+            <tr>
+                <td><strong>${itemName}</strong></td>
+                <td>1</td>
+                <td>₹${prices.amazon}</td>
+                <td class="text-success fw-bold">₹${prices.bigbasket}</td>
+                <td>₹${prices.local}</td>
+                <td><span class="badge bg-success">${bestPlatform}</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function reorderItems(orderId) {
+    alert(`🛒 Reordering items from ${orderId}...\n\nWe'll recreate your previous order with current best prices and availability.\n\nEstimated savings: ₹234-₹567 depending on platform choice.`);
+}
+
+function optimizePrevious(orderId) {
+    alert(`🎯 Optimizing previous order ${orderId}...\n\nAnalyzing current prices across all platforms to find the best deals for your items.\n\nThis will show you potential savings and platform recommendations.`);
+}
+
+function placeOrder() {
+    alert(`🚀 Placing optimized order with BigBasket...\n\nOrder Summary:\n- 15 items\n- Total: ₹1,845\n- Delivery: 2 hours\n- You saved: ₹611\n\nOrder will be placed and you'll receive confirmation shortly.`);
+}
+
+function setSchedule() {
+    alert(`📅 Setting up automated grocery schedule...\n\nBased on your shopping patterns:\n- Weekly order: Every Sunday\n- Delivery time: 10 AM - 12 PM\n- Platform: BigBasket (best prices)\n- Estimated monthly savings: ₹2,400\n\nYou'll receive reminder notifications before each order.`);
+}
+
+function viewDeals() {
+    alert(`🎉 Current deals for your cart items:\n\n📦 BigBasket Deals:\n- Rice: 15% off (Save ₹35)\n- Vegetables: 20% off (Save ₹27)\n- Fruits: Buy 1 Get 1 Free\n\nTotal additional savings: ₹234\n\nSwitch to BigBasket to maximize your savings!`);
+}
+
+function quickReorder() {
+    alert(`⚡ Quick Reorder activated!\n\nBased on your weekly essentials:\n- Milk, Bread, Eggs\n- Rice, Atta, Oil\n- Seasonal vegetables\n- Cleaning supplies\n\nEstimated total: ₹1,234\n\nOptimizing across platforms now...`);
+}
+
+function loadMoreOrders() {
+    alert('📜 Loading more previous orders...\n\nIn production, this would load your complete order history with pagination.');
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#28A745' : '#17A2B8'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        z-index: 1000;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        max-width: 400px;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 4000);
+}
+</script>
+{% endblock %}

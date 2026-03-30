@@ -1,0 +1,135 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Merchants - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="admin-section-card">
+    <form method="get" class="row g-3 align-items-end admin-toolbar-form">
+        <div class="col-lg-5">
+            <label class="form-label small text-secondary">Search</label>
+            <input type="text" class="form-control" name="q" value="{{ merchant_filters.q }}" placeholder="Shop, owner, or email">
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Verification</label>
+            <select class="form-select" name="verification">
+                <option value="all" {% if merchant_filters.verification == 'all' %}selected{% endif %}>All</option>
+                <option value="verified" {% if merchant_filters.verification == 'verified' %}selected{% endif %}>Verified</option>
+                <option value="pending" {% if merchant_filters.verification == 'pending' %}selected{% endif %}>Pending</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Status</label>
+            <select class="form-select" name="status">
+                <option value="all" {% if merchant_filters.status == 'all' %}selected{% endif %}>All</option>
+                <option value="active" {% if merchant_filters.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="suspended" {% if merchant_filters.status == 'suspended' %}selected{% endif %}>Suspended</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2 d-grid">
+            <button class="btn-premium btn-premium-primary" type="submit">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Total</div><div class="value">{{ merchant_summary.total }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Verified</div><div class="value">{{ merchant_summary.verified }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Pending</div><div class="value">{{ merchant_summary.pending }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Suspended</div><div class="value">{{ merchant_summary.suspended }}</div></div>
+    </div>
+</div>
+
+<div class="admin-section-card">
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Merchant</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Verification</th>
+                    <th>Products</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for merchant in merchants_page %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ merchant.shop_name }}</div>
+                        <div class="small text-secondary">{{ merchant.user.get_full_name|default:merchant.user.username }} · {{ merchant.user.email }}</div>
+                    </td>
+                    <td>{{ merchant.business_category|default:"Not set" }}</td>
+                    <td>
+                        {% if merchant.user.is_active %}
+                        <span class="badge bg-success-subtle text-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary">Suspended</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if merchant.verified %}
+                        <span class="badge bg-success-subtle text-success">Verified</span>
+                        {% else %}
+                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ merchant.product_count|default:0 }}</td>
+                    <td>{{ merchant.rating|floatformat:2 }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if not merchant.verified %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="merchant_id" value="{{ merchant.id }}">
+                                <input type="hidden" name="action" value="approve">
+                                <button class="btn btn-sm btn-outline-success" type="submit">Approve</button>
+                            </form>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="merchant_id" value="{{ merchant.id }}">
+                                <input type="hidden" name="action" value="reject">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                            </form>
+                            {% endif %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="merchant_id" value="{{ merchant.id }}">
+                                <input type="hidden" name="action" value="{% if merchant.user.is_active %}suspend{% else %}reactivate{% endif %}">
+                                <button class="btn btn-sm btn-outline-primary" type="submit">{% if merchant.user.is_active %}Suspend{% else %}Reactivate{% endif %}</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-secondary">No merchants matched the current filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if merchants_page.paginator.num_pages > 1 %}
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="small text-secondary">Page {{ merchants_page.number }} of {{ merchants_page.paginator.num_pages }}</div>
+        <div class="d-flex gap-2">
+            {% if merchants_page.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ merchants_page.previous_page_number }}&q={{ merchant_filters.q }}&verification={{ merchant_filters.verification }}&status={{ merchant_filters.status }}">Previous</a>
+            {% endif %}
+            {% if merchants_page.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ merchants_page.next_page_number }}&q={{ merchant_filters.q }}&verification={{ merchant_filters.verification }}&status={{ merchant_filters.status }}">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

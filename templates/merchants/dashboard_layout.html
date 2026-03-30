@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .merchant-workspace {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: 2rem 0 3rem;
+    }
+
+    .merchant-sidebar {
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+
+    .merchant-shell-card,
+    .merchant-panel {
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .merchant-shell-card {
+        padding: 1.5rem;
+    }
+
+    .merchant-panel {
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .merchant-shop-pill {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: rgba(37, 99, 235, 0.06);
+        margin-bottom: 1.25rem;
+    }
+
+    .merchant-shell-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+    }
+
+    .merchant-shell-metric {
+        border-radius: 1rem;
+        background: #f8fafc;
+        padding: 0.85rem;
+    }
+
+    .merchant-shell-metric strong {
+        display: block;
+        font-size: 1.1rem;
+    }
+
+    .merchant-section-card {
+        border-radius: 1.25rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        padding: 1.25rem;
+    }
+
+    @media (max-width: 991px) {
+        .merchant-workspace {
+            grid-template-columns: 1fr;
+        }
+
+        .merchant-sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .merchant-shell-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="merchant-workspace">
+        <aside class="merchant-sidebar">
+            <div class="sidebar-premium merchant-shell-card">
+                <div class="merchant-shop-pill">
+                    <div class="fw-bold">{{ merchant_shell.shop_name }}</div>
+                    <div class="small text-secondary">{{ merchant_shell.business_category|default:"Merchant" }}</div>
+                    <div class="small text-secondary">{{ user.email }}</div>
+                </div>
+
+                {% for item in merchant_dashboard_nav %}
+                <a href="{{ item.url }}" class="sidebar-link {% if item.active %}active{% endif %}">
+                    <i class="fas {{ item.icon }}"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+                {% endfor %}
+
+                <div class="merchant-shell-grid">
+                    <div class="merchant-shell-metric">
+                        <span class="small text-secondary">Products</span>
+                        <strong>{{ merchant_shell_stats.total_products|default:0 }}</strong>
+                    </div>
+                    <div class="merchant-shell-metric">
+                        <span class="small text-secondary">Active Deals</span>
+                        <strong>{{ merchant_shell_stats.active_offers|default:0 }}</strong>
+                    </div>
+                    <div class="merchant-shell-metric">
+                        <span class="small text-secondary">Pending Requests</span>
+                        <strong>{{ merchant_shell_stats.pending_requests|default:0 }}</strong>
+                    </div>
+                    <div class="merchant-shell-metric">
+                        <span class="small text-secondary">Unread Alerts</span>
+                        <strong>{{ merchant_shell_stats.unread_notifications|default:0 }}</strong>
+                    </div>
+                </div>
+
+                <div class="merchant-shell-grid mt-3">
+                    <div class="merchant-shell-metric">
+                        <span class="small text-secondary">Rating</span>
+                        <strong>{{ merchant_shell_stats.rating|default:0 }}</strong>
+                    </div>
+                    <div class="merchant-shell-metric">
+                        <span class="small text-secondary">Location</span>
+                        <strong class="small">{{ merchant_shell_stats.location }}</strong>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <section>
+            <div class="merchant-panel">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+                    <div>
+                        <h1 class="fw-bold mb-1">{{ merchant_dashboard_title }}</h1>
+                        <p class="text-secondary mb-0">{{ merchant_dashboard_intro }}</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% block merchant_actions %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+
+            {% block merchant_content %}{% endblock %}
+        </section>
+    </div>
+</div>
+{% endblock %}

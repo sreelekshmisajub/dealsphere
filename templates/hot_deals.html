@@ -1,0 +1,384 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}Hot Deals - DealSphere{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">Hot Deals</h1>
+                <p class="lead mb-4">Powered by Smart Deal Scanner. See what's trending, most-searched, and whether it's really worth the hype.</p>
+                
+                <!-- Filter Pills -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <button class="btn btn-light active" onclick="filterDeals('all')">All Deals</button>
+                    <button class="btn btn-light" onclick="filterDeals('min40')">Min. 40% off</button>
+                    <button class="btn btn-light" onclick="filterDeals('min50')">Min. 50% off</button>
+                    <button class="btn btn-light" onclick="filterDeals('min60')">Min. 60% off</button>
+                    <button class="btn btn-light" onclick="filterDeals('min70')">Min. 70% off</button>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="text-center">
+                    <div class="stats-counter text-white">2,847</div>
+                    <p class="text-white">Live Deals Today</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Verified Deals Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Verified Deals</h2>
+            <div class="d-flex gap-2">
+                <select class="form-select" style="width: auto;">
+                    <option>Amazon</option>
+                    <option>Flipkart</option>
+                    <option>Local Stores</option>
+                    <option>All Stores</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row g-4" id="dealsContainer">
+            <!-- Deal Card 1 -->
+            <div class="col-lg-3 col-md-6" data-discount="75">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">75% OFF</div>
+                    <img src="https://via.placeholder.com/300x200/28A745/FFFFFF?text=Smartphone" alt="Smartphone" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">Samsung Galaxy S23</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹79,999</span>
+                                <h5 class="text-success mb-0">₹19,999</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Amazon</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.5 (2,341)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 2 -->
+            <div class="col-lg-3 col-md-6" data-discount="65">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">65% OFF</div>
+                    <img src="https://via.placeholder.com/300x200/FF6B35/FFFFFF?text=Laptop" alt="Laptop" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">HP Pavilion 15" Laptop</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹65,000</span>
+                                <h5 class="text-success mb-0">₹22,750</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Flipkart</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.3 (892)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 3 -->
+            <div class="col-lg-3 col-md-6" data-discount="55">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">55% OFF</div>
+                    <img src="https://via.placeholder.com/300x200/007BFF/FFFFFF?text=Headphones" alt="Headphones" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">Sony WH-1000XM4</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹29,999</span>
+                                <h5 class="text-success mb-0">₹13,499</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Local Store</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.7 (3,421)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 4 -->
+            <div class="col-lg-3 col-md-6" data-discount="45">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">45% OFF</div>
+                    <img src="https://via.placeholder.com/300x200/6F42C1/FFFFFF?text=Camera" alt="Camera" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">Canon EOS R50</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹85,999</span>
+                                <h5 class="text-success mb-0">₹47,299</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Amazon</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.6 (1,234)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 5 -->
+            <div class="col-lg-3 col-md-6" data-discount="80">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">80% OFF</div>
+                    <img src="https://via.placeholder.com/300x20E83A8C/FFFFFF?text=Watch" alt="Watch" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">Apple Watch Series 8</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹45,999</span>
+                                <h5 class="text-success mb-0">₹9,199</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Flipkart</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.8 (5,678)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 6 -->
+            <div class="col-lg-3 col-md-6" data-discount="50">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">50% OFF</div>
+                    <img src="https://via.placeholder.com/300x20E17A2B8/FFFFFF?text=Tablet" alt="Tablet" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">iPad Air 5th Gen</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹54,900</span>
+                                <h5 class="text-success mb-0">₹27,450</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Amazon</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.9 (2,890)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 7 -->
+            <div class="col-lg-3 col-md-6" data-discount="70">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">70% OFF</div>
+                    <img src="https://via.placeholder.com/300x20E28A745/FFFFFF?text=Speaker" alt="Speaker" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">JBL Flip 6 Speaker</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹8,999</span>
+                                <h5 class="text-success mb-0">₹2,699</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Local Store</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.4 (1,567)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Deal Card 8 -->
+            <div class="col-lg-3 col-md-6" data-discount="60">
+                <div class="deal-card position-relative">
+                    <div class="price-drop-badge">60% OFF</div>
+                    <img src="https://via.placeholder.com/300x20EFD7E14/FFFFFF?text=TV" alt="TV" class="deal-image">
+                    <div class="p-3">
+                        <h6 class="mb-2">Samsung 55" 4K Smart TV</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                                <span class="text-decoration-line-through text-muted">₹75,000</span>
+                                <h5 class="text-success mb-0">₹30,000</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Flipkart</small>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="rating">
+                                <i class="fas fa-star text-warning"></i>
+                                <span>4.5 (3,234)</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm">View Deal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Load More Button -->
+        <div class="text-center mt-5">
+            <button class="btn btn-primary-custom btn-lg" onclick="loadMoreDeals()">
+                <i class="fas fa-plus me-2"></i>Load More Deals
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Deal Scanner Info -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-4">Powered by Smart Deal Scanner</h2>
+                <p class="lead mb-4">Our AI-powered deal scanner analyzes thousands of products in real-time to bring you only the best deals that pass our quality test.</p>
+                
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Real Price Drops</h6>
+                                <small class="text-muted">No fake discounts</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Verified Sellers</h6>
+                                <small class="text-muted">Trusted merchants only</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Stock Available</h6>
+                                <small class="text-muted">In-stock items only</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-success me-3 fs-4"></i>
+                            <div>
+                                <h6 class="mb-0">Best Quality</h6>
+                                <small class="text-muted">Top-rated products</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <img src="https://via.placeholder.com/500x400/FF6B35/FFFFFF?text=Deal+Scanner+AI" alt="Deal Scanner" class="img-fluid rounded-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterDeals(minDiscount) {
+    const allCards = document.querySelectorAll('.deal-card');
+    const buttons = document.querySelectorAll('.btn-light');
+    
+    // Update active button
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Filter deals
+    allCards.forEach(card => {
+        const cardParent = card.closest('[data-discount]');
+        const discount = parseInt(cardParent.dataset.discount);
+        
+        if (minDiscount === 'all') {
+            cardParent.style.display = 'block';
+        } else {
+            const minRequired = parseInt(minDiscount.replace('min', ''));
+            cardParent.style.display = discount >= minRequired ? 'block' : 'none';
+        }
+    });
+}
+
+function loadMoreDeals() {
+    // Simulate loading more deals
+    const container = document.getElementById('dealsContainer');
+    const currentDeals = container.children.length;
+    
+    // Show loading state
+    const button = event.target;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        // In real implementation, this would fetch more deals from API
+        alert('Loading more amazing deals... In production, this would fetch real data from our AI system.');
+        
+        button.innerHTML = '<i class="fas fa-plus me-2"></i>Load More Deals';
+        button.disabled = false;
+    }, 1500);
+}
+
+// Add click handlers for deal buttons
+document.querySelectorAll('.btn-primary.btn-sm').forEach(button => {
+    button.addEventListener('click', function() {
+        const dealCard = this.closest('.deal-card');
+        const productName = dealCard.querySelector('h6').textContent;
+        alert(`Viewing deal: ${productName}\n\nThis would take you to the product page with the applied discount.`);
+    });
+});
+</script>
+{% endblock %}

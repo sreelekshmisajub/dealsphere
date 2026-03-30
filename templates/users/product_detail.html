@@ -1,0 +1,804 @@
+{% extends 'users/dashboard_layout.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .comparison-shell {
+        display: grid;
+        grid-template-columns: minmax(250px, 0.82fr) minmax(0, 1.16fr) minmax(250px, 0.82fr);
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    .comparison-shell > * {
+        min-width: 0;
+    }
+
+    .comparison-card,
+    .source-card,
+    .scanner-card {
+        background: #ffffff;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        min-width: 0;
+    }
+
+    .comparison-card,
+    .scanner-card {
+        padding: 1.5rem;
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+
+    .detail-image {
+        height: 360px;
+        border-radius: 1.25rem;
+        background:
+            radial-gradient(circle at top, rgba(99, 102, 241, 0.16), transparent 58%),
+            linear-gradient(180deg, #f8faff 0%, #eef2ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .detail-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        padding: 1rem;
+    }
+
+    .detail-image-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .source-pill-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+        margin-top: 1.1rem;
+    }
+
+    .source-pill {
+        padding: 0.9rem 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        min-height: 88px;
+    }
+
+    .product-summary {
+        padding: 1.35rem 1.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(14, 165, 233, 0.06));
+        border-radius: 1.5rem;
+        border: 1px solid rgba(99, 102, 241, 0.12);
+        min-width: 0;
+    }
+
+    .comparison-card h2 {
+        font-size: clamp(2rem, 2.55vw, 3.2rem);
+        line-height: 1.08;
+        overflow-wrap: anywhere;
+    }
+
+    .summary-price {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+    }
+
+    .comparison-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .source-card {
+        padding: 1.15rem 1.2rem;
+    }
+
+    .source-card.source-unavailable {
+        background: #f8fafc;
+        border-style: dashed;
+        box-shadow: none;
+    }
+
+    .source-card.source-muted-note {
+        background: #f8fafc;
+        border-style: dashed;
+        box-shadow: none;
+    }
+
+    .source-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(170px, 210px);
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .source-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+        margin-top: 0.45rem;
+    }
+
+    .match-badge {
+        background: rgba(59, 130, 246, 0.12);
+        color: #1d4ed8;
+    }
+
+    .source-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem;
+        color: #64748b;
+        font-size: 0.92rem;
+        margin-top: 0.75rem;
+    }
+
+    .source-actions {
+        display: grid;
+        gap: 0.65rem;
+        min-width: 0;
+        align-self: start;
+    }
+
+    .source-actions > * {
+        min-width: 0;
+    }
+
+    .scanner-score {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background:
+            radial-gradient(circle at center, #ffffff 0 54%, transparent 55%),
+            conic-gradient(#22c55e 0 65%, #fde047 65% 82%, #f97316 82% 92%, #ef4444 92% 100%);
+        box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .scanner-score strong {
+        display: block;
+        font-size: 1.9rem;
+        line-height: 1;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .metric-box {
+        padding: 0.95rem 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        min-width: 0;
+    }
+
+    .breakdown-list {
+        display: grid;
+        gap: 0.7rem;
+        margin-top: 1rem;
+    }
+
+    .breakdown-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        font-size: 0.95rem;
+        color: #334155;
+        flex-wrap: wrap;
+    }
+
+    .extra-offers {
+        margin-top: 1rem;
+    }
+
+    .extra-offer-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-top: 1px solid rgba(148, 163, 184, 0.18);
+        font-size: 0.95rem;
+        flex-wrap: wrap;
+    }
+
+    .live-source-card { border-left: 3px solid #6366f1; }
+    .live-source--amazon   { border-left-color: #FF9900; }
+    .live-source--flipkart { border-left-color: #2874F0; }
+    .live-source--myntra   { border-left-color: #FF3F6C; }
+
+    .amazon-review-list {
+        display: grid;
+        gap: 0.9rem;
+        margin-top: 1rem;
+    }
+
+    .amazon-review-card {
+        padding: 1rem 1.05rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .amazon-rating-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+        gap: 0.65rem;
+        margin-top: 1rem;
+    }
+
+    .amazon-rating-box {
+        padding: 0.75rem 0.8rem;
+        border-radius: 1rem;
+        background: rgba(59, 130, 246, 0.06);
+        text-align: center;
+    }
+
+    .source-pill,
+    .source-stats span,
+    .metric-box strong,
+    .metric-box div,
+    .breakdown-row > *,
+    .extra-offer-row > * {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1440px) {
+        .comparison-shell {
+            grid-template-columns: minmax(0, 1.18fr) minmax(290px, 0.82fr);
+        }
+
+        .comparison-card {
+            grid-column: 1 / -1;
+            position: static;
+        }
+
+        .scanner-card {
+            position: static;
+            top: auto;
+        }
+    }
+
+    @media (max-width: 1199px) {
+        .comparison-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .comparison-card,
+        .scanner-card {
+            position: static;
+        }
+
+        .source-pill-grid,
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .source-header {
+            grid-template-columns: 1fr;
+        }
+
+        .source-actions {
+            width: 100%;
+            min-width: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url search_route_name %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-arrow-left"></i>Back to results
+</a>
+{% if user.is_authenticated and not user.is_staff and not user.is_merchant %}
+<a href="{% url 'dashboard_basket' %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-basket-shopping"></i>Smart Basket
+</a>
+{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="comparison-shell">
+    <article class="comparison-card">
+        <div class="detail-image">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            {% else %}
+                {% if "Sugar" in product.name %}
+                    <img src="{% static 'images/products/sugar.png' %}" alt="Sugar">
+                {% elif "Formal Shirt" in product.name %}
+                    <img src="{% static 'images/products/formal_shirt.png' %}" alt="Formal Shirt">
+                {% elif "Salwar Suit" in product.name %}
+                    <img src="{% static 'images/products/salwar_suit.png' %}" alt="Salwar Suit">
+                {% elif product.category.name == "Grocery" %}
+                    <img src="{% static 'images/products/sugar.png' %}" alt="Grocery">
+                {% elif product.category.name == "Dresses" %}
+                    <img src="{% static 'images/products/formal_shirt.png' %}" alt="Dresses">
+                {% else %}
+                    <div class="detail-image-empty">
+                        <i class="fas fa-image fa-3x mb-3 opacity-25"></i>
+                        <span class="small fw-semibold">Authentic product visual arriving soon</span>
+                        <span class="smallest text-muted">Verified DealSphere Catalog</span>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+        <span class="badge bg-primary bg-opacity-10 text-primary mb-2">{{ product.category.name }}</span>
+        <h2 class="fw-bold mb-2">{{ product.name }}</h2>
+        <div class="small text-secondary mb-3">
+            {% if product.rating %}
+            <i class="fas fa-star text-warning me-1"></i>{{ product.rating|floatformat:1 }}
+            {% else %}
+            Rating unavailable
+            {% endif %}
+        </div>
+        <p class="text-secondary mb-0">{{ product.description }}</p>
+
+        <div class="source-pill-grid">
+            {% for slot in source_slots %}
+            <div class="source-pill">
+                <div class="small text-secondary mb-1">{{ slot.label }}</div>
+                {% if slot.available %}
+                <strong>Rs.{{ slot.option.price|floatformat:0 }}</strong>
+                <div class="small text-secondary mt-1">
+                    {% if slot.option.match_type == 'exact' %}
+                    Exact match
+                    {% else %}
+                    Related catalog match
+                    {% endif %}
+                </div>
+                {% else %}
+                <strong>Unavailable</strong>
+                <div class="small text-secondary mt-1">No live source found</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <section>
+        <div class="product-summary">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                <div>
+                    <div class="small text-secondary text-uppercase fw-bold mb-1">Live Comparison</div>
+                    <h4 class="fw-bold mb-2">Compare {{ comparison_summary.available_count }} available price source{{ comparison_summary.available_count|pluralize }}</h4>
+                    <p class="text-secondary mb-0">Select the exact source you want to carry into cart or checkout. Related-source rows are labeled explicitly.</p>
+                </div>
+                <div class="text-sm-end">
+                    {% if comparison_summary.current_best %}
+                    <div class="small text-secondary mb-1">Current best price</div>
+                    <div class="summary-price">Rs.{{ comparison_summary.current_best.price|floatformat:0 }}</div>
+                    <div class="small text-secondary mt-1">
+                        {{ comparison_summary.current_best.source_name }}
+                        {% if comparison_summary.current_best.match_type == 'catalog_match' %}
+                        • related catalog row
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="summary-price text-secondary">No live source</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if comparison_summary.savings_percent %}
+            <div class="mt-3 small fw-semibold text-success">
+                <i class="fas fa-bolt me-1"></i>Best current source is {{ comparison_summary.savings_percent|floatformat:0 }}% below the highest comparable price.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="comparison-list">
+            {% for slot in available_source_slots %}
+                {% with option=slot.option %}
+                <article class="source-card">
+                    <div class="source-header">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                <strong class="fs-5">{{ slot.label }}</strong>
+                                {% if slot.is_best %}
+                                <span class="badge bg-success-subtle text-success">Lowest Current Price</span>
+                                {% endif %}
+                                {% if option.verified %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary">Verified</span>
+                                {% endif %}
+                                <span class="badge match-badge">{{ option.match_label }}</span>
+                            </div>
+                            <div class="small text-secondary">{{ option.match_note }}</div>
+                            {% if option.match_type == 'catalog_match' and option.product_name != product.name %}
+                            <div class="small text-secondary mt-1">Matched product row: {{ option.product_name }}</div>
+                            {% endif %}
+                            <div class="source-meta">
+                                <span class="badge bg-light text-dark">{{ option.source_name }}</span>
+                                {% if slot.count > 1 %}
+                                <span class="badge bg-light text-dark">{{ slot.count }} live listings</span>
+                                {% endif %}
+                            </div>
+                            <div class="source-stats">
+                                <span><i class="fas fa-truck-fast me-1"></i>{{ option.delivery_time_hours }}h delivery</span>
+                                <span><i class="fas fa-star text-warning me-1"></i>{{ option.rating|floatformat:1 }}</span>
+                                {% if option.address %}
+                                <span><i class="fas fa-location-dot me-1"></i>{{ option.address }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="source-actions">
+                            <div class="text-end">
+                                <div class="h3 fw-bold text-primary mb-0">Rs.{{ option.price|floatformat:0 }}</div>
+                                {% if slot.relative_delta_percent %}
+                                <div class="small text-danger mt-1">{{ slot.relative_delta_percent|floatformat:0 }}% above best price</div>
+                                {% else %}
+                                <div class="small text-success mt-1">Best available price</div>
+                                {% endif %}
+                            </div>
+                            {% if user.is_authenticated and not user.is_staff and not user.is_merchant %}
+                            <form method="post" action="{% url 'dashboard_cart_add' %}" class="d-grid gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ option.product_id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <input type="hidden" name="source" value="{{ option.source }}">
+                                {% if option.merchant_id %}
+                                <input type="hidden" name="merchant_id" value="{{ option.merchant_id }}">
+                                {% endif %}
+                                <input type="hidden" name="next" value="{% url 'dashboard_basket' %}">
+                                <button type="submit" class="btn-premium btn-premium-primary btn-sm">Add to Cart</button>
+                            </form>
+                            <form method="post" action="{% url 'dashboard_cart_add' %}" class="d-grid gap-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ option.product_id }}">
+                                <input type="hidden" name="quantity" value="1">
+                                <input type="hidden" name="source" value="{{ option.source }}">
+                                {% if option.merchant_id %}
+                                <input type="hidden" name="merchant_id" value="{{ option.merchant_id }}">
+                                {% endif %}
+                                <input type="hidden" name="next" value="{% url 'dashboard_checkout' %}">
+                                <button type="submit" class="btn-premium btn-premium-secondary btn-sm">Buy Now</button>
+                            </form>
+                            {% if option.source == 'local' %}
+                            <a href="{% url 'dashboard_deal_lock_product' option.product_id %}" class="btn-premium btn-premium-secondary btn-sm text-center">Request price match</a>
+                            {% elif option.external_url %}
+                            <a href="{{ option.external_url }}" target="_blank" rel="noopener" class="btn-premium btn-premium-secondary btn-sm text-center">Open Source</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="{% url 'login' %}" class="btn-premium btn-premium-primary btn-sm text-center">Login to continue</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endwith %}
+            {% endfor %}
+
+            {% if missing_source_labels %}
+            <article class="source-card source-muted-note">
+                <div class="d-flex justify-content-between gap-3 align-items-start flex-wrap">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <strong class="fs-6">Other sources not shown</strong>
+                            <span class="badge bg-secondary-subtle text-secondary">Unavailable</span>
+                        </div>
+                        <div class="small text-secondary">
+                            {{ missing_source_labels|join:", " }} do not have a verified comparable row for this product right now, so only live matched sources are shown above.
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="small fw-semibold text-secondary">No fake comparisons</div>
+                    </div>
+                </div>
+            </article>
+            {% endif %}
+        </div>
+
+        {% with live_ok_count=live_retail_prices|length %}
+        {% if live_retail_prices %}
+        {# Only render this section if at least one source returned ok data #}
+        {% for chk in live_retail_prices %}{% if chk.status == 'ok' and chk.price %}
+        <div class="source-card extra-offers mt-3" id="live-retail-section">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                <div>
+                    <div class="small text-secondary text-uppercase fw-bold mb-1">Live Retail Prices</div>
+                    <h5 class="fw-bold mb-1">Real-time prices from Amazon · Flipkart · Myntra</h5>
+                    <div class="small text-secondary">Fetched live — reflects current online prices.</div>
+                </div>
+            </div>
+            <div class="comparison-list">
+            {% for item in live_retail_prices %}
+                {% if item.status == 'ok' and item.price %}
+                <article class="source-card live-source-card live-source--{{ item.source }}">
+                    <div class="source-header">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                <strong class="fs-5">
+                                    {% if item.source == 'amazon' %}<i class="fab fa-amazon me-1" style="color:#FF9900"></i>
+                                    {% elif item.source == 'flipkart' %}<i class="fas fa-bag-shopping me-1" style="color:#2874F0"></i>
+                                    {% elif item.source == 'myntra' %}<i class="fas fa-shirt me-1" style="color:#FF3F6C"></i>
+                                    {% endif %}
+                                    {{ item.source_name }}
+                                </strong>
+                                {% if forloop.first %}<span class="badge bg-success-subtle text-success">Lowest Live Price</span>{% endif %}
+                                {% if item.discount_percent %}<span class="badge bg-danger bg-opacity-10 text-danger">{{ item.discount_percent|floatformat:0 }}% off</span>{% endif %}
+                            </div>
+                            {% if item.title %}<div class="small text-secondary text-truncate" style="max-width:480px">{{ item.title }}</div>{% endif %}
+                            <div class="source-stats mt-1">
+                                {% if item.rating %}<span><i class="fas fa-star text-warning me-1"></i>{{ item.rating }}</span>{% endif %}
+                                {% if item.review_count %}<span><i class="fas fa-comment me-1"></i>{{ item.review_count }} reviews</span>{% endif %}
+                                {% if item.availability %}<span><i class="fas fa-circle me-1 {% if 'stock' in item.availability|lower or 'available' in item.availability|lower %}text-success{% else %}text-danger{% endif %}"></i>{{ item.availability }}</span>{% endif %}
+                                {% if item.brand %}<span><i class="fas fa-tag me-1"></i>{{ item.brand }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="source-actions">
+                            <div class="text-end">
+                                <div class="h3 fw-bold text-primary mb-0">₹{{ item.price|floatformat:0 }}</div>
+                                {% if item.original_price and item.original_price > item.price %}
+                                <div class="small text-muted text-decoration-line-through">₹{{ item.original_price|floatformat:0 }}</div>
+                                {% endif %}
+                            </div>
+                            <a href="{{ item.url }}" target="_blank" rel="noopener noreferrer"
+                               class="btn-premium btn-premium-primary btn-sm text-center">
+                                Buy on {{ item.source_name }}
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
+        {% endif %}{% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if amazon_product_snapshot %}
+        <div class="source-card extra-offers mt-3">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                <div>
+                    <div class="small text-secondary text-uppercase fw-bold mb-1">Live Amazon Snapshot</div>
+                    <h5 class="fw-bold mb-1">RapidAPI pricing and product info</h5>
+                    <div class="small text-secondary">
+                        {% if amazon_product_snapshot.asin %}ASIN {{ amazon_product_snapshot.asin }}{% endif %}
+                        {% if amazon_product_snapshot.domain %} • domain {{ amazon_product_snapshot.domain }}{% endif %}
+                    </div>
+                </div>
+                <span class="badge {% if amazon_product_snapshot.status == 'ok' %}bg-success-subtle text-success{% elif amazon_product_snapshot.status == 'provider_access_denied' %}bg-warning-subtle text-warning{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                    {{ amazon_product_snapshot.status|default:"unavailable" }}
+                </span>
+            </div>
+
+            {% if amazon_product_snapshot.status == 'ok' %}
+            <div class="metric-grid mt-3">
+                <div class="metric-box">
+                    <div class="small text-secondary">Live Price</div>
+                    <strong>
+                        {% if amazon_product_snapshot.currency_symbol %}{{ amazon_product_snapshot.currency_symbol }}{% endif %}
+                        {% if amazon_product_snapshot.current_price is not None %}{{ amazon_product_snapshot.current_price|floatformat:2 }}{% else %}N/A{% endif %}
+                    </strong>
+                </div>
+                <div class="metric-box">
+                    <div class="small text-secondary">Rating</div>
+                    <strong>{% if amazon_product_snapshot.rating is not None %}{{ amazon_product_snapshot.rating|floatformat:1 }}{% else %}N/A{% endif %}</strong>
+                </div>
+                <div class="metric-box">
+                    <div class="small text-secondary">Ratings Total</div>
+                    <strong>{{ amazon_product_snapshot.ratings_total|default:"N/A" }}</strong>
+                </div>
+                <div class="metric-box">
+                    <div class="small text-secondary">Sales Volume</div>
+                    <strong>{{ amazon_product_snapshot.sales_volume|default:"N/A" }}</strong>
+                </div>
+            </div>
+
+            {% if amazon_product_snapshot.live_title %}
+            <div class="mt-3">
+                <div class="small text-secondary text-uppercase fw-bold mb-1">Live Title</div>
+                <div class="fw-semibold">{{ amazon_product_snapshot.live_title }}</div>
+            </div>
+            {% endif %}
+
+            {% if amazon_product_snapshot.availability %}
+            <div class="small text-secondary mt-3">{{ amazon_product_snapshot.availability }}</div>
+            {% endif %}
+
+            {% if amazon_product_snapshot.features %}
+            <div class="mt-3">
+                <div class="small text-secondary text-uppercase fw-bold mb-2">Top Features</div>
+                <div class="amazon-review-list">
+                    {% for feature in amazon_product_snapshot.features|slice:":4" %}
+                    <div class="amazon-review-card">{{ feature }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if amazon_product_snapshot.product_url %}
+            <div class="mt-3">
+                <a href="{{ amazon_product_snapshot.product_url }}" target="_blank" rel="noopener" class="btn-premium btn-premium-secondary btn-sm text-center">Open Live Amazon Page</a>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="small text-secondary mt-3">
+                {{ amazon_product_snapshot.message|default:"Live Amazon product info is not available right now." }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if comparison_summary.available_count > 3 %}
+        <div class="source-card extra-offers mt-3">
+            <div class="small text-secondary text-uppercase fw-bold mb-2">All matched sources</div>
+            {% for option in comparison_options %}
+            <div class="extra-offer-row">
+                <div>
+                    <strong>{{ option.source_name }}</strong>
+                    <div class="small text-secondary">
+                        {{ option.source|title }}
+                        {% if option.match_type == 'catalog_match' %}
+                        • related row: {{ option.product_name }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-end fw-semibold">Rs.{{ option.price|floatformat:0 }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if amazon_reviews %}
+        <div class="source-card extra-offers mt-3">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                <div>
+                    <div class="small text-secondary text-uppercase fw-bold mb-1">Live Amazon Reviews</div>
+                    <h5 class="fw-bold mb-1">RapidAPI review feed for the Amazon-linked row</h5>
+                    <div class="small text-secondary">
+                        {% if amazon_reviews.asin %}ASIN {{ amazon_reviews.asin }}{% endif %}
+                        {% if amazon_reviews.country %} • {{ amazon_reviews.country }}{% endif %}
+                    </div>
+                </div>
+                {% if amazon_reviews.status == 'ok' %}
+                <span class="badge bg-success-subtle text-success">{{ amazon_reviews.review_count }} live review{{ amazon_reviews.review_count|pluralize }}</span>
+                {% else %}
+                <span class="badge bg-secondary-subtle text-secondary text-uppercase">{{ amazon_reviews.status|default:"unavailable" }}</span>
+                {% endif %}
+            </div>
+
+            {% if amazon_reviews.status == 'ok' %}
+            {% if amazon_reviews.rating_distribution %}
+            <div class="amazon-rating-grid">
+                {% for rating, count in amazon_reviews.rating_distribution.items %}
+                <div class="amazon-rating-box">
+                    <div class="small text-secondary">{{ rating }} star</div>
+                    <strong>{{ count }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="amazon-review-list">
+                {% for review in amazon_reviews.reviews %}
+                <article class="amazon-review-card">
+                    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-2">
+                        <div>
+                            <div class="fw-semibold">{{ review.review_title|default:"Untitled review" }}</div>
+                            <div class="small text-secondary">
+                                {{ review.review_author|default:"Amazon customer" }}
+                                {% if review.review_date %} • {{ review.review_date }}{% endif %}
+                            </div>
+                        </div>
+                        <div class="small fw-semibold text-warning">
+                            <i class="fas fa-star"></i>
+                            {% if review.review_star_rating is not None %}{{ review.review_star_rating|floatformat:1 }}{% else %}N/A{% endif %}
+                        </div>
+                    </div>
+                    <div class="small text-secondary">{{ review.review_comment|truncatechars:320 }}</div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mt-3">
+                        <div class="small text-secondary">
+                            {% if review.is_verified_purchase %}
+                            Verified purchase
+                            {% endif %}
+                            {% if review.helpful_vote_statement %}
+                            {% if review.is_verified_purchase %} • {% endif %}{{ review.helpful_vote_statement }}
+                            {% endif %}
+                        </div>
+                        {% if review.review_link %}
+                        <a href="{{ review.review_link }}" target="_blank" rel="noopener" class="btn-premium btn-premium-secondary btn-sm text-center">Open Review</a>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="small text-secondary mt-3">{{ amazon_reviews.message|default:"Amazon review data is not available for this product yet." }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+
+    <aside class="scanner-card">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+            <div>
+                <div class="small text-secondary text-uppercase fw-bold mb-1">Deal Scanner</div>
+                <h4 class="fw-bold mb-0">Price snapshot</h4>
+            </div>
+            <span class="badge bg-success-subtle text-success">Real catalog only</span>
+        </div>
+
+        <div class="scanner-score">
+            <div class="text-center">
+                <strong>{{ comparison_summary.deal_score }}</strong>
+                <div class="small text-secondary">/ 100</div>
+            </div>
+        </div>
+
+        <div class="p-3 rounded-4 mb-3" style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.14);">
+            <div class="fw-semibold mb-1">{{ comparison_summary.insight_title }}</div>
+            <div class="small text-secondary">{{ comparison_summary.insight_copy }}</div>
+        </div>
+
+        <div class="metric-grid">
+            <div class="metric-box">
+                <div class="small text-secondary">Lowest Price</div>
+                <strong>{% if comparison_summary.lowest_price %}Rs.{{ comparison_summary.lowest_price|floatformat:0 }}{% else %}N/A{% endif %}</strong>
+            </div>
+            <div class="metric-box">
+                <div class="small text-secondary">Average Price</div>
+                <strong>{% if comparison_summary.average_price %}Rs.{{ comparison_summary.average_price|floatformat:0 }}{% else %}N/A{% endif %}</strong>
+            </div>
+            <div class="metric-box">
+                <div class="small text-secondary">Highest Price</div>
+                <strong>{% if comparison_summary.highest_price %}Rs.{{ comparison_summary.highest_price|floatformat:0 }}{% else %}N/A{% endif %}</strong>
+            </div>
+            <div class="metric-box">
+                <div class="small text-secondary">Savings Window</div>
+                <strong>{{ comparison_summary.savings_percent|floatformat:0 }}%</strong>
+            </div>
+        </div>
+
+        <div class="breakdown-list">
+            <div class="breakdown-row">
+                <span>Available sources</span>
+                <strong>{{ comparison_summary.available_count }}</strong>
+            </div>
+            <div class="breakdown-row">
+                <span>Best source</span>
+                <strong>{% if comparison_summary.current_best %}{{ comparison_summary.current_best.source_name }}{% else %}N/A{% endif %}</strong>
+            </div>
+            <div class="breakdown-row">
+                <span>Best match type</span>
+                <strong>{% if comparison_summary.current_best %}{{ comparison_summary.current_best.match_label }}{% else %}N/A{% endif %}</strong>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top">
+            <div class="fw-semibold mb-1">Set a price drop alert later</div>
+            <div class="small text-secondary mb-3">Notifications use stored real catalog prices only. No synthetic price history is shown here.</div>
+            {% if user.is_authenticated and not user.is_staff and not user.is_merchant %}
+            <a href="{% url 'dashboard_notifications' %}" class="btn-premium btn-premium-primary w-100 text-center">Open Alerts</a>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn-premium btn-premium-primary w-100 text-center">Login to track alerts</a>
+            {% endif %}
+        </div>
+    </aside>
+</section>
+{% endblock %}

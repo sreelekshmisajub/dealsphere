@@ -1,0 +1,441 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}User Dashboard - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .stats-grid,
+    .quick-grid,
+    .two-col-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: 1.5rem;
+    }
+
+    .quick-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .two-col-grid {
+        grid-template-columns: 1.2fr 0.8fr;
+        margin-top: 1.5rem;
+    }
+
+    .dashboard-card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        height: 100%;
+        min-width: 0;
+    }
+
+    .stat-kicker {
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-top: 0.35rem;
+    }
+
+    .search-hero {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+        color: #ffffff;
+        margin-bottom: 1.5rem;
+        min-width: 0;
+    }
+
+    .dashboard-search-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .dashboard-search-form input {
+        border: 0;
+        border-radius: 999px;
+        padding: 0.95rem 1.1rem;
+    }
+
+    .chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+
+    .dashboard-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.65rem 1rem;
+        border-radius: 999px;
+        background: #f8fafc;
+        color: var(--text-main);
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .list-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.85rem 0;
+        border-bottom: 1px solid #eef2f7;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .list-row > * {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+
+    .list-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .recommendation-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .recommendation-card {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    @media (max-width: 1199px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .quick-grid,
+        .two-col-grid,
+        .recommendation-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .dashboard-search-form {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-magnifying-glass"></i>Search Results
+</a>
+<a href="{% url 'dashboard_basket' %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-basket-shopping"></i>Smart Basket
+</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="search-hero">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-start">
+        <div>
+            <h3 class="fw-bold text-white mb-1">Start a comparison</h3>
+            <p class="mb-0 text-white-50">Use text search, barcode lookup, or visual search entry points from this dashboard.</p>
+        </div>
+        <div class="small text-white-50">Location-aware ranking works best after your current coordinates are saved.</div>
+    </div>
+
+    <form class="dashboard-search-form" method="get" action="{% url 'dashboard_results' %}" id="dashboard-search-form" autocomplete="off">
+        <div style="position:relative;">
+            <input type="text" name="q" id="dashboard-search-input" placeholder="Search product name, brand, or category" required style="width:100%;border:0;border-radius:999px;padding:0.95rem 1.1rem;">
+            <ul id="search-autocomplete-dropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border-radius:1rem;box-shadow:0 12px 32px rgba(15,23,42,0.18);z-index:9999;list-style:none;margin:0;padding:0.4rem 0;max-height:400px;overflow-y:auto;"></ul>
+        </div>
+        <button class="btn-premium btn-premium-secondary" type="button" id="capture-location-button">
+            <i class="fas fa-location-crosshairs"></i>Use My Location
+        </button>
+        <button class="btn-premium btn-premium-primary" type="submit">
+            <i class="fas fa-arrow-right"></i>Search
+        </button>
+    </form>
+    <div id="location-status" class="small text-white-50 mt-2"></div>
+</section>
+
+<section class="stats-grid">
+    <div class="dashboard-card">
+        <div class="stat-kicker">Current Cart Savings</div>
+        <div class="stat-value text-success">Rs.{{ stats.total_saved|default:0 }}</div>
+        <div class="text-secondary small">Against the cheapest current online baseline.</div>
+    </div>
+    <div class="dashboard-card">
+        <div class="stat-kicker">Pending Price Matches</div>
+        <div class="stat-value text-primary">{{ stats.active_requests|default:0 }}</div>
+        <div class="text-secondary small">Waiting for merchant action.</div>
+    </div>
+    <div class="dashboard-card">
+        <div class="stat-kicker">Tracked Cart Items</div>
+        <div class="stat-value">{{ cart_items_count|default:0 }}</div>
+        <div class="text-secondary small">Ready for basket optimization.</div>
+    </div>
+    <div class="dashboard-card">
+        <div class="stat-kicker">Unread Alerts</div>
+        <div class="stat-value text-warning">{{ stats.price_drops_alerts|default:0 }}</div>
+        <div class="text-secondary small">Price drops and deal confirmations.</div>
+    </div>
+</section>
+
+<section class="quick-grid">
+    <div class="dashboard-card">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-layer-group text-primary"></i>
+            <h5 class="fw-bold mb-0">Quick Categories</h5>
+        </div>
+        <div class="chip-list">
+            {% for category in quick_categories %}
+            <a href="{% url 'dashboard_results' %}?category={{ category.name|urlencode }}" class="dashboard-chip">
+                <i class="fas fa-tag text-primary"></i>{{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-qrcode text-primary"></i>
+            <h5 class="fw-bold mb-0">Multi-Modal Search</h5>
+        </div>
+        <div class="chip-list">
+            <a href="{% url 'dashboard_barcode' %}" class="dashboard-chip"><i class="fas fa-barcode text-primary"></i>Barcode</a>
+            <a href="{% url 'dashboard_visual_search' %}" class="dashboard-chip"><i class="fas fa-camera text-primary"></i>Visual Search</a>
+            <a href="{% url 'dashboard_results' %}" class="dashboard-chip"><i class="fas fa-magnifying-glass text-primary"></i>Text Search</a>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-clock-rotate-left text-primary"></i>
+            <h5 class="fw-bold mb-0">Recent Searches</h5>
+        </div>
+        {% for search in recent_searches %}
+        <div class="list-row">
+            <a href="{{ search.url }}" class="text-decoration-none fw-semibold">{{ search.label }}</a>
+            <span class="small text-secondary">{{ search.created_at|timesince }} ago</span>
+        </div>
+        {% empty %}
+        <p class="text-secondary small mb-0">Search activity will appear here after you use the catalog.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="two-col-grid">
+    <div class="dashboard-card">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-bell text-primary"></i>
+            <h5 class="fw-bold mb-0">Active Alerts</h5>
+        </div>
+        {% for notification in active_alerts %}
+        <div class="list-row">
+            <div>
+                <div class="fw-semibold">{{ notification.title }}</div>
+                <div class="small text-secondary">{{ notification.message|truncatechars:90 }}</div>
+            </div>
+            <span class="small text-secondary">{{ notification.created_at|timesince }} ago</span>
+        </div>
+        {% empty %}
+        <p class="text-secondary small mb-0">No active alerts are stored for this account yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="dashboard-card">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="fas fa-list-check text-primary"></i>
+            <h5 class="fw-bold mb-0">Recent Activity</h5>
+        </div>
+        {% for activity in recent_activities %}
+        <div class="list-row">
+            <div>
+                <div class="fw-semibold">{{ activity.activity_type|title }}</div>
+                <div class="small text-secondary">
+                    {% if activity.product %}
+                    {{ activity.product.name }}
+                    {% elif activity.merchant %}
+                    {{ activity.merchant.shop_name }}
+                    {% else %}
+                    Account activity
+                    {% endif %}
+                </div>
+            </div>
+            <span class="small text-secondary">{{ activity.created_at|timesince }} ago</span>
+        </div>
+        {% empty %}
+        <p class="text-secondary small mb-0">No recent activity was recorded yet.</p>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="dashboard-card mt-4">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="fas fa-brain text-primary"></i>
+        <h5 class="fw-bold mb-0">Recommended Next Products</h5>
+    </div>
+    <p class="text-secondary small mb-4">
+        {% if insight_message %}
+        {{ insight_message }}
+        {% else %}
+        Recommendations are generated from your real search and product-view activity.
+        {% endif %}
+    </p>
+    <div class="recommendation-grid">
+        {% for product in recommendations|slice:":4" %}
+        <div class="recommendation-card">
+            <div class="fw-bold mb-1">{{ product.name }}</div>
+            <div class="small text-secondary mb-2">{{ product.category.name }}</div>
+            {% if product.best_offer %}
+            <div class="small text-primary fw-bold mb-3">{{ product.best_offer.merchant }} | Rs.{{ product.best_offer.price }}</div>
+            {% endif %}
+            <a href="{% url product_detail_route_name product.id %}" class="btn-premium btn-premium-secondary btn-sm">View product</a>
+        </div>
+        {% empty %}
+        <p class="text-secondary small mb-0">Recommendations will appear after more usage data is available.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const captureButton = document.getElementById('capture-location-button');
+    const locationStatus = document.getElementById('location-status');
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(';').shift();
+        }
+        return '';
+    }
+
+    // Live search autocomplete
+    const searchInput = document.getElementById('dashboard-search-input');
+    const dropdown = document.getElementById('search-autocomplete-dropdown');
+    let autocompleteTimer = null;
+
+    function closeDropdown() {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+    }
+
+    function renderDropdown(items) {
+        dropdown.innerHTML = '';
+        if (!items.length) { closeDropdown(); return; }
+        items.forEach(function (p) {
+            const li = document.createElement('li');
+            li.style.cssText = 'display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1rem;cursor:pointer;border-radius:0.75rem;margin:0 0.3rem;transition:background 0.15s;';
+            const source = (p.best_offer && p.best_offer.source) ? p.best_offer.source : '';
+            const sourceColors = { amazon: '#FF9900', flipkart: '#2874F0', myntra: '#FF3F6C', local: '#10b981' };
+            const badgeColor = sourceColors[source] || '#6366f1';
+            li.innerHTML =
+                '<div style="width:40px;height:40px;flex-shrink:0;border-radius:0.6rem;background:#f1f5f9;display:flex;align-items:center;justify-content:center;overflow:hidden;">' +
+                    (p.image_url ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:contain;padding:4px;" onerror="this.style.display=\'none\'">' : '<i class="fas fa-box" style="color:#94a3b8;font-size:1rem;"></i>') +
+                '</div>' +
+                '<div style="min-width:0;flex:1;">' +
+                    '<div style="font-weight:700;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#0f172a;">' + p.name + '</div>' +
+                    '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:2px;">' +
+                        (p.best_offer && p.best_offer.price ? '<span style="font-size:0.82rem;font-weight:800;color:#2563eb;">Rs.' + parseFloat(p.best_offer.price).toLocaleString() + '</span>' : '') +
+                        (source ? '<span style="font-size:0.72rem;font-weight:700;padding:1px 7px;border-radius:999px;color:#fff;background:' + badgeColor + ';">' + source.charAt(0).toUpperCase() + source.slice(1) + '</span>' : '') +
+                    '</div>' +
+                '</div>';
+            li.addEventListener('mouseenter', function () { li.style.background = '#f8fafc'; });
+            li.addEventListener('mouseleave', function () { li.style.background = ''; });
+            li.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                window.location.href = '/dashboard/product/' + p.id + '/';
+            });
+            dropdown.appendChild(li);
+        });
+        dropdown.style.display = 'block';
+    }
+
+    searchInput?.addEventListener('input', function () {
+        clearTimeout(autocompleteTimer);
+        const q = searchInput.value.trim();
+        if (q.length < 2) { closeDropdown(); return; }
+        autocompleteTimer = setTimeout(function () {
+            fetch('/api/v1/products/search/?q=' + encodeURIComponent(q) + '&limit=8', {
+                headers: { 'Accept': 'application/json' }
+            }).then(function (r) { return r.ok ? r.json() : null; })
+              .then(function (data) {
+                if (!data) { closeDropdown(); return; }
+                const items = Array.isArray(data) ? data : (data.results || data.products || []);
+                renderDropdown(items.slice(0, 8));
+            }).catch(function () { closeDropdown(); });
+        }, 300);
+    });
+
+    searchInput?.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDropdown();
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) closeDropdown();
+    });
+
+    captureButton?.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+            locationStatus.textContent = 'Geolocation is not available in this browser.';
+            return;
+        }
+
+        locationStatus.textContent = 'Capturing your location...';
+        navigator.geolocation.getCurrentPosition(function (position) {
+            fetch('/api/v1/users/location/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                })
+            }).then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Location update failed');
+                }
+                return response.json();
+            }).then(function () {
+                locationStatus.textContent = `Location saved: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+            }).catch(function () {
+                locationStatus.textContent = 'Unable to save location to the backend.';
+            });
+        }, function () {
+            locationStatus.textContent = 'Browser location access was denied or unavailable.';
+        });
+    });
+});
+</script>
+{% endblock %}

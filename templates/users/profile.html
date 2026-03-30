@@ -1,0 +1,128 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Profile - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .profile-card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 991px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<button class="btn-premium btn-premium-secondary" id="profile-location-button" type="button">
+    <i class="fas fa-location-crosshairs"></i>Use My Location
+</button>
+<button class="btn-premium btn-premium-primary" form="profile-form" type="submit">
+    <i class="fas fa-floppy-disk"></i>Save Changes
+</button>
+{% endblock %}
+
+{% block dashboard_content %}
+<form method="post" id="profile-form">
+    {% csrf_token %}
+    <div class="profile-grid">
+        <section class="profile-card">
+            <h4 class="fw-bold mb-3">Account Details</h4>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label-premium">First name</label>
+                    <input class="form-control" type="text" name="first_name" value="{{ profile_form_values.first_name }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-premium">Last name</label>
+                    <input class="form-control" type="text" name="last_name" value="{{ profile_form_values.last_name }}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label-premium">Email</label>
+                    <input class="form-control" type="email" name="email" value="{{ profile_form_values.email }}" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label-premium">Phone</label>
+                    <input class="form-control" type="text" name="phone" value="{{ profile_form_values.phone }}" maxlength="10" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-premium">Latitude</label>
+                    <input class="form-control" type="text" name="location_lat" id="profile-location-lat" value="{{ profile_form_values.location_lat }}" placeholder="e.g. 10.12345678">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-premium">Longitude</label>
+                    <input class="form-control" type="text" name="location_lng" id="profile-location-lng" value="{{ profile_form_values.location_lng }}" placeholder="e.g. 76.12345678">
+                </div>
+                <div class="col-12">
+                    <div class="small text-secondary" id="profile-location-status">
+                        Save your coordinates to improve hyperlocal shop ranking and distance-based comparison.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="profile-card">
+            <h4 class="fw-bold mb-3">Change Password</h4>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label-premium">Current password</label>
+                    <input class="form-control" type="password" name="current_password">
+                </div>
+                <div class="col-12">
+                    <label class="form-label-premium">New password</label>
+                    <input class="form-control" type="password" name="new_password">
+                </div>
+                <div class="col-12">
+                    <label class="form-label-premium">Confirm new password</label>
+                    <input class="form-control" type="password" name="confirm_new_password">
+                </div>
+            </div>
+            <div class="small text-secondary mt-3">
+                Password updates require the current password and must still follow the uppercase, number, and special-character rule.
+            </div>
+        </section>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const locationButton = document.getElementById('profile-location-button');
+    const latInput = document.getElementById('profile-location-lat');
+    const lngInput = document.getElementById('profile-location-lng');
+    const status = document.getElementById('profile-location-status');
+
+    locationButton?.addEventListener('click', function () {
+        if (!navigator.geolocation) {
+            status.textContent = 'Geolocation is not available in this browser.';
+            return;
+        }
+
+        status.textContent = 'Capturing your current coordinates...';
+        navigator.geolocation.getCurrentPosition(function (position) {
+            latInput.value = position.coords.latitude.toFixed(8);
+            lngInput.value = position.coords.longitude.toFixed(8);
+            status.textContent = 'Current coordinates loaded into the form. Save changes to persist them.';
+        }, function () {
+            status.textContent = 'Browser location access was denied or unavailable.';
+        });
+    });
+});
+</script>
+{% endblock %}

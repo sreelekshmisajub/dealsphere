@@ -1,0 +1,655 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}Spend Lens - Spending Analysis Dashboard{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Spend Lens</h1>
+                <p class="lead mb-4">See where your money really goes. Get detailed insights into your shopping habits, track spending patterns, and discover opportunities to save more.</p>
+                
+                <!-- Date Range Selector -->
+                <div class="bg-white rounded-3 p-4 shadow-lg">
+                    <h5 class="mb-3">Select Time Period</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <select class="form-select" id="timeRange">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 3 months</option>
+                                <option value="365">Last year</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-primary-custom w-100" onclick="updateAnalysis()">
+                                <i class="fas fa-sync-alt me-2"></i>Update Analysis
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <img src="https://via.placeholder.com/500x400/FF6B35/FFFFFF?text=Spending+Analysis+Dashboard" alt="Spend Lens" class="img-fluid rounded-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Overview Stats -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">Spending Overview</h2>
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-wallet fa-3x text-primary mb-3"></i>
+                        <h3 class="text-primary mb-2">₹45,230</h3>
+                        <p class="text-muted mb-0">Total Spent</p>
+                        <small class="text-success">↑ 12% from last period</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
+                        <h3 class="text-success mb-2">127</h3>
+                        <p class="text-muted mb-0">Total Orders</p>
+                        <small class="text-success">↑ 8% from last period</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-piggy-bank fa-3x text-warning mb-3"></i>
+                        <h3 class="text-warning mb-2">₹8,450</h3>
+                        <p class="text-muted mb-0">Total Saved</p>
+                        <small class="text-success">↑ 23% from last period</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                        <h3 class="text-info mb-2">₹356</h3>
+                        <p class="text-muted mb-0">Avg. Order Value</p>
+                        <small class="text-danger">↓ 3% from last period</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Spending Charts -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">Spending Trends</h2>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Daily Spending Trend</h5>
+                        <canvas id="spendingChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Category Breakdown</h5>
+                        <canvas id="categoryChart" width="200" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Category Analysis -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">Category Analysis</h2>
+        <div class="row g-4">
+            <!-- Electronics -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Electronics</h5>
+                            <span class="badge bg-primary">35%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Spent: ₹15,830</span>
+                                <span>Orders: 23</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: 35%"></div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Price</small>
+                                <div class="fw-bold">₹688</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Saved</small>
+                                <div class="fw-bold text-success">₹2,340</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Top Item</small>
+                                <div class="fw-bold">Phone</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fashion -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Fashion</h5>
+                            <span class="badge bg-success">28%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Spent: ₹12,664</span>
+                                <span>Orders: 45</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Price</small>
+                                <div class="fw-bold">₹281</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Saved</small>
+                                <div class="fw-bold text-success">₹1,890</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Top Item</small>
+                                <div class="fw-bold">Shoes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Home & Kitchen -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Home & Kitchen</h5>
+                            <span class="badge bg-warning">20%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Spent: ₹9,046</span>
+                                <span>Orders: 31</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: 20%"></div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Price</small>
+                                <div class="fw-bold">₹292</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Saved</small>
+                                <div class="fw-bold text-success">₹1,230</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Top Item</small>
+                                <div class="fw-bold">Cookware</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Groceries -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Groceries</h5>
+                            <span class="badge bg-info">12%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Spent: ₹5,428</span>
+                                <span>Orders: 18</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: 12%"></div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Price</small>
+                                <div class="fw-bold">₹301</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Saved</small>
+                                <div class="fw-bold text-success">₹1,890</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Top Item</small>
+                                <div class="fw-bold">Rice</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Books -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Books</h5>
+                            <span class="badge bg-secondary">3%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Spent: ₹1,357</span>
+                                <span>Orders: 8</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-secondary" style="width: 3%"></div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Price</small>
+                                <div class="fw-bold">₹169</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Saved</small>
+                                <div class="fw-bold text-success">₹234</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Top Item</small>
+                                <div class="fw-bold">Novels</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other -->
+            <div class="col-lg-4 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Other</h5>
+                            <span class="badge bg-dark">2%</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Spent: ₹905</span>
+                                <span>Orders: 3</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-dark" style="width: 2%"></div>
+                            </div>
+                        </div>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <small class="text-muted">Avg Price</small>
+                                <div class="fw-bold">₹302</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Saved</small>
+                                <div class="fw-bold text-success">₹167</div>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted">Top Item</small>
+                                <div class="fw-bold">Misc</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Shopping Habits -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">Shopping Habits & Insights</h2>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-4">🕐 Shopping Time Analysis</h5>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Morning (6AM - 12PM)</span>
+                                <span class="badge bg-primary">23%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: 23%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Afternoon (12PM - 6PM)</span>
+                                <span class="badge bg-success">45%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Evening (6PM - 12AM)</span>
+                                <span class="badge bg-warning">28%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Night (12AM - 6AM)</span>
+                                <span class="badge bg-info">4%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: 4%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <small><strong>💡 Insight:</strong> You shop most frequently in the afternoon. Consider setting deal alerts during this time for maximum savings!</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h5 class="mb-4">📱 Platform Preferences</h5>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Amazon</span>
+                                <span class="badge bg-warning">42%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: 42%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Flipkart</span>
+                                <span class="badge bg-primary">28%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Local Stores</span>
+                                <span class="badge bg-success">18%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: 18%"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Other Platforms</span>
+                                <span class="badge bg-secondary">12%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-secondary" style="width: 12%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-success mt-3">
+                            <small><strong>💡 Insight:</strong> You're getting great deals from local stores! Consider increasing local shopping for better savings.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recommendations -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🎯 Personalized Recommendations</h2>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-cut fa-3x text-success mb-3"></i>
+                            <h5>Reduce Electronics Spending</h5>
+                        </div>
+                        <p class="text-muted">Your electronics spending is 35% of total budget. Consider waiting for sales or exploring alternatives.</p>
+                        <div class="text-center">
+                            <button class="btn btn-success" onclick="showElectronicsTips()">
+                                <i class="fas fa-lightbulb me-2"></i>View Tips
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                            <h5>Best Shopping Times</h5>
+                        </div>
+                        <p class="text-muted">Shop during weekday afternoons for better deals and faster delivery. Weekend shopping costs 12% more on average.</p>
+                        <div class="text-center">
+                            <button class="btn btn-warning" onclick="showShoppingCalendar()">
+                                <i class="fas fa-calendar me-2"></i>View Calendar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <i class="fas fa-store fa-3x text-info mb-3"></i>
+                            <h5>Explore Local Stores</h5>
+                        </div>
+                        <p class="text-muted">You're saving 23% more with local stores. Increase local shopping for better deals and support local businesses.</p>
+                        <div class="text-center">
+                            <button class="btn btn-info" onclick="showLocalStores()">
+                                <i class="fas fa-map-marked-alt me-2"></i>Find Stores
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Export Options -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">📊 Export & Share</h2>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Export Your Data</h5>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary" onclick="exportData('csv')">
+                                <i class="fas fa-file-csv me-2"></i>Export as CSV
+                            </button>
+                            <button class="btn btn-outline-success" onclick="exportData('pdf')">
+                                <i class="fas fa-file-pdf me-2"></i>Export as PDF Report
+                            </button>
+                            <button class="btn btn-outline-info" onclick="exportData('json')">
+                                <i class="fas fa-file-code me-2"></i>Export as JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Share Insights</h5>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-warning" onclick="shareInsights('family')">
+                                <i class="fas fa-users me-2"></i>Share with Family
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="shareInsights('advisor')">
+                                <i class="fas fa-user-tie me-2"></i>Send to Financial Advisor
+                            </button>
+                            <button class="btn btn-outline-dark" onclick="shareInsights('social')">
+                                <i class="fas fa-share-alt me-2"></i>Share on Social Media
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Spending Trend Chart
+const spendingCtx = document.getElementById('spendingChart').getContext('2d');
+const spendingChart = new Chart(spendingCtx, {
+    type: 'line',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Daily Spending',
+            data: [1200, 1900, 1500, 2100],
+            borderColor: '#FF6B35',
+            backgroundColor: 'rgba(255, 107, 53, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₹' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Category Breakdown Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+const categoryChart = new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Electronics', 'Fashion', 'Home & Kitchen', 'Groceries', 'Books', 'Other'],
+        datasets: [{
+            data: [35, 28, 20, 12, 3, 2],
+            backgroundColor: [
+                '#FF6B35',
+                '#28A745',
+                '#FFC107',
+                '#17A2B8',
+                '#6C757D',
+                '#343A40'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+function updateAnalysis() {
+    const timeRange = document.getElementById('timeRange').value;
+    
+    // Show loading state
+    const button = event.target;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        // Simulate data update
+        alert(`Spending analysis updated for last ${timeRange} days!\n\nIn production, this would fetch real data from your DealSphere account.`);
+        
+        button.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Update Analysis';
+        button.disabled = false;
+    }, 1500);
+}
+
+function showElectronicsTips() {
+    alert('💡 Electronics Shopping Tips:\n\n1. Wait for festive sales (Diwali, Christmas)\n2. Compare prices across 5+ platforms\n3. Check for bank offers and cashback\n4. Consider refurbished options\n5. Use price tracking for best deals');
+}
+
+function showShoppingCalendar() {
+    alert('📅 Best Shopping Calendar:\n\n🟢 Best Days:\n- Monday-Thursday afternoons\n- First week of month\n- End of financial year\n\n🔴 Avoid:\n- Weekend shopping\n- Festival season last minute\n- Payday weekends');
+}
+
+function showLocalStores() {
+    alert('🏪 Local Store Benefits:\n\n✅ Current Savings: 23% more\n✅ Faster delivery\n✅ Support local economy\n✅ Easy returns\n✅ Personalized service\n\nRecommended stores near you:\n- Electronics: Local Tech Hub\n- Fashion: Fashion Street Market\n- Groceries: Fresh Mart');
+}
+
+function exportData(format) {
+    alert(`📊 Exporting data as ${format.toUpperCase()}...\n\nYour spending analysis will include:\n- Transaction history\n- Category breakdown\n- Savings analysis\n- Shopping patterns\n- Personalized recommendations\n\nFile will be downloaded shortly.`);
+}
+
+function shareInsights(type) {
+    const messages = {
+        family: 'Share spending insights with family members for better budget planning',
+        advisor: 'Send detailed financial report to your financial advisor',
+        social: 'Share your savings achievements on social media'
+    };
+    
+    alert(`📤 ${messages[type]}!\n\nIn production, this would:\n- Generate shareable report\n- Include key insights\n- Add privacy controls\n- Create shareable link`);
+}
+</script>
+{% endblock %}

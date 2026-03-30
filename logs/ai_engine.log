@@ -1,0 +1,6 @@
+ERROR 2026-03-21 10:31:37,245 basket_optimizer 14996 25380 Error loading product data: [Errno 2] No such file or directory: 'dataset/raw/amazon.csv'
+ERROR 2026-03-21 10:31:37,255 basket_optimizer 14996 6104 Error loading product data: [Errno 2] No such file or directory: 'dataset/raw/amazon.csv'
+ERROR 2026-03-21 10:31:43,554 basket_optimizer 15416 1936 Error loading product data: [Errno 2] No such file or directory: 'dataset/raw/amazon.csv'
+ERROR 2026-03-21 10:32:13,261 basket_optimizer 24284 13344 Error loading product data: [Errno 2] No such file or directory: 'dataset/marketing_sample_for_flipkart_com-ecommerce__20191101_20191130__15k_data.csv'
+ERROR 2026-03-21 10:32:13,555 basket_optimizer 24284 24808 Error loading product data: [Errno 2] No such file or directory: 'dataset/marketing_sample_for_flipkart_com-ecommerce__20191101_20191130__15k_data.csv'
+ERROR 2026-03-21 10:34:24,821 basket_optimizer 11344 31648 Error loading product data: [Errno 2] No such file or directory: 'dataset/marketing_sample_for_flipkart_com-ecommerce__20191101_20191130__15k_data.csv'

@@ -1,0 +1,174 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Barcode Scanner - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .barcode-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 1.5rem;
+    }
+
+    .barcode-card,
+    .barcode-result-card,
+    .barcode-price-card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        min-width: 0;
+    }
+
+    .barcode-stack {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .barcode-match-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .barcode-similar-card {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        min-width: 0;
+    }
+
+    .barcode-price-card .d-flex,
+    .barcode-result-card .d-flex {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    @media (max-width: 991px) {
+        .barcode-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-magnifying-glass"></i>Search Results
+</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="barcode-grid">
+    <article class="barcode-card">
+        <h4 class="fw-bold mb-2">Barcode Lookup</h4>
+        <p class="text-secondary mb-4">
+            Use the real barcode dataset and catalog match flow. Camera scanning can be added on top, but this page already supports manual barcode lookup without fake data.
+        </p>
+
+        <form method="get" action="{% url 'dashboard_barcode' %}" class="d-grid gap-3">
+            <div>
+                <label class="form-label-premium">Barcode</label>
+                <input class="form-control" type="text" name="barcode" value="{{ barcode_query }}" placeholder="Enter 8, 12, 13, or 14 digit barcode" required>
+            </div>
+            <button class="btn-premium btn-premium-primary" type="submit">
+                <i class="fas fa-barcode"></i>Lookup Barcode
+            </button>
+        </form>
+
+        <div class="small text-secondary mt-3">
+            Route: <strong>/dashboard/barcode/</strong><br>
+            Flow: barcode input -> backend lookup -> product match -> product/result navigation.
+        </div>
+    </article>
+
+    <section class="barcode-stack">
+        {% if scan_result %}
+        <article class="barcode-result-card">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <div class="small text-secondary text-uppercase fw-bold mb-1">Lookup Result</div>
+                    {% if scan_result.found %}
+                    <h4 class="fw-bold mb-1">{{ scan_result.product.name }}</h4>
+                    <div class="text-secondary">
+                        Match type: {{ scan_result.match_type|title }}{% if scan_result.product.category %} | Category: {{ scan_result.product.category }}{% endif %}
+                    </div>
+                    {% if scan_result.product.brand %}
+                    <div class="small text-secondary mt-1">Brand: {{ scan_result.product.brand }}</div>
+                    {% endif %}
+                    {% if scan_result.product.source_dataset %}
+                    <div class="small text-secondary mt-1">Dataset: {{ scan_result.product.source_dataset }}</div>
+                    {% endif %}
+                    {% else %}
+                    <h4 class="fw-bold mb-1">No barcode match</h4>
+                    <div class="text-secondary">{{ scan_result.message }}</div>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <div class="small text-secondary">Barcode</div>
+                    <div class="fw-bold">{{ scan_result.barcode }}</div>
+                </div>
+            </div>
+
+            {% if scan_result.found %}
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                {% if scan_result.product.id %}
+                <a href="{% url 'dashboard_product_detail' scan_result.product.id %}" class="btn-premium btn-premium-primary">
+                    <i class="fas fa-box-open"></i>Open Product
+                </a>
+                {% endif %}
+                <a href="{% url 'dashboard_results' %}?q={{ scan_result.product.name|urlencode }}" class="btn-premium btn-premium-secondary">
+                    <i class="fas fa-magnifying-glass"></i>Search Similar
+                </a>
+            </div>
+            {% endif %}
+        </article>
+
+        {% if scan_result.price_comparison %}
+        <article class="barcode-price-card">
+            <h5 class="fw-bold mb-3">Price Comparison</h5>
+            {% for candidate in scan_result.price_comparison %}
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                    <div class="fw-semibold">{{ candidate.merchant }}</div>
+                    <div class="small text-secondary">{{ candidate.source|title }} | Delivery {{ candidate.delivery_time }}h</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold text-primary">Rs.{{ candidate.price }}</div>
+                    <div class="small text-secondary">Rating {{ candidate.rating|floatformat:1 }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </article>
+        {% endif %}
+
+        {% if similar_matches %}
+        <article class="barcode-price-card">
+            <h5 class="fw-bold mb-3">Similar Catalog Matches</h5>
+            <div class="barcode-match-grid">
+                {% for product in similar_matches %}
+                <div class="barcode-similar-card">
+                    <div class="fw-semibold mb-2">{{ product.name }}</div>
+                    {% if product.detail_url %}
+                    <a href="{{ product.detail_url }}" class="btn-premium btn-premium-secondary btn-sm">View Product</a>
+                    {% else %}
+                    <a href="{% url 'dashboard_results' %}?q={{ product.name|urlencode }}" class="btn-premium btn-premium-secondary btn-sm">Search</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+        {% endif %}
+        {% else %}
+        <article class="barcode-result-card">
+            <h5 class="fw-bold mb-2">No lookup run yet</h5>
+            <p class="text-secondary mb-0">Enter a barcode to run the real lookup flow against the catalog and external barcode datasets.</p>
+        </article>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

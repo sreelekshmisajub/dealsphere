@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .admin-workspace {
+        display: grid;
+        grid-template-columns: 310px minmax(0, 1fr);
+        gap: 1.5rem;
+        padding: 2rem 0 3rem;
+    }
+
+    .admin-sidebar {
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+
+    .admin-shell-card,
+    .admin-panel,
+    .admin-section-card {
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .admin-shell-card {
+        padding: 1.5rem;
+    }
+
+    .admin-panel {
+        padding: 1.5rem 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-section-card {
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-pill {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: rgba(239, 68, 68, 0.08);
+        margin-bottom: 1.25rem;
+    }
+
+    .admin-shell-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+    }
+
+    .admin-shell-metric {
+        border-radius: 1rem;
+        background: #f8fafc;
+        padding: 0.85rem;
+    }
+
+    .admin-shell-metric strong {
+        display: block;
+        font-size: 1.1rem;
+    }
+
+    .admin-stat-card {
+        border-radius: 1.25rem;
+        background: linear-gradient(180deg, #ffffff, #f8fbff);
+        border: 1px solid rgba(15, 23, 42, 0.05);
+        padding: 1.2rem;
+        height: 100%;
+    }
+
+    .admin-stat-card .label {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .admin-stat-card .value {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .admin-toolbar-form .form-control,
+    .admin-toolbar-form .form-select,
+    .admin-section-card .form-control,
+    .admin-section-card .form-select,
+    .admin-panel .form-control,
+    .admin-panel .form-select {
+        border-radius: 0.9rem;
+    }
+
+    .admin-table th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        white-space: nowrap;
+    }
+
+    .admin-table td {
+        vertical-align: middle;
+    }
+
+    .admin-kpi-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .admin-code-block {
+        border-radius: 1rem;
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 1rem;
+        font-family: Consolas, monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        max-height: 460px;
+        overflow: auto;
+    }
+
+    @media (max-width: 991px) {
+        .admin-workspace {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .admin-shell-grid,
+        .admin-kpi-list {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-workspace">
+        <aside class="admin-sidebar">
+            <div class="sidebar-premium admin-shell-card">
+                <div class="admin-pill">
+                    <div class="fw-bold">{{ admin_shell.name }}</div>
+                    <div class="small text-secondary">{{ admin_shell.role }}</div>
+                    <div class="small text-secondary">{{ admin_shell.email }}</div>
+                </div>
+
+                {% for item in admin_dashboard_nav %}
+                <a href="{{ item.url }}" class="sidebar-link {% if item.active %}active{% endif %}">
+                    <i class="fas {{ item.icon }}"></i>
+                    <span>{{ item.label }}</span>
+                </a>
+                {% endfor %}
+
+                <div class="admin-shell-grid">
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">Users</span>
+                        <strong>{{ admin_shell_stats.total_users|default:0 }}</strong>
+                    </div>
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">Pending Merchants</span>
+                        <strong>{{ admin_shell_stats.pending_merchants|default:0 }}</strong>
+                    </div>
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">Active Offers</span>
+                        <strong>{{ admin_shell_stats.active_offers|default:0 }}</strong>
+                    </div>
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">Unread Alerts</span>
+                        <strong>{{ admin_shell_stats.unread_notifications|default:0 }}</strong>
+                    </div>
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">System Status</span>
+                        <strong class="text-capitalize">{{ admin_shell_stats.system_status|default:"unknown" }}</strong>
+                    </div>
+                    <div class="admin-shell-metric">
+                        <span class="small text-secondary">Recent Activity</span>
+                        <strong>{{ admin_shell_stats.recent_activity|default:0 }}</strong>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <section>
+            <div class="admin-panel">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start gap-3">
+                    <div>
+                        <h1 class="fw-bold mb-1">{{ admin_dashboard_title }}</h1>
+                        <p class="text-secondary mb-0">{{ admin_dashboard_intro }}</p>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% block admin_actions %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+
+            {% block admin_content %}{% endblock %}
+        </section>
+    </div>
+</div>
+{% endblock %}

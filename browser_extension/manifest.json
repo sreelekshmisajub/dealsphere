@@ -1,0 +1,75 @@
+{
+  "manifest_version": 3,
+  "name": "DealSphere - Price Tracker & Shopping Assistant",
+  "version": "1.0.0",
+  "description": "Track prices, find deals, and shop smarter with AI-powered recommendations",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "notifications"
+  ],
+  
+  "host_permissions": [
+    "https://*.amazon.com/*",
+    "https://*.amazon.in/*",
+    "https://*.flipkart.com/*",
+    "https://*.myntra.com/*",
+    "https://*.ajio.com/*",
+    "https://*.nykaa.com/*",
+    "https://*.tatacliq.com/*",
+    "https://*.croma.com/*",
+    "https://*.meesho.com/*",
+    "https://dealsphere.com/*",
+    "http://localhost:8000/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.amazon.com/*",
+        "https://*.amazon.in/*",
+        "https://*.flipkart.com/*",
+        "https://*.myntra.com/*",
+        "https://*.ajio.com/*",
+        "https://*.nykaa.com/*",
+        "https://*.tatacliq.com/*",
+        "https://*.croma.com/*",
+        "https://*.meesho.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DealSphere Price Tracker",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["popup.html", "popup.js", "popup.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

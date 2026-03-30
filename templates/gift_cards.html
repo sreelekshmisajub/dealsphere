@@ -1,0 +1,606 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}Gift Cards - DealSphere{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Gift Cards</h1>
+                <p class="lead mb-4">Gift cards from leading brands. Simple, flexible, and ready to use. Verified by Deal Scanner for the best deals.</p>
+                
+                <!-- Gift Card Search -->
+                <div class="bg-white rounded-3 p-4 shadow-lg">
+                    <h5 class="mb-3">Find Gift Cards</h5>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="giftCardSearch" placeholder="Search for brands or stores...">
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <select class="form-select" id="categoryFilter">
+                                <option value="all">All Categories</option>
+                                <option value="shopping">Shopping</option>
+                                <option value="food">Food & Dining</option>
+                                <option value="entertainment">Entertainment</option>
+                                <option value="travel">Travel</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-primary-custom w-100" onclick="searchGiftCards()">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <img src="https://via.placeholder.com/500x400/FF6B35/FFFFFF?text=Gift+Cards+Collection" alt="Gift Cards" class="img-fluid rounded-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Gift Cards -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🎁 Featured Gift Cards</h2>
+        <div class="row g-4">
+            <!-- Amazon Gift Card -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/FF9900/FFFFFF?text=AZ" alt="Amazon" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">Amazon</h5>
+                        <p class="text-muted small mb-3">Millions of products</p>
+                        <div class="mb-3">
+                            <span class="badge bg-success">5% Cashback</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹500</div>
+                            <div class="text-muted small">Max: ₹10,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('amazon')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Flipkart Gift Card -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/2874A6/FFFFFF?text=FK" alt="Flipkart" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">Flipkart</h5>
+                        <p class="text-muted small mb-3">Electronics & Fashion</p>
+                        <div class="mb-3">
+                            <span class="badge bg-warning">3% Cashback</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹100</div>
+                            <div class="text-muted small">Max: ₹5,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('flipkart')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Starbucks Gift Card -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/00704A/FFFFFF?text=SB" alt="Starbucks" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">Starbucks</h5>
+                        <p class="text-muted small mb-3">Coffee & Beverages</p>
+                        <div class="mb-3">
+                            <span class="badge bg-success">10% Bonus</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹200</div>
+                            <div class="text-muted small">Max: ₹2,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('starbucks')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Myntra Gift Card -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/FF6B35/FFFFFF?text=MY" alt="Myntra" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">Myntra</h5>
+                        <p class="text-muted small mb-3">Fashion & Lifestyle</p>
+                        <div class="mb-3">
+                            <span class="badge bg-info">7% Cashback</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹500</div>
+                            <div class="text-muted small">Max: ₹5,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('myntra')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🛍️ Shop by Category</h2>
+        <div class="row g-4">
+            <!-- Shopping -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-shopping-bag fa-3x text-primary mb-3"></i>
+                        <h6 class="mb-2">Shopping</h6>
+                        <small class="text-muted">45 cards</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Food & Dining -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-utensils fa-3x text-success mb-3"></i>
+                        <h6 class="mb-2">Food & Dining</h6>
+                        <small class="text-muted">32 cards</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Entertainment -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-film fa-3x text-warning mb-3"></i>
+                        <h6 class="mb-2">Entertainment</h6>
+                        <small class="text-muted">18 cards</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Travel -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-plane fa-3x text-info mb-3"></i>
+                        <h6 class="mb-2">Travel</h6>
+                        <small class="text-muted">24 cards</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gaming -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-gamepad fa-3x text-danger mb-3"></i>
+                        <h6 class="mb-2">Gaming</h6>
+                        <small class="text-muted">15 cards</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- More -->
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-ellipsis-h fa-3x text-secondary mb-3"></i>
+                        <h6 class="mb-2">More</h6>
+                        <small class="text-muted">28 cards</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- All Gift Cards -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">All Gift Cards</h2>
+            <div class="d-flex gap-2">
+                <select class="form-select" style="width: auto;" onchange="sortGiftCards(this.value)">
+                    <option value="popular">Most Popular</option>
+                    <option value="cashback">Highest Cashback</option>
+                    <option value="price-low">Low Price</option>
+                    <option value="price-high">High Price</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row g-4" id="allGiftCards">
+            <!-- Additional gift cards -->
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/E74C3C/FFFFFF?text=KM" alt="KFC" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">KFC</h5>
+                        <p class="text-muted small mb-3">Fast Food</p>
+                        <div class="mb-3">
+                            <span class="badge bg-warning">8% Bonus</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹100</div>
+                            <div class="text-muted small">Max: ₹1,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('kfc')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/9B59B6/FFFFFF?text=" alt="BookMyShow" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">BookMyShow</h5>
+                        <p class="text-muted small mb-3">Movies & Events</p>
+                        <div class="mb-3">
+                            <span class="badge bg-info">5% Cashback</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹150</div>
+                            <div class="text-muted small">Max: ₹2,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('bookmyshow')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/16A085/FFFFFF?text=UB" alt="Uber" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">Uber</h5>
+                        <p class="text-muted small mb-3">Ride Sharing</p>
+                        <div class="mb-3">
+                            <span class="badge bg-success">10% Bonus</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹200</div>
+                            <div class="text-muted small">Max: ₹5,000</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('uber')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <img src="https://via.placeholder.com/80x80/F39C12/FFFFFF?text=" alt="Dominos" class="rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        <h5 class="mb-2">Dominos</h5>
+                        <p class="text-muted small mb-3">Pizza Delivery</p>
+                        <div class="mb-3">
+                            <span class="badge bg-danger">15% Bonus</span>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small">Min: ₹100</div>
+                            <div class="text-muted small">Max: ₹1,500</div>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="buyGiftCard('dominos')">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-primary" onclick="loadMoreGiftCards()">
+                <i class="fas fa-plus me-2"></i>Load More Gift Cards
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Referral Program -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="fw-bold mb-4">🎉 Refer & Earn</h2>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Invite Friends & Earn Rewards</h5>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Earn ₹100 per referral</h6>
+                                    <small class="text-muted">When your friend makes their first purchase</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="feature-icon me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Friend gets 10% off</h6>
+                                    <small class="text-muted">On their first gift card purchase</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="feature-icon me-3" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fas fa-infinity"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Unlimited referrals</h6>
+                                    <small class="text-muted">No limit on how much you can earn</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="referralLink" value="dealsphere.com/ref/ABC123" readonly>
+                            <button class="btn btn-primary-custom" onclick="copyReferralLink()">
+                                <i class="fas fa-copy me-2"></i>Copy
+                            </button>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="shareReferral('whatsapp')">
+                                <i class="fab fa-whatsapp me-2"></i>Share on WhatsApp
+                            </button>
+                            <button class="btn btn-primary" onclick="shareReferral('email')">
+                                <i class="fas fa-envelope me-2"></i>Share via Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="mb-4">Your Referral Stats</h5>
+                        <div class="row text-center mb-4">
+                            <div class="col-4">
+                                <div class="h4 text-primary mb-0">12</div>
+                                <small class="text-muted">Total Referrals</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 text-success mb-0">₹1,200</div>
+                                <small class="text-muted">Total Earned</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 text-warning mb-0">3</div>
+                                <small class="text-muted">Pending</small>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mb-3">Recent Referrals</h6>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">Rahul S.</div>
+                                    <small class="text-muted">2 days ago</small>
+                                </div>
+                                <span class="badge bg-success">₹100 earned</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">Priya M.</div>
+                                    <small class="text-muted">5 days ago</small>
+                                </div>
+                                <span class="badge bg-success">₹100 earned</span>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">Amit K.</div>
+                                    <small class="text-muted">1 week ago</small>
+                                </div>
+                                <span class="badge bg-warning">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="fw-bold mb-4">📋 How It Works</h2>
+        <div class="row g-4">
+            <div class="col-lg-3">
+                <div class="text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5>1. Browse & Select</h5>
+                    <p class="text-muted">Choose from 150+ gift cards across various categories</p>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h5>2. Customize & Pay</h5>
+                    <p class="text-muted">Select amount, add personal message, and pay securely</p>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h5>3. Instant Delivery</h5>
+                    <p class="text-muted">Receive gift card instantly via email or SMS</p>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="text-center">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h5>4. Shop & Save</h5>
+                    <p class="text-muted">Use gift card to shop and get exclusive deals</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function searchGiftCards() {
+    const searchTerm = document.getElementById('giftCardSearch').value;
+    const category = document.getElementById('categoryFilter').value;
+    
+    if (!searchTerm && category === 'all') {
+        alert('Please enter a search term or select a category');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Searching...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = '<i class="fas fa-search me-2"></i>Search';
+        button.disabled = false;
+        
+        alert(`Searching for gift cards:\n\nSearch term: ${searchTerm || 'All'}\nCategory: ${category}\n\nFound 23 matching gift cards\n\nIn production, this would filter the gift cards dynamically.`);
+    }, 1500);
+}
+
+function buyGiftCard(brand) {
+    const brandNames = {
+        'amazon': 'Amazon',
+        'flipkart': 'Flipkart',
+        'starbucks': 'Starbucks',
+        'myntra': 'Myntra',
+        'kfc': 'KFC',
+        'bookmyshow': 'BookMyShow',
+        'uber': 'Uber',
+        'dominos': 'Dominos'
+    };
+    
+    const brandName = brandNames[brand] || brand;
+    
+    // Show modal for gift card purchase
+    const amount = prompt(`Enter gift card amount for ${brandName}:`, '500');
+    
+    if (amount && !isNaN(amount) && amount > 0) {
+        alert(`🎉 Gift Card Purchase Summary:\n\nBrand: ${brandName}\nAmount: ₹${amount}\nCashback: Calculate at checkout\nDelivery: Instant via email\n\nProceeding to payment...`);
+        
+        // In production, this would:
+        // 1. Validate amount
+        // 2. Apply any available offers
+        // 3. Redirect to payment gateway
+        // 4. Process the transaction
+        // 5. Send gift card via email
+    }
+}
+
+function sortGiftCards(sortBy) {
+    const sortOptions = {
+        'popular': 'Most Popular',
+        'cashback': 'Highest Cashback',
+        'price-low': 'Lowest Price',
+        'price-high': 'Highest Price'
+    };
+    
+    alert(`Sorting gift cards by: ${sortOptions[sortBy]}\n\nIn production, this would reorder the gift cards based on the selected criteria.`);
+}
+
+function loadMoreGiftCards() {
+    const button = event.target;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = '<i class="fas fa-plus me-2"></i>Load More Gift Cards';
+        button.disabled = false;
+        
+        alert('Loading 20 more gift cards...\n\nIn production, this would append additional gift cards to the grid.');
+    }, 1500);
+}
+
+function copyReferralLink() {
+    const input = document.getElementById('referralLink');
+    input.select();
+    document.execCommand('copy');
+    
+    // Show success feedback
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+    button.classList.remove('btn-primary-custom');
+    button.classList.add('btn-success');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-primary-custom');
+    }, 2000);
+}
+
+function shareReferral(platform) {
+    const referralLink = document.getElementById('referralLink').value;
+    const message = `Join DealSphere and get amazing deals on gift cards! Use my referral link: ${referralLink}`;
+    
+    if (platform === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    } else if (platform === 'email') {
+        window.location.href = `mailto:?subject=Join DealSphere&body=${encodeURIComponent(message)}`;
+    }
+    
+    // Track referral share
+    alert(`📤 Referral link shared via ${platform}!\n\nYou'll earn ₹100 when your friend makes their first purchase.`);
+}
+
+// Initialize tooltips and other interactive elements
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to gift cards
+    const giftCards = document.querySelectorAll('.card');
+    giftCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Add search functionality
+    document.getElementById('giftCardSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchGiftCards();
+        }
+    });
+});
+</script>
+{% endblock %}

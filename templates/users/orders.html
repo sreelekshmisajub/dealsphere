@@ -1,0 +1,91 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Orders - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .order-card {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1rem;
+        min-width: 0;
+    }
+
+    .order-item {
+        padding: 0.9rem 0;
+        border-bottom: 1px solid #eef2f7;
+        min-width: 0;
+    }
+
+    .order-card .d-flex,
+    .order-item {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .order-card .d-flex > *,
+    .order-item > * {
+        min-width: 0;
+        flex: 1 1 220px;
+    }
+
+    .order-item:last-child {
+        border-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-magnifying-glass"></i>Search Products
+</a>
+{% endblock %}
+
+{% block dashboard_content %}
+{% for order in orders %}
+<article class="order-card">
+    <div class="d-flex justify-content-between gap-3 mb-3">
+        <div>
+            <h5 class="fw-bold mb-1">Order {{ order.id }}</h5>
+            <div class="small text-secondary">{{ order.created_at|date:"M d, Y H:i" }}</div>
+        </div>
+        <div class="text-end">
+            <div class="fw-semibold">Rs.{{ order.total_amount }}</div>
+            <div class="small text-secondary">{{ order.payment_method|title }} | {{ order.payment_status|title }}</div>
+        </div>
+    </div>
+    <div class="small text-secondary mb-2">Status: {{ order.status|title }} | Delivery address: {{ order.delivery_address }}</div>
+    {% if order.payment_reference %}
+    <div class="small text-secondary mb-2">Reference: {{ order.payment_reference }}</div>
+    {% endif %}
+    {% if order.payment_link %}
+    <div class="mb-3">
+        <a href="{{ order.payment_link }}" target="_blank" rel="noopener" class="small fw-semibold text-primary text-decoration-none">Open payment link</a>
+    </div>
+    {% endif %}
+    {% for item in order.items.all %}
+    <div class="order-item d-flex justify-content-between gap-3">
+        <div>
+            <div class="fw-semibold">{{ item.product.name }}</div>
+            <div class="small text-secondary">{{ item.source_name }} | {{ item.source|title }} | Qty {{ item.quantity }}</div>
+        </div>
+        <div class="text-end">
+            <div class="fw-semibold">Rs.{{ item.price }}</div>
+            {% if item.external_url %}
+            <a href="{{ item.external_url }}" target="_blank" rel="noopener" class="small fw-semibold text-primary text-decoration-none">Open checkout</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</article>
+{% empty %}
+<section class="order-card">
+    <h4 class="fw-bold mb-2">No orders yet</h4>
+    <p class="text-secondary mb-0">Placed orders will appear here once you complete checkout.</p>
+</section>
+{% endfor %}
+{% endblock %}

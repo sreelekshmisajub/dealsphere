@@ -1,0 +1,147 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Deals - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="admin-section-card">
+    <form method="get" class="row g-3 align-items-end admin-toolbar-form">
+        <div class="col-lg-5">
+            <label class="form-label small text-secondary">Search</label>
+            <input type="text" class="form-control" name="q" value="{{ deal_filters.q }}" placeholder="Product, merchant, or user">
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Request Status</label>
+            <select class="form-select" name="request_status">
+                <option value="all" {% if deal_filters.request_status == 'all' %}selected{% endif %}>All</option>
+                <option value="pending" {% if deal_filters.request_status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if deal_filters.request_status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if deal_filters.request_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="expired" {% if deal_filters.request_status == 'expired' %}selected{% endif %}>Expired</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Offer Status</label>
+            <select class="form-select" name="offer_status">
+                <option value="all" {% if deal_filters.offer_status == 'all' %}selected{% endif %}>All</option>
+                <option value="active" {% if deal_filters.offer_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if deal_filters.offer_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2 d-grid">
+            <button class="btn-premium btn-premium-primary" type="submit">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Active Offers</div><div class="value">{{ deal_summary.active_offers }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Inactive Offers</div><div class="value">{{ deal_summary.inactive_offers }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Pending</div><div class="value">{{ deal_summary.pending_requests }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Approved</div><div class="value">{{ deal_summary.approved_requests }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Expired</div><div class="value">{{ deal_summary.expired_requests }}</div></div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Price-Match Requests</h5>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>User</th>
+                            <th>Merchant</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in price_match_requests %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.product.name }}</div>
+                                <div class="small text-secondary">Req: {{ item.requested_price }} · Comp: {{ item.competitor_price|default:"-" }}</div>
+                            </td>
+                            <td>{{ item.user.email }}</td>
+                            <td>{{ item.merchant.shop_name }}</td>
+                            <td><span class="badge bg-light text-dark text-capitalize">{{ item.status }}</span></td>
+                            <td>
+                                {% if item.status != 'expired' %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="request_id" value="{{ item.id }}">
+                                    <input type="hidden" name="action" value="expire_request">
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Expire</button>
+                                </form>
+                                {% else %}
+                                <span class="small text-secondary">Closed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-secondary">No price-match requests available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Merchant Offers</h5>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Offer</th>
+                            <th>Merchant</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for offer in offer_rows %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ offer.product.name }}</div>
+                                <div class="small text-secondary">Price {{ offer.price }} · Delivery {{ offer.delivery_time_hours }}h</div>
+                            </td>
+                            <td>{{ offer.merchant.shop_name }}</td>
+                            <td>
+                                {% if offer.is_active %}
+                                <span class="badge bg-success-subtle text-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="offer_id" value="{{ offer.id }}">
+                                    <input type="hidden" name="action" value="{% if offer.is_active %}cancel_offer{% else %}reactivate_offer{% endif %}">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">{% if offer.is_active %}Disable{% else %}Reactivate{% endif %}</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-secondary">No offers available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_content %}
+<div class="merchant-section-card mb-4">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="small text-secondary">Total Requests</div>
+            <div class="h3 fw-bold">{{ request_summary.total }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Pending</div>
+            <div class="h3 fw-bold">{{ request_summary.pending }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Approved</div>
+            <div class="h3 fw-bold">{{ request_summary.approved }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Rejected</div>
+            <div class="h3 fw-bold">{{ request_summary.rejected }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="merchant-section-card mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label-premium">Status</label>
+            <select class="form-select" name="status">
+                <option value="pending" {% if request_filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if request_filters.status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if request_filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                <option value="expired" {% if request_filters.status == 'expired' %}selected{% endif %}>Expired</option>
+                <option value="all" {% if request_filters.status == 'all' %}selected{% endif %}>All</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn-premium btn-premium-secondary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+{% for row in request_rows %}
+<div class="merchant-section-card mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <div class="fw-bold">{{ row.record.product.name }}</div>
+            <div class="small text-secondary">
+                {{ row.record.user.get_full_name|default:row.record.user.username }}
+                | {{ row.record.created_at|date:"d M Y, H:i" }}
+            </div>
+        </div>
+        <span class="badge {% if row.record.status == 'pending' %}bg-warning text-dark{% elif row.record.status == 'approved' %}bg-success{% elif row.record.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+            {{ row.record.status|title }}
+        </span>
+    </div>
+
+    <div class="row g-4 mb-3">
+        <div class="col-md-3">
+            <div class="small text-secondary">Requested Price</div>
+            <div class="fw-semibold">Rs.{{ row.record.requested_price }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Competitor Price</div>
+            <div class="fw-semibold">Rs.{{ row.record.competitor_price|default:0 }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Competitor Source</div>
+            <div class="fw-semibold">{{ row.record.competitor_source|default:"Not provided" }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="small text-secondary">Current Merchant Price</div>
+            <div class="fw-semibold">
+                {% if row.merchant_offer %}Rs.{{ row.merchant_offer.price }}{% else %}No active offer{% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if row.record.status == 'pending' %}
+    <form method="post" class="row g-3 align-items-end">
+        {% csrf_token %}
+        <input type="hidden" name="request_id" value="{{ row.record.id }}">
+        <div class="col-md-8">
+            <label class="form-label-premium">Response Message</label>
+            <input type="text" class="form-control" name="response_message" placeholder="Optional note to the customer">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn-premium btn-premium-primary" type="submit" name="decision" value="approved">Approve</button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn-premium btn-premium-secondary" type="submit" name="decision" value="rejected">Reject</button>
+        </div>
+    </form>
+    {% else %}
+    <div class="small text-secondary">
+        {% if row.record.response_message %}{{ row.record.response_message }}{% else %}No response message stored.{% endif %}
+        {% if row.record.expires_at %}<br>Valid until {{ row.record.expires_at|date:"d M Y, H:i" }}.{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% empty %}
+<div class="merchant-section-card">
+    <div class="text-secondary">No price-match requests found for the selected status.</div>
+</div>
+{% endfor %}
+{% endblock %}

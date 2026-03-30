@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Orders - Merchant Hub - DealSphere{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-item-premium {
+        background: white;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: var(--shadow-sm);
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        transition: var(--transition);
+        display: flex;
+        gap: 2rem;
+        position: relative;
+    }
+    .order-item-premium:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+    }
+    .order-status-pending { border-left: 6px solid #f59e0b; }
+    .order-status-shipped { border-left: 6px solid #3b82f6; }
+    .order-status-delivered { border-left: 6px solid #10b981; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row align-items-center mb-5 animate-on-scroll">
+        <div class="col-lg-8">
+            <h2 class="display-5 fw-bold mb-1">Live Order Stream</h2>
+            <p class="text-secondary small mb-0">Total <span class="text-primary fw-bold">{{ orders|length|default:12 }} orders</span> active across verified locations.</p>
+        </div>
+        <div class="col-lg-3 d-flex justify-content-end gap-3 mt-4 mt-lg-0">
+            <button class="btn-premium btn-premium-secondary small"><i class="fas fa-file-export me-2"></i> Monthly Export</button>
+            <button class="btn-premium btn-premium-secondary small"><i class="fas fa-print me-2"></i> Print Shipping Labels</button>
+        </div>
+    </div>
+
+    <!-- Stats Summary Row -->
+    <div class="row g-4 mb-5 animate-on-scroll">
+        <div class="col-md-3">
+            <div class="card glass-dark p-4 border-0 shadow-sm rounded-xl">
+                <span class="smaller text-secondary">ACTIVE ORDERS</span>
+                <h3 class="fw-bold text-dark mb-0">12</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-dark p-4 border-0 shadow-sm rounded-xl">
+                <span class="smaller text-secondary">PENDING SHIPMENT</span>
+                <h3 class="fw-bold text-primary mb-0">5</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-dark p-4 border-0 shadow-sm rounded-xl">
+                <span class="smaller text-secondary">IN TRANSIT</span>
+                <h3 class="fw-bold text-info mb-0">4</h3>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card glass-dark p-4 border-0 shadow-sm rounded-xl">
+                <span class="smaller text-secondary">TODAY'S REVENUE</span>
+                <h3 class="fw-bold text-success mb-0">₹42,500</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Loop -->
+    <div class="animate-on-scroll">
+        {% for order in orders %}
+        <div class="order-item-premium order-status-{{ order.status|default:'pending' }} animate-on-scroll">
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <div class="d-flex align-items-center gap-3 mb-1">
+                            <h5 class="fw-bold mb-0">Order #{{ order.id|truncatechars:8 }}</h5>
+                            <span class="badge bg-light text-secondary border smaller">ID: {{ order.id }}</span>
+                        </div>
+                        <p class="smaller text-secondary mb-0">Customer: <span class="text-primary fw-bold">{{ order.user.get_full_name|default:order.user.username }}</span> &middot; Ordered {{ order.created_at|date:"f a, M d" }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge {% if order.status == 'pending' %}bg-warning{% elif order.status == 'shipped' %}bg-primary{% else %}bg-success{% endif %} bg-opacity-10 text-{{ order.status|default:'warning' }} px-3 py-2 rounded-pill smaller mb-2">{{ order.status|title|default:'Pending' }}</span>
+                        <div class="h4 fw-bold text-dark mb-0">₹{{ order.total_amount }}</div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="label-premium mb-2">SHIPPING ADDRESS</label>
+                        <p class="smaller text-secondary mb-0" style="max-width:300px;">{{ order.delivery_address|default:"123, Indiranagar 100ft Rd, Bangalore, India - 560001" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="label-premium mb-2">ITEMS ({{ order.items.count|default:1 }})</label>
+                        <ul class="list-unstyled mb-0">
+                            {% for item in order.items.all %}
+                                <li class="smaller text-secondary mb-1"><strong>{{ item.quantity }}x</strong> {{ item.product.name }} &middot; ₹{{ item.price }}</li>
+                            {% empty %}
+                                <li class="smaller text-secondary"><i class="fas fa-shopping-bag me-2 opacity-50"></i> Standard Pickup Order (Multi-items)</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top border-light">
+                    <div class="small text-secondary"><i class="fas fa-clock me-2"></i> Delivery Estimate: <strong>Within 4 hours</strong></div>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-white border-0 glass px-4 py-2 small fw-bold text-danger">Cancel Order</button>
+                        <button class="btn-premium btn-premium-primary rounded-pill py-2 px-5 small fw-bold shadow-lg">Ship Instantly</button>
+                        <button class="btn btn-white border-0 glass rounded-pill px-4 py-2 small fw-bold text-primary shadow-sm"><i class="fas fa-print me-2"></i> Invoice</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Mock Orders for Visualization -->
+        {% for status in "pending,shipped,delivered"|split:"," %}
+        <div class="order-item-premium order-status-{{ status }} animate-on-scroll">
+            <div class="flex-grow-1">
+                <div class="text-center py-5 text-secondary">
+                    <i class="fas fa-ghost fa-3x text-primary opacity-25 mb-4"></i>
+                    <h5 class="fw-bold mb-1">No orders yet</h5>
+                    <p class="small mb-0">When orders come in, they'll appear here automatically.</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

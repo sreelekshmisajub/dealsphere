@@ -1,0 +1,154 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Deal-Lock - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .deal-lock-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .deal-lock-card,
+    .deal-lock-request {
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        min-width: 0;
+    }
+
+    .offer-option {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: #f8fafc;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        margin-bottom: 1rem;
+        min-width: 0;
+    }
+
+    .request-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .offer-option .d-flex,
+    .deal-lock-request .d-flex {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    @media (max-width: 991px) {
+        .deal-lock-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-magnifying-glass"></i>Search Products
+</a>
+{% if selected_product %}
+<a href="{% url 'dashboard_product_detail' selected_product.id %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-box-open"></i>Product Detail
+</a>
+{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="deal-lock-grid">
+    <article class="deal-lock-card">
+        {% if selected_product %}
+        <div class="small text-secondary text-uppercase fw-bold mb-1">Selected Product</div>
+        <h4 class="fw-bold mb-2">{{ selected_product.name }}</h4>
+        <div class="text-secondary mb-3">{{ selected_product.category.name }}</div>
+
+        <div class="p-3 rounded-4 bg-light border mb-4">
+            <div class="small text-secondary">Cheapest online baseline</div>
+            <div class="h4 fw-bold mb-0">
+                {% if online_baseline_price %}
+                Rs.{{ online_baseline_price }}
+                {% else %}
+                Unavailable
+                {% endif %}
+            </div>
+            {% if online_baseline_source %}
+            <div class="small text-secondary mt-1">Source: {{ online_baseline_source }}</div>
+            {% endif %}
+        </div>
+
+        {% if local_offers %}
+        <form method="post">
+            {% csrf_token %}
+            <h5 class="fw-bold mb-3">Choose a merchant offer</h5>
+            {% for offer in local_offers %}
+            <label class="offer-option d-block">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <input class="form-check-input mt-0" type="radio" name="merchant_id" value="{{ offer.merchant_id }}" {% if forloop.first %}checked{% endif %}>
+                            <strong>{{ offer.shop_name }}</strong>
+                            {% if offer.beats_online %}
+                            <span class="badge bg-success-subtle text-success">Already beats online</span>
+                            {% endif %}
+                        </div>
+                        <div class="small text-secondary">{{ offer.address }}</div>
+                        <div class="small text-secondary">Delivery {{ offer.delivery_time_hours }} hour(s)</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-primary">Rs.{{ offer.price }}</div>
+                    </div>
+                </div>
+            </label>
+            {% endfor %}
+            <button class="btn-premium btn-premium-primary" type="submit">
+                <i class="fas fa-ticket"></i>Request Deal-Lock
+            </button>
+        </form>
+        {% else %}
+        <p class="text-secondary mb-0">No local merchant offers are active for this product yet.</p>
+        {% endif %}
+        {% else %}
+        <h4 class="fw-bold mb-2">Open a product first</h4>
+        <p class="text-secondary mb-4">
+            Deal-Lock works after you select a product from search results or the product detail page. The request is then sent to the matching merchant with the current online baseline.
+        </p>
+        <a href="{% url 'dashboard_results' %}" class="btn-premium btn-premium-primary">Go to Search Results</a>
+        {% endif %}
+    </article>
+
+    <section class="deal-lock-card">
+        <h4 class="fw-bold mb-3">Recent Price Match Requests</h4>
+        <div class="request-list">
+            {% for request in deal_lock_requests %}
+            <article class="deal-lock-request">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                    <div>
+                        <div class="fw-semibold">{{ request.product.name }}</div>
+                        <div class="small text-secondary">{{ request.merchant.shop_name }}</div>
+                    </div>
+                    <span class="badge {% if request.status == 'approved' %}bg-success-subtle text-success{% elif request.status == 'rejected' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                        {{ request.status|title }}
+                    </span>
+                </div>
+                <div class="small text-secondary">Requested price: Rs.{{ request.requested_price }}</div>
+                {% if request.competitor_source %}
+                <div class="small text-secondary">Baseline source: {{ request.competitor_source }}</div>
+                {% endif %}
+                <div class="small text-secondary mt-1">{{ request.created_at|timesince }} ago</div>
+            </article>
+            {% empty %}
+            <div class="deal-lock-request">
+                <div class="fw-semibold mb-2">No requests yet</div>
+                <div class="text-secondary">Your pending, approved, and rejected deal-lock requests will appear here.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</section>
+{% endblock %}

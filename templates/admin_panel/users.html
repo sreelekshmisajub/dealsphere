@@ -1,0 +1,158 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Users - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="admin-section-card">
+    <form method="get" class="row g-3 align-items-end admin-toolbar-form">
+        <div class="col-lg-4">
+            <label class="form-label small text-secondary">Search</label>
+            <input type="text" class="form-control" name="q" value="{{ user_filters.q }}" placeholder="Email, username, or full name">
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Role</label>
+            <select class="form-select" name="role">
+                <option value="all" {% if user_filters.role == 'all' %}selected{% endif %}>All</option>
+                <option value="customer" {% if user_filters.role == 'customer' %}selected{% endif %}>Customers</option>
+                <option value="merchant" {% if user_filters.role == 'merchant' %}selected{% endif %}>Merchants</option>
+                <option value="admin" {% if user_filters.role == 'admin' %}selected{% endif %}>Admins</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Status</label>
+            <select class="form-select" name="status">
+                <option value="all" {% if user_filters.status == 'all' %}selected{% endif %}>All</option>
+                <option value="active" {% if user_filters.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if user_filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Verified</label>
+            <select class="form-select" name="verified">
+                <option value="all" {% if user_filters.verified == 'all' %}selected{% endif %}>All</option>
+                <option value="verified" {% if user_filters.verified == 'verified' %}selected{% endif %}>Verified</option>
+                <option value="unverified" {% if user_filters.verified == 'unverified' %}selected{% endif %}>Unverified</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2 d-grid">
+            <button class="btn-premium btn-premium-primary" type="submit">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Total</div><div class="value">{{ user_summary.total }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Customers</div><div class="value">{{ user_summary.customers }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Merchants</div><div class="value">{{ user_summary.merchants }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Admins</div><div class="value">{{ user_summary.admins }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Active</div><div class="value">{{ user_summary.active }}</div></div>
+    </div>
+    <div class="col-md-4 col-xl-2">
+        <div class="admin-stat-card"><div class="label">Inactive</div><div class="value">{{ user_summary.inactive }}</div></div>
+    </div>
+</div>
+
+<div class="admin-section-card">
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Verified</th>
+                    <th>Joined</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in users_page %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ item.get_full_name|default:item.username }}</div>
+                        <div class="small text-secondary">{{ item.email }}</div>
+                    </td>
+                    <td>
+                        {% if item.is_staff %}
+                        <span class="badge bg-danger-subtle text-danger">Admin</span>
+                        {% elif item.is_merchant %}
+                        <span class="badge bg-info-subtle text-info">Merchant</span>
+                        {% else %}
+                        <span class="badge bg-primary-subtle text-primary">Customer</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.is_active %}
+                        <span class="badge bg-success-subtle text-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.is_verified %}
+                        <span class="badge bg-success-subtle text-success">Verified</span>
+                        {% else %}
+                        <span class="badge bg-warning-subtle text-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.date_joined|date:"M d, Y" }}</td>
+                    <td>{{ item.last_login|date:"M d, Y H:i"|default:"Never" }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ item.id }}">
+                                <input type="hidden" name="action" value="{% if item.is_active %}deactivate{% else %}activate{% endif %}">
+                                <button class="btn btn-sm btn-outline-primary" type="submit">{% if item.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+                            </form>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ item.id }}">
+                                <input type="hidden" name="action" value="{% if item.is_verified %}unverify{% else %}verify{% endif %}">
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">{% if item.is_verified %}Unverify{% else %}Verify{% endif %}</button>
+                            </form>
+                            {% if not item.is_staff or item.id != user.id %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ item.id }}">
+                                <input type="hidden" name="action" value="soft_delete">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Soft Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-secondary">No users matched the current filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if users_page.paginator.num_pages > 1 %}
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="small text-secondary">Page {{ users_page.number }} of {{ users_page.paginator.num_pages }}</div>
+        <div class="d-flex gap-2">
+            {% if users_page.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ users_page.previous_page_number }}&q={{ user_filters.q }}&role={{ user_filters.role }}&status={{ user_filters.status }}&verified={{ user_filters.verified }}">Previous</a>
+            {% endif %}
+            {% if users_page.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ users_page.next_page_number }}&q={{ user_filters.q }}&role={{ user_filters.role }}&status={{ user_filters.status }}&verified={{ user_filters.verified }}">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

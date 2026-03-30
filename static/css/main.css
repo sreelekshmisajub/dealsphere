@@ -1,0 +1,423 @@
+/* DealSphere Design System - Modern & Premium UI */
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --secondary: #f59e0b;
+    --secondary-hover: #d97706;
+    --accent: #8b5cf6;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #facc15;
+    --info: #3b82f6;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    background-color: var(--bg-light);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+/* Glassmorphism Classes */
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-lg);
+}
+
+.glass-dark {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Navbar Upgrades */
+.navbar-premium {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 1rem 0;
+    transition: var(--transition);
+}
+
+.navbar-premium.scrolled {
+    padding: 0.5rem 0;
+    box-shadow: var(--shadow-md);
+}
+
+.navbar-premium .navbar-brand {
+    font-size: 1.5rem;
+    font-family: 'Outfit', sans-serif;
+    color: var(--primary);
+}
+
+.navbar-premium .nav-link {
+    color: var(--text-main);
+    font-weight: 500;
+    margin: 0 0.5rem;
+    transition: var(--transition);
+}
+
+.navbar-premium .nav-link:hover {
+    color: var(--primary);
+}
+
+/* Buttons Upgrades */
+.btn-premium {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+}
+
+.btn-premium-primary {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+}
+
+.btn-premium-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+    color: white;
+}
+
+.btn-premium-secondary {
+    background: var(--bg-white);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.btn-premium-secondary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Cards Upgrades */
+.card-premium {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    border: none;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    overflow: hidden;
+}
+
+.card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.category-card {
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    background: linear-gradient(to bottom, #ffffff, #f1f5f9);
+}
+
+.category-card .icon-wrapper {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    color: var(--primary);
+    transition: var(--transition);
+}
+
+.category-card:hover .icon-wrapper {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Deal Cards */
+.deal-card .image-container {
+    position: relative;
+    padding-top: 100%;
+}
+
+.deal-card img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.deal-badge {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--danger);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-md);
+}
+
+/* Hero Section */
+.hero-wrapper {
+    position: relative;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    padding: 6rem 0;
+    overflow: hidden;
+    color: white;
+}
+
+.hero-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Search Bar Premium */
+.search-container-premium {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 0.5rem;
+    display: flex;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-input-premium {
+    flex: 1;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    border-radius: var(--radius-md);
+    outline: none;
+}
+
+/* Hover Animations */
+.hover-lift {
+    transition: var(--transition);
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Dashboard Sidebar */
+.sidebar-premium {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    height: 100%;
+    box-shadow: var(--shadow-sm);
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary);
+}
+
+.sidebar-link i {
+    width: 20px;
+}
+
+/* Footer Premium */
+.footer-premium {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 5rem 0 2rem;
+}
+
+.footer-link {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: var(--transition);
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.footer-link:hover {
+    color: white;
+    transform: translateX(5px);
+}
+
+/* Comparison Table */
+.comparison-table .feature-col {
+    background: #f1f5f9;
+    font-weight: 600;
+}
+
+.comparison-table .product-col {
+    text-align: center;
+}
+
+.comparison-table .check-icon {
+    color: var(--success);
+}
+
+.comparison-table .cross-icon {
+    color: var(--danger);
+}
+
+/* Specific UI for Merchant/Admin */
+.stats-card {
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    color: white;
+}
+
+.stats-card-primary { background: linear-gradient(135deg, #2563eb, #8b5cf6); }
+.stats-card-success { background: linear-gradient(135deg, #10b981, #059669); }
+.stats-card-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.stats-card-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+/* Utility Classes */
+.rounded-xl { border-radius: 1.25rem !important; }
+.rounded-2xl { border-radius: 2rem !important; }
+.shadow-xl { box-shadow: var(--shadow-xl) !important; }
+.shadow-hover:hover { box-shadow: var(--shadow-xl) !important; translate: 0 -5px; }
+
+.smaller { font-size: 0.875rem !important; }
+.smallest { font-size: 0.75rem !important; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.letter-spacing-wide { letter-spacing: 0.1em; }
+
+.form-label-premium {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.max-h-300 { max-height: 300px; }
+
+.line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* SaaS Premium Enhancements */
+.shadow-glow {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 3s infinite ease-in-out;
+}
+
+@keyframes pulse-subtle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(1.02); }
+}
+
+.text-gradient-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Custom Checkbox & Switch */
+.custom-checkbox .form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.custom-switch .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    cursor: pointer;
+}
+
+/* Animations Hub */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Hover Effects */
+.hover-opacity-100 { transition: var(--transition); }
+.group:hover .hover-opacity-100 { opacity: 1 !important; }
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .navbar-premium {
+        background: white;
+    }
+}

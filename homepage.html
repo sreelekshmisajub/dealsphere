@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DealSphere - Smart Online and Offline Deal Comparison</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Urbanist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="/static/css/main.css" rel="stylesheet">
+
+    
+<style>
+    :root {
+        --ds-purple: #4c40e8;
+        --ds-purple-dark: #352dbd;
+        --ds-green: #2ecf63;
+        --ds-ink: #13223a;
+        --ds-muted: #64748b;
+        --ds-line: #dde4f4;
+        --ds-soft: #eff2ff;
+        --ds-soft-peach: #fff3ec;
+        --ds-soft-gold: #fff9db;
+        --ds-panel: #f7f8fe;
+    }
+
+    .landing-shell {
+        background: linear-gradient(180deg, #f7f9ff 0%, #ffffff 22%, #f8faff 100%);
+    }
+
+    .section-space {
+        padding: 5rem 0;
+    }
+
+    .section-title {
+        font-size: clamp(2rem, 3vw, 3rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        text-align: center;
+        margin-bottom: 0.8rem;
+    }
+
+    .section-copy {
+        max-width: 760px;
+        margin: 0 auto 2.5rem;
+        color: var(--ds-muted);
+        text-align: center;
+        font-size: 1.05rem;
+    }
+
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at center, rgba(151, 144, 255, 0.56) 0%, rgba(151, 144, 255, 0.12) 24%, transparent 58%),
+            linear-gradient(135deg, #3420db 0%, #4734e4 48%, #5a48ff 100%);
+        color: #ffffff;
+    }
+
+    .hero-section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+            repeating-conic-gradient(
+                from -8deg at 50% 48%,
+                rgba(255, 255, 255, 0.085) 0deg,
+                rgba(255, 255, 255, 0.02) 7deg,
+                rgba(255, 255, 255, 0) 14deg
+            );
+        opacity: 0.62;
+        pointer-events: none;
+    }
+
+    .hero-inner {
+        position: relative;
+        z-index: 1;
+        padding: 3.7rem 0 11.75rem;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 1.7rem;
+        padding: 0.8rem 1.45rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(77, 57, 219, 0.34);
+        box-shadow: 0 20px 34px rgba(24, 10, 95, 0.24);
+        font-size: 1.02rem;
+        font-weight: 700;
+    }
+
+    .hero-title {
+        max-width: 980px;
+        margin: 0 auto 1.35rem;
+        text-align: center;
+        font-size: clamp(3.2rem, 6vw, 5.95rem);
+        line-height: 0.92;
+        letter-spacing: -0.065em;
+        color: #000000;
+    }
+
+    .hero-title .accent {
+        color: #33d558;
+    }
+
+    .hero-copy {
+        max-width: 1100px;
+        margin: 0 auto 2.6rem;
+        text-align: center;
+        font-size: clamp(1.12rem, 2vw, 1.55rem);
+        color: #000000;
+    }
+
+    .hero-search {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0.45rem 0.45rem 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(246, 248, 255, 0.98);
+        border: 5px solid rgba(255, 255, 255, 0.26);
+        box-shadow: 0 28px 70px rgba(14, 8, 68, 0.28);
+    }
+
+    .hero-search-main {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        gap: 0.95rem;
+        padding: 0 0.85rem 0 1.1rem;
+        color: #7a8699;
+    }
+
+    .hero-search-main input {
+        flex: 1 1 auto;
+        min-height: 70px;
+        border: 0;
+        background: transparent;
+        color: var(--ds-ink);
+        font-size: 1.22rem;
+        font-weight: 600;
+        outline: none;
+    }
+
+    .hero-search-main input::placeholder {
+        color: #6d7d99;
+        opacity: 1;
+    }
+
+    .hero-search-voice {
+        width: 48px;
+        height: 48px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: #6e7280;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .hero-search-btn {
+        min-width: 192px;
+        min-height: 72px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #5c4df3, #493de2);
+        color: #ffffff;
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
+    .hero-bottom-strip {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+        background: rgba(28, 21, 94, 0.92);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(14px);
+    }
+
+    .hero-bottom-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.85rem;
+        padding: 1rem 0;
+    }
+
+    .hero-bottom-copy {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    .hero-bottom-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.6rem 0.95rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .hero-float {
+        position: absolute;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .hero-float.headphones {
+        top: -6px;
+        left: -14px;
+        font-size: 8rem;
+        color: rgba(20, 22, 58, 0.92);
+        transform: rotate(-12deg);
+    }
+
+    .hero-float.phone {
+        top: -18px;
+        right: -16px;
+        width: 118px;
+        height: 168px;
+        border-radius: 1.5rem;
+        background: linear-gradient(180deg, #ffb44e 0%, #ff8a2b 100%);
+        box-shadow: 0 18px 34px rgba(18, 15, 61, 0.28);
+        transform: rotate(24deg);
+    }
+
+    .hero-float.phone::before,
+    .hero-float.phone::after {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: rgba(45, 45, 45, 0.55);
+        box-shadow: 24px 0 0 rgba(45, 45, 45, 0.55), 12px 22px 0 rgba(45, 45, 45, 0.45);
+    }
+
+    .hero-float.laptop {
+        left: -56px;
+        top: 128px;
+        width: 130px;
+        height: 88px;
+        border-radius: 1rem 1rem 0.6rem 0.6rem;
+        background: linear-gradient(180deg, #c4dcff 0%, #6ca0ff 100%);
+        border: 6px solid rgba(246, 248, 255, 0.92);
+        transform: rotate(-24deg);
+        box-shadow: 0 18px 34px rgba(18, 15, 61, 0.22);
+    }
+
+    .hero-float.laptop::after {
+        content: "";
+        position: absolute;
+        left: -8px;
+        right: -8px;
+        bottom: -14px;
+        height: 12px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #d4ddf0 0%, #91a0bd 100%);
+    }
+
+    .hero-float.earbuds {
+        top: 154px;
+        right: -10px;
+        width: 138px;
+        height: 120px;
+    }
+
+    .hero-float.earbuds::before,
+    .hero-float.earbuds::after {
+        content: "";
+        position: absolute;
+        width: 52px;
+        height: 72px;
+        border-radius: 999px 999px 30px 30px;
+        background: #eef1ff;
+        box-shadow: 0 16px 30px rgba(19, 13, 61, 0.18);
+    }
+
+    .hero-float.earbuds::before {
+        left: 18px;
+        transform: rotate(18deg);
+    }
+
+    .hero-float.earbuds::after {
+        right: 18px;
+        transform: rotate(-18deg);
+    }
+
+    .hero-cart {
+        position: absolute;
+        bottom: 20px;
+        width: 258px;
+        height: 188px;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .hero-cart.left {
+        left: 22px;
+    }
+
+    .hero-cart.right {
+        right: 22px;
+        transform: scaleX(-1);
+    }
+
+    .hero-cart-basket {
+        position: absolute;
+        left: 32px;
+        bottom: 20px;
+        width: 132px;
+        height: 98px;
+        border: 4px solid rgba(218, 228, 255, 0.92);
+        border-radius: 1rem 1rem 1.2rem 1.2rem;
+        background: linear-gradient(180deg, rgba(76, 64, 232, 0.18) 0%, rgba(255, 255, 255, 0.03) 100%);
+    }
+
+    .hero-cart-basket::before,
+    .hero-cart-basket::after {
+        content: "";
+        position: absolute;
+        width: 46px;
+        height: 34px;
+        border: 4px solid rgba(218, 228, 255, 0.92);
+        border-bottom: 0;
+        border-radius: 999px 999px 0 0;
+        top: -26px;
+    }
+
+    .hero-cart-basket::before {
+        left: 10px;
+    }
+
+    .hero-cart-basket::after {
+        right: 10px;
+    }
+
+    .hero-cart-box {
+        position: absolute;
+        bottom: 62px;
+        left: 86px;
+        width: 58px;
+        height: 52px;
+        background: linear-gradient(180deg, #f2dbad 0%, #d0ae67 100%);
+        box-shadow: 32px 10px 0 #edd4a4;
+    }
+
+    .hero-cart-box::before {
+        content: "";
+        position: absolute;
+        left: 22px;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        background: rgba(173, 128, 44, 0.55);
+        box-shadow: 32px 10px 0 rgba(173, 128, 44, 0.55);
+    }
+
+    .hero-shoe,
+    .hero-gift {
+        position: absolute;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, rgba(241, 246, 255, 0.95) 0%, rgba(207, 216, 255, 0.95) 100%);
+        box-shadow: 0 18px 26px rgba(18, 15, 61, 0.16);
+    }
+
+    .hero-shoe {
+        width: 74px;
+        height: 48px;
+        bottom: 20px;
+        left: 156px;
+        transform: skewX(-16deg);
+    }
+
+    .hero-shoe::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 7px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(52, 60, 91, 0.22);
+    }
+
+    .hero-gift {
+        width: 54px;
+        height: 40px;
+        bottom: 12px;
+        left: 214px;
+    }
+
+    .hero-gift::before,
+    .hero-gift::after {
+        content: "";
+        position: absolute;
+        background: rgba(116, 136, 255, 0.48);
+    }
+
+    .hero-gift::before {
+        width: 6px;
+        top: 0;
+        bottom: 0;
+        left: 24px;
+    }
+
+    .hero-gift::after {
+        height: 6px;
+        left: 0;
+        right: 0;
+        top: 17px;
+    }
+
+    .hero-spark {
+        position: absolute;
+        color: rgba(255, 255, 255, 0.58);
+        font-weight: 800;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .hero-spark.one {
+        left: 132px;
+        bottom: 222px;
+        font-size: 2rem;
+    }
+
+    .hero-spark.two {
+        right: 134px;
+        bottom: 226px;
+        font-size: 2rem;
+    }
+
+    .hero-spark.three {
+        left: 120px;
+        bottom: 150px;
+        font-size: 0.95rem;
+    }
+
+    .hero-spark.four {
+        right: 120px;
+        bottom: 150px;
+        font-size: 0.95rem;
+    }
+
+    .hero-coupon {
+        position: absolute;
+        z-index: 1;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 2.4rem;
+        pointer-events: none;
+    }
+
+    .hero-coupon.left {
+        left: 184px;
+        bottom: 184px;
+        transform: rotate(-20deg);
+    }
+
+    .hero-coupon.right {
+        right: 184px;
+        bottom: 184px;
+        transform: rotate(20deg);
+    }
+
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+
+    .mini-card,
+    .spotlight-card,
+    .deal-card,
+    .role-card,
+    .why-card {
+        border-radius: 1.5rem;
+        border: 1px solid var(--ds-line);
+        background: #ffffff;
+        box-shadow: 0 18px 32px rgba(35, 49, 85, 0.06);
+    }
+
+    .mini-card {
+        padding: 1.4rem;
+        text-align: center;
+        background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+    }
+
+    .mini-card.discount {
+        background: linear-gradient(180deg, #fff2ec 0%, #ffffff 100%);
+    }
+
+    .mini-card .eyebrow {
+        color: #574bd6;
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .mini-card .value {
+        font-size: 2.1rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 0.35rem 0;
+    }
+
+    .mini-card .meta {
+        color: var(--ds-muted);
+        font-size: 0.92rem;
+    }
+
+    .spotlight-card {
+        padding: 1.4rem;
+    }
+
+    .spotlight-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .spotlight-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin-bottom: 0.15rem;
+    }
+
+    .spotlight-meta {
+        color: var(--ds-muted);
+        font-size: 0.95rem;
+    }
+
+    .deal-card {
+        overflow: hidden;
+    }
+
+    .deal-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 210px;
+        padding: 1.5rem;
+        background: linear-gradient(180deg, #f4f7ff 0%, #ffffff 100%);
+    }
+
+    .deal-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .deal-body {
+        padding: 1.3rem 1.35rem 1.45rem;
+    }
+
+    .deal-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.7rem;
+        padding: 0.38rem 0.72rem;
+        border-radius: 999px;
+        background: var(--ds-soft);
+        color: var(--ds-purple);
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .deal-name {
+        font-size: 1.08rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 0.45rem;
+        min-height: 2.6rem;
+    }
+
+    .deal-meta {
+        color: var(--ds-muted);
+        font-size: 0.92rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .deal-price-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        margin-bottom: 1rem;
+    }
+
+    .deal-price {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--ds-purple);
+    }
+
+    .deal-original {
+        color: var(--ds-muted);
+        text-decoration: line-through;
+        font-size: 0.92rem;
+    }
+
+    .deal-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 48px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #5c4df3, #493de2);
+        color: #ffffff;
+        font-weight: 800;
+    }
+
+    .install-panel {
+        padding: 2rem;
+        border-radius: 2rem;
+        background: linear-gradient(180deg, #eef2ff 0%, #ffffff 100%);
+        border: 1px solid var(--ds-line);
+        box-shadow: 0 18px 32px rgba(35, 49, 85, 0.06);
+    }
+
+    .role-grid,
+    .why-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
+    }
+
+    .role-card,
+    .why-card {
+        padding: 1.45rem;
+    }
+
+    .role-title,
+    .why-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+    }
+
+    .role-copy,
+    .why-copy {
+        color: var(--ds-muted);
+        margin-bottom: 1rem;
+    }
+
+    .role-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        background: var(--ds-soft);
+        color: var(--ds-purple);
+        font-weight: 800;
+    }
+
+    .source-ribbon {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .source-pill {
+        padding: 0.7rem 1.05rem;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid var(--ds-line);
+        color: var(--ds-ink);
+        font-weight: 700;
+        box-shadow: 0 12px 20px rgba(35, 49, 85, 0.05);
+    }
+
+    .empty-block {
+        padding: 2rem;
+        border-radius: 1.5rem;
+        background: var(--ds-panel);
+        text-align: center;
+        color: var(--ds-muted);
+        border: 1px dashed var(--ds-line);
+    }
+
+    @media (max-width: 991.98px) {
+        .hero-search {
+            flex-direction: column;
+            border-radius: 2rem;
+            padding: 0.8rem;
+        }
+
+        .hero-search-btn {
+            width: 100%;
+        }
+
+        .hero-search-voice {
+            display: none;
+        }
+
+        .hero-inner {
+            padding-bottom: 8.25rem;
+        }
+
+        .hero-float,
+        .hero-cart,
+        .hero-coupon {
+            display: none;
+        }
+
+        .hero-metrics,
+        .card-grid,
+        .role-grid,
+        .why-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .card-grid,
+        .role-grid,
+        .why-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-space {
+            padding: 3.5rem 0;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+        }
+
+        .hero-copy {
+            font-size: 1rem;
+        }
+
+        .hero-bottom-row {
+            flex-direction: column;
+            padding: 0.9rem 0;
+        }
+    }
+</style>
+
+
+    <style>
+        :root {
+            --bh-purple: #4c40e8;
+            --bh-purple-dark: #352dbd;
+            --bh-green: #2ecf63;
+            --bh-ink: #13223a;
+            --bh-muted: #64748b;
+            --bh-line: #dde4f4;
+            --bh-soft: #eff2ff;
+            --bh-panel: #f7f8fe;
+            --bh-footer: #221b53;
+        }
+
+        body {
+            font-family: 'Urbanist', sans-serif;
+            color: var(--bh-ink);
+            background: #ffffff;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--bh-ink);
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .bh-header {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(221, 228, 244, 0.92);
+        }
+
+        .bh-navbar {
+            min-height: 90px;
+        }
+
+        .bh-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.85rem;
+            color: var(--bh-purple);
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .bh-brand:hover {
+            color: var(--bh-purple);
+        }
+
+        .bh-brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            background: linear-gradient(135deg, #6048ff, #3b31cb);
+            box-shadow: 0 12px 24px rgba(76, 64, 232, 0.24);
+        }
+
+        .bh-nav-link {
+            position: relative;
+            color: var(--bh-ink);
+            font-size: 1.08rem;
+            font-weight: 600;
+            padding: 0.6rem 0.9rem;
+            border-radius: 999px;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .bh-nav-link:hover,
+        .bh-nav-link:focus {
+            color: var(--bh-purple);
+            background: var(--bh-soft);
+        }
+
+        .bh-badge {
+            position: absolute;
+            top: 0.1rem;
+            right: -0.1rem;
+            font-size: 0.54rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 0.12rem 0.34rem;
+            border-radius: 999px;
+            background: #ffe4ef;
+            color: #ff507f;
+        }
+
+        .bh-chip-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 1px solid var(--bh-line);
+            background: #ffffff;
+            color: var(--bh-purple);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .bh-install-btn,
+        .bh-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.65rem;
+            min-height: 54px;
+            padding: 0.85rem 1.4rem;
+            border-radius: 999px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .bh-install-btn {
+            color: var(--bh-purple);
+            background: #eef1fb;
+            border: 1px solid rgba(221, 228, 244, 0.96);
+        }
+
+        .bh-login-btn {
+            color: #ffffff;
+            background: linear-gradient(135deg, #5c4df3, #493de2);
+            box-shadow: 0 16px 24px rgba(76, 64, 232, 0.22);
+        }
+
+        .bh-install-btn:hover,
+        .bh-login-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .bh-page {
+            min-height: calc(100vh - 90px);
+        }
+
+        .message-stack {
+            position: relative;
+            z-index: 2;
+        }
+
+        .footer-shell {
+            background: var(--bh-footer);
+            color: rgba(255, 255, 255, 0.82);
+            padding: 4.5rem 0 2rem;
+            margin-top: 0;
+        }
+
+        .footer-shell p,
+        .footer-shell li {
+            color: rgba(255, 255, 255, 0.74);
+        }
+
+        .footer-brand {
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .footer-link {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 0.85rem;
+            color: rgba(255, 255, 255, 0.74);
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: #ffffff;
+        }
+
+        .footer-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+        }
+
+        .footer-stat {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 1rem 1.15rem;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        @media (max-width: 1199.98px) {
+            .bh-nav-link {
+                padding: 0.55rem 0.7rem;
+                font-size: 0.98rem;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .bh-navbar {
+                min-height: auto;
+                padding: 0.85rem 0;
+            }
+
+            .bh-nav-link {
+                display: block;
+                margin-bottom: 0.35rem;
+            }
+
+            .bh-header-actions {
+                margin-top: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .bh-install-btn,
+            .bh-login-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="bh-header">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg bh-navbar">
+                <a class="bh-brand" href="/">
+                    <span class="bh-brand-mark"><i class="fas fa-tag"></i></span>
+                    <span>DealSphere</span>
+                </a>
+
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#bhNavbar" aria-controls="bhNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="bhNavbar">
+                    <ul class="navbar-nav mx-auto align-items-lg-center gap-lg-1 mt-3 mt-lg-0">
+                        <li class="nav-item"><a class="bh-nav-link" href="/deals/">Hot Deals</a></li>
+                        <li class="nav-item"><a class="bh-nav-link" href="/spending-analysis/">Spend Lens</a></li>
+                        <li class="nav-item"><a class="bh-nav-link" href="/price-alert/">Price Alert</a></li>
+                        <li class="nav-item">
+                            <a class="bh-nav-link" href="/#grocery-comparison">
+                                Grocery Comparison
+                                <span class="bh-badge">Beta</span>
+                            </a>
+                        </li>
+                        <li class="nav-item"><a class="bh-nav-link" href="/#ride-compare">Ride Compare</a></li>
+                        <li class="nav-item"><a class="bh-nav-link" href="/gift-cards/">Gift Cards</a></li>
+                        <li class="nav-item">
+                            <a class="bh-nav-link" href="/#refer-earn">
+                                Refer &amp; Earn
+                                <span class="bh-badge">New</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center gap-2 bh-header-actions">
+                        
+                        <a class="bh-chip-icon" href="/about/" aria-label="Platform language tools">
+                            <i class="fas fa-language"></i>
+                        </a>
+                        <a class="bh-install-btn" href="/register/">
+                            <i class="fab fa-chrome"></i>
+                            Install, it's free
+                        </a>
+                        <a class="bh-login-btn" href="/login/">Login</a>
+                        
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    
+
+    <main class="bh-page">
+        
+<div class="landing-shell">
+    <section class="hero-section">
+        <div class="hero-float headphones"><i class="fas fa-headphones"></i></div>
+        <div class="hero-float phone"></div>
+        <div class="hero-float laptop"></div>
+        <div class="hero-float earbuds"></div>
+        <div class="hero-cart left">
+            <div class="hero-cart-basket"></div>
+            <div class="hero-cart-box"></div>
+            <div class="hero-shoe"></div>
+            <div class="hero-gift"></div>
+        </div>
+        <div class="hero-cart right">
+            <div class="hero-cart-basket"></div>
+            <div class="hero-cart-box"></div>
+            <div class="hero-shoe"></div>
+            <div class="hero-gift"></div>
+        </div>
+        <div class="hero-spark one">+</div>
+        <div class="hero-spark two">+</div>
+        <div class="hero-spark three">o</div>
+        <div class="hero-spark four">o</div>
+        <div class="hero-coupon left"><i class="fas fa-ticket-simple"></i></div>
+        <div class="hero-coupon right"><i class="fas fa-ticket-simple"></i></div>
+        <div class="container hero-inner">
+            <div class="text-center">
+                <div class="hero-badge">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    Price History &amp; Tracker
+                </div>
+                <h1 class="hero-title">
+                    Find <span class="accent">Real Deals</span><br>
+                    Skip the Fake Ones
+                </h1>
+                <p class="hero-copy">
+                    Track genuine price drops, compare across stores, and shop smarter every day
+                </p>
+            </div>
+
+            <form class="hero-search" method="get" action="/products/search/">
+                <div class="hero-search-main">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input
+                        type="search"
+                        name="q"
+                        placeholder="Paste a Flipkart / Amazon link or Search a Product"
+                        value=""
+                    >
+                </div>
+                <button class="hero-search-voice" type="button" aria-label="Voice search">
+                    <i class="fas fa-microphone-lines"></i>
+                </button>
+                <button class="hero-search-btn" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="hero-bottom-strip">
+            <div class="container">
+                <div class="hero-bottom-row">
+                    <div class="hero-bottom-copy">
+                        <i class="fas fa-sparkles"></i>
+                        Smart shopping signal
+                    </div>
+                    
+                    <span class="hero-bottom-pill"><strong>1377</strong> Catalog Products</span>
+                    
+                    <span class="hero-bottom-pill"><strong>1181</strong> Live Local Offers</span>
+                    
+                    <span class="hero-bottom-pill"><strong>80</strong> Verified Merchants</span>
+                    
+                    <span class="hero-bottom-pill"><strong>13</strong> Tracked Categories</span>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-space">
+        <div class="container">
+            <h2 class="section-title">Hot Deals</h2>
+            <p class="section-copy">
+                These buckets are computed from the current searchable catalog instead of hard-coded landing-page counts.
+            </p>
+            <div class="card-grid">
+                
+                <a class="mini-card" href="/products/search/?max_price=99">
+                    <div class="eyebrow">Catalog Bucket</div>
+                    <div class="value">Rs.99</div>
+                    <div class="meta">40 live result(s)</div>
+                </a>
+                
+                <a class="mini-card" href="/products/search/?max_price=199">
+                    <div class="eyebrow">Catalog Bucket</div>
+                    <div class="value">Rs.199</div>
+                    <div class="meta">162 live result(s)</div>
+                </a>
+                
+                <a class="mini-card" href="/products/search/?max_price=299">
+                    <div class="eyebrow">Catalog Bucket</div>
+                    <div class="value">Rs.299</div>
+                    <div class="meta">308 live result(s)</div>
+                </a>
+                
+                <a class="mini-card" href="/products/search/?max_price=399">
+                    <div class="eyebrow">Catalog Bucket</div>
+                    <div class="value">Rs.399</div>
+                    <div class="meta">433 live result(s)</div>
+                </a>
+                
+                <a class="mini-card" href="/products/search/?max_price=499">
+                    <div class="eyebrow">Catalog Bucket</div>
+                    <div class="value">Rs.499</div>
+                    <div class="meta">511 live result(s)</div>
+                </a>
+                
+                <a class="mini-card" href="/products/search/?max_price=999">
+                    <div class="eyebrow">Catalog Bucket</div>
+                    <div class="value">Rs.999</div>
+                    <div class="meta">757 live result(s)</div>
+                </a>
+                
+            </div>
+        </div>
+    </section>
+
+    <section class="section-space pt-0">
+        <div class="container">
+            <h2 class="section-title">Best Discounts</h2>
+            <p class="section-copy">
+                Discount coverage below is derived from active offers where the original price is available.
+            </p>
+            <div class="card-grid">
+                
+                <div class="mini-card discount">
+                    <div class="eyebrow">Local Offer Range</div>
+                    <div class="value">10%+</div>
+                    <div class="meta">1077 discounted offer(s)</div>
+                </div>
+                
+                <div class="mini-card discount">
+                    <div class="eyebrow">Local Offer Range</div>
+                    <div class="value">20%+</div>
+                    <div class="meta">884 discounted offer(s)</div>
+                </div>
+                
+                <div class="mini-card discount">
+                    <div class="eyebrow">Local Offer Range</div>
+                    <div class="value">30%+</div>
+                    <div class="meta">662 discounted offer(s)</div>
+                </div>
+                
+                <div class="mini-card discount">
+                    <div class="eyebrow">Local Offer Range</div>
+                    <div class="value">40%+</div>
+                    <div class="meta">431 discounted offer(s)</div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <section class="section-space pt-0">
+        <div class="container">
+            <h2 class="section-title">Shop by Categories</h2>
+            <p class="section-copy">
+                Each category card points to a real product currently available in the dataset-backed catalog.
+            </p>
+            
+            <div class="card-grid">
+                
+                <a class="spotlight-card" href="/products/1377/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Electronics</div>
+                            <div class="spotlight-meta">484 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.54.4</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Smartwatch</div>
+                    <span class="deal-tag"><i class="fas fa-store"></i>Metro Electronics</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/1038/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Home&amp;Kitchen</div>
+                            <div class="spotlight-meta">448 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.79.0</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Kitchenwell 18Pc Plastic Food Snack Bag Pouch Clip Sealer for Keeping Food Fresh for Home, Kitchen, Camping Snack Seal Sealing Bag Clips (Multi-Color) | (Pack of 18)|</div>
+                    <span class="deal-tag"><i class="fab fa-amazon"></i>Amazon</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/859/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Computers&amp;Accessories</div>
+                            <div class="spotlight-meta">375 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.39.0</strong>
+                        
+                    </div>
+                    <div class="deal-meta">E-COSMOS 5V 1.2W Portable Flexible USB LED Light (Colours May Vary, Small, EC-POF1)</div>
+                    <span class="deal-tag"><i class="fab fa-amazon"></i>Amazon</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/565/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">OfficeProducts</div>
+                            <div class="spotlight-meta">31 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.50.0</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Classmate Octane Neon- Blue Gel Pens(Pack of 5)|Smooth Writing Pen|Attractive body colour for Boys &amp; Girls|Waterproof ink for smudge free writing|Preferred by Students for Exam|Study at home essential</div>
+                    <span class="deal-tag"><i class="fab fa-amazon"></i>Amazon</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/1349/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Beauty</div>
+                            <div class="spotlight-meta">8 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.129.0</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Conditioner</div>
+                    <span class="deal-tag"><i class="fas fa-store"></i>Daily Needs Store</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/1348/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Dresses</div>
+                            <div class="spotlight-meta">8 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.169.2</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Salwar Suit</div>
+                    <span class="deal-tag"><i class="fas fa-store"></i>Metro Electronics</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/1374/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Grocery</div>
+                            <div class="spotlight-meta">8 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.279.18</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Oats</div>
+                    <span class="deal-tag"><i class="fas fa-store"></i>Urban Mart</span>
+                </a>
+                
+                <a class="spotlight-card" href="/products/1359/">
+                    <div class="spotlight-top">
+                        <div>
+                            <div class="spotlight-name">Stationery</div>
+                            <div class="spotlight-meta">8 product(s)</div>
+                        </div>
+                        
+                        <strong>Rs.263.2</strong>
+                        
+                    </div>
+                    <div class="deal-meta">Notebook</div>
+                    <span class="deal-tag"><i class="fas fa-store"></i>City Mart</span>
+                </a>
+                
+            </div>
+            
+        </div>
+    </section>
+
+    <section class="section-space pt-0" id="verified-deals">
+        <div class="container">
+            <h2 class="section-title">Verified Local and Online Deals</h2>
+            <p class="section-copy">
+                Product cards below are rendered from actual catalog rows and verified merchant offers only.
+            </p>
+
+            
+            <div class="card-grid">
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/I/31s6OZfTO2L.jpg" alt="E-COSMOS 5V 1.2W Portable Flexible USB LED Light (Colours May Vary, Small, EC-POF1)" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">E-COSMOS 5V 1.2W Portable Flexible USB LED Light (Colours May Vary, Small, EC-POF1)</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.39.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/859/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/I/51YPXDh78VL.jpg" alt="GIZGA essentials Universal Silicone Keyboard Protector Skin for 15.6-inches Laptop (5 x 6 x 3 inches)" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">GIZGA essentials Universal Silicone Keyboard Protector Skin for 15.6-inches Laptop (5 x 6 x 3 inches)</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.39.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/583/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/W/WEBP_402378-T2/images/I/31vg0FKWoUL.jpg" alt="Inventis 5V 1.2W Portable Flexible USB LED Light Lamp (Colors may vary)" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">Inventis 5V 1.2W Portable Flexible USB LED Light Lamp (Colors may vary)</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.39.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/876/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/W/WEBP_402378-T2/images/I/414BHyTttvL.jpg" alt="Classmate Octane Neon- Blue Gel Pens(Pack of 5)|Smooth Writing Pen|Attractive body colour for Boys &amp; Girls|Waterproof ink for smudge free writing|Preferred by Students for Exam|Study at home essential" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">Classmate Octane Neon- Blue Gel Pens(Pack of 5)|Smooth Writing Pen|Attractive body colour for Boys &amp; Girls|Waterproof ink for smudge free writing|Preferred by Students for Exam|Study at home essential</div>
+                        <div class="deal-meta">OfficeProducts</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.50.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/565/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/I/31jSLNakA7L.jpg" alt="FLiX (Beetel Flow USB to Micro USB PVC Data Sync &amp; 12W(2.4A) Fast Charging Cable,Made in India,480Mbps Data Sync,Solid Cable,1 Meter Long cable for all Andriod &amp; Micro USB Devices (Black)(XCD-FPM01)" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">FLiX (Beetel Flow USB to Micro USB PVC Data Sync &amp; 12W(2.4A) Fast Charging Cable,Made in India,480Mbps Data Sync,Solid Cable,1 Meter Long cable for all Andriod &amp; Micro USB Devices (Black)(XCD-FPM01)</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.57.89</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/179/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/I/413phG1P5UL.jpg" alt="E-COSMOS 5V 1.2W Portable Flexible USB LED Light (Colors May Vary, Small) - Set of 2 Pieces" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">E-COSMOS 5V 1.2W Portable Flexible USB LED Light (Colors May Vary, Small) - Set of 2 Pieces</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.59.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/634/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/I/31v7NnnAItL.jpg" alt="FLiX (Beetel USB to Micro USB PVC Data Sync &amp; 2A Fast Charging Cable, Made in India, 480Mbps Data Sync, Solid Cable, 1 Meter Long USB Cable for Micro USB Devices (White)(XCD-M11)" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">FLiX (Beetel USB to Micro USB PVC Data Sync &amp; 2A Fast Charging Cable, Made in India, 480Mbps Data Sync, Solid Cable, 1 Meter Long USB Cable for Micro USB Devices (White)(XCD-M11)</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.59.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/45/">View deal</a>
+                    </div>
+                </article>
+                
+                <article class="deal-card">
+                    <div class="deal-image">
+                        
+                        <img src="https://m.media-amazon.com/images/I/31qGpf8uzuL.jpg" alt="Flix Micro Usb Cable For Smartphone (Black)" onerror="this.parentElement.innerHTML='<div class=\'empty-block w-100\'><i class=\'fas fa-image mb-2\'></i><br>Image Error</div>'">
+                        
+                    </div>
+                    <div class="deal-body">
+                        <span class="deal-tag">
+                            <i class="fab fa-amazon"></i>Amazon
+                        </span>
+                        <div class="deal-name">Flix Micro Usb Cable For Smartphone (Black)</div>
+                        <div class="deal-meta">Computers&amp;Accessories</div>
+                        <div class="deal-price-row">
+                            <span class="deal-price">Rs.59.0</span>
+                            
+                        </div>
+                        <a class="deal-cta" href="/products/24/">View deal</a>
+                    </div>
+                </article>
+                
+            </div>
+            
+        </div>
+    </section>
+
+
+
+    <section class="section-space pt-0">
+        <div class="container">
+            <h2 class="section-title">Why Use DealSphere?</h2>
+            <p class="section-copy">
+                The goal is not a static showcase. The landing page now reflects the real backend and the module structure of the project.
+            </p>
+            <div class="why-grid">
+                
+                <article class="why-card">
+                    <div class="why-title">Hybrid Comparison</div>
+                    <div class="why-copy">Ranks Amazon, Flipkart, and verified local merchant offers in one search result.</div>
+                </article>
+                
+                <article class="why-card">
+                    <div class="why-title">ML Ranking Engine</div>
+                    <div class="why-copy">Uses weighted scoring for price, delivery speed, rating, and merchant trust.</div>
+                </article>
+                
+                <article class="why-card">
+                    <div class="why-title">Smart Basket Logic</div>
+                    <div class="why-copy">Builds a split-purchase strategy instead of forcing a single-source checkout.</div>
+                </article>
+                
+                <article class="why-card">
+                    <div class="why-title">Real Dataset Backing</div>
+                    <div class="why-copy">Catalog data is loaded from the dataset folder instead of placeholder frontend content.</div>
+                </article>
+                
+            </div>
+        </div>
+    </section>
+
+    <section class="section-space pt-0">
+        <div class="container">
+            <h2 class="section-title">Sources and Verified Stores</h2>
+            <p class="section-copy">
+                These labels are built from the current online sources and verified merchant records in the database.
+            </p>
+            <div class="source-ribbon">
+                
+                <span class="source-pill">Amazon</span>
+                
+                <span class="source-pill">Flipkart</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">Budget Bazaar</span>
+                
+                <span class="source-pill">City Mart</span>
+                
+                <span class="source-pill">City Mart</span>
+                
+            </div>
+        </div>
+    </section>
+</div>
+
+    </main>
+
+    <footer class="footer-shell">
+        <div class="container">
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-4">
+                    <a class="bh-brand footer-brand mb-3" href="/">
+                        <span class="bh-brand-mark"><i class="fas fa-tag"></i></span>
+                        <span>DealSphere</span>
+                    </a>
+                    <p class="mt-3 mb-4">
+                        DealSphere is a Django + AI/ML shopping comparison platform for online plus hyperlocal offline offers, with a landing experience modeled on the conversion pattern the user requested.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="footer-pill" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="footer-pill" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="footer-pill" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="footer-pill" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <h5 class="text-white mb-3">Explore</h5>
+                    <a class="footer-link" href="/deals/">Hot Deals</a>
+                    <a class="footer-link" href="/price-history/">Price History</a>
+                    <a class="footer-link" href="/gift-cards/">Gift Cards</a>
+                    <a class="footer-link" href="/about/">About</a>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <h5 class="text-white mb-3">Project Roles</h5>
+                    <a class="footer-link" href="/register/">User</a>
+                    <a class="footer-link" href="/register/merchant/">Merchant</a>
+                    <a class="footer-link" href="/admin/dashboard/">Admin</a>
+                    <a class="footer-link" href="/profile/">Profile</a>
+                </div>
+                <div class="col-lg-4">
+                    <h5 class="text-white mb-3">Core Modules</h5>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="footer-stat">
+                                <strong class="d-block text-white">AI Ranking</strong>
+                                <small>Price, proximity, delivery speed, and trust scoring.</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="footer-stat">
+                                <strong class="d-block text-white">Smart Basket</strong>
+                                <small>Split purchase suggestions within a target budget.</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="footer-stat">
+                                <strong class="d-block text-white">Visual Search</strong>
+                                <small>Image and barcode-assisted product discovery.</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="footer-stat">
+                                <strong class="d-block text-white">Price Alerts</strong>
+                                <small>Forecast-based notifications for upcoming drops.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-light opacity-10 my-4">
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <p class="mb-0 small">&copy; 2026 DealSphere. Smart online and offline shopping offer comparison system.</p>
+                <div class="d-flex gap-3 small">
+                    <a class="footer-link mb-0" href="/about/">About</a>
+                    <a class="footer-link mb-0" href="#">Privacy</a>
+                    <a class="footer-link mb-0" href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        function downloadExtension() {
+            window.location.href = "/register/";
+        }
+
+        function downloadApp() {
+            window.location.href = "/register/";
+        }
+    </script>
+    
+</body>
+</html>

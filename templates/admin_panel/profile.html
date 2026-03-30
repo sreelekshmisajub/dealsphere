@@ -1,0 +1,42 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Profile - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="admin-section-card">
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        <div class="col-md-6">
+            <label class="form-label">First Name</label>
+            <input class="form-control" type="text" name="first_name" value="{{ admin_profile_form_values.first_name }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Last Name</label>
+            <input class="form-control" type="text" name="last_name" value="{{ admin_profile_form_values.last_name }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" name="email" value="{{ admin_profile_form_values.email }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input class="form-control" type="text" name="phone" value="{{ admin_profile_form_values.phone }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Current Password</label>
+            <input class="form-control" type="password" name="current_password">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">New Password</label>
+            <input class="form-control" type="password" name="new_password">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Confirm New Password</label>
+            <input class="form-control" type="password" name="confirm_new_password">
+        </div>
+        <div class="col-12">
+            <button class="btn-premium btn-premium-primary" type="submit">Save Admin Profile</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Compare Products - DealSphere{% endblock %}
+
+{% block extra_css %}
+<style>
+    .comparison-wrapper {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 2rem;
+        gap: 2rem;
+        scroll-behavior: smooth;
+    }
+    .comparison-col {
+        min-width: 320px;
+        flex: 1;
+        background: white;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        position: relative;
+    }
+    .comparison-col:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary);
+        z-index: 10;
+    }
+    .feature-row {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .feature-row.header {
+        background: #f8fafc;
+        border-radius: 1.5rem 1.5rem 0 0;
+        padding: 2.5rem 1.5rem;
+        min-height: 480px;
+        text-align: center;
+    }
+    .label-premium {
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    .value-premium {
+        color: #1e293b;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    .offer-box {
+        background: rgba(37, 99, 235, 0.03);
+        border: 1px dashed rgba(37, 99, 235, 0.2);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-5 align-items-end animate-on-scroll">
+        <div class="col-lg-6">
+            <h2 class="display-5 fw-bold mb-1">Product Comparison</h2>
+            <p class="text-secondary mb-0">Deep dive into specifications and real-time prices across verified platforms.</p>
+        </div>
+        <div class="col-lg-6 text-lg-end mt-4 mt-lg-0">
+            <button class="btn-premium btn-premium-secondary me-2">
+                <i class="fas fa-file-export me-1"></i> Export PDF
+            </a>
+            <button class="btn-premium btn-premium-primary">
+                <i class="fas fa-plus me-1"></i> Add Another
+            </a>
+        </div>
+    </div>
+
+    <div class="comparison-wrapper pb-5 animate-on-scroll">
+        {% for product in products %}
+        <div class="comparison-col">
+            <!-- Header Section -->
+            <div class="feature-row header">
+                <div class="image-wrapper mb-4 h-100 d-flex align-items-center justify-content-center">
+                    <img src="{{ product.image_url|default:'https://via.placeholder.com/200x200?text=Product' }}" class="img-fluid w-75 object-fit-contain" alt="{{ product.name }}">
+                </div>
+                <h5 class="fw-bold mb-3">{{ product.name }}</h5>
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                    <span class="h3 fw-bold text-primary mb-0">₹{{ product.best_offer.price|default:product.amazon_price }}</span>
+                    {% if product.best_offer.original_price %}
+                    <span class="text-muted text-decoration-line-through smaller">₹{{ product.best_offer.original_price }}</span>
+                    {% endif %}
+                </div>
+                <div class="d-grid gap-2 px-3">
+                    <button class="btn-premium btn-premium-primary rounded-lg py-2">Add to Cart</button>
+                    <button class="btn-premium btn-premium-secondary rounded-lg py-2">Set Alert</button>
+                </div>
+            </div>
+
+            <!-- Specs Rows -->
+            <div class="feature-row">
+                <span class="label-premium">Brand</span>
+                <span class="value-premium">{{ product.brand.name|default:"Genuine Provider" }}</span>
+            </div>
+            
+            <div class="feature-row">
+                <span class="label-premium">Best Source</span>
+                <span class="value-premium d-flex align-items-center gap-2">
+                    {% if product.best_offer %}
+                    <i class="fas fa-store text-primary opacity-75"></i> {{ product.best_offer.merchant }}
+                    {% else %}
+                    <i class="fab fa-amazon text-warning"></i> Amazon.in
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="feature-row">
+                <span class="label-premium">Delivery Speed</span>
+                <span class="value-premium d-flex align-items-center gap-2">
+                    <i class="fas fa-shipping-fast text-success opacity-75"></i> 
+                    {% if product.best_offer %}Within {{ product.best_offer.delivery_time_hours }} hours{% else %}2-4 Working Days{% endif %}
+                </span>
+            </div>
+
+            <div class="feature-row">
+                <span class="label-premium">AI Recommendation</span>
+                <div class="glass p-2 rounded-lg border-primary border-opacity-10 mt-2">
+                    <p class="smaller text-secondary mb-0">
+                        <i class="fas fa-brain text-primary me-2"></i>
+                        {% if product.amazon_price < product.flipkart_price %}Best online price on Amazon. Best overall with Local Store pick-up.{% else %}Flipkart offers better online deal. Use Smart Basket for local discount.{% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="feature-row h-100 flex-grow-1">
+                <span class="label-premium">Description Highlights</span>
+                <p class="smaller text-secondary mb-0 overflow-hidden line-clamp-4">{{ product.description|default:"No detailed description available." }}</p>
+            </div>
+            
+            <!-- Close Button for Comparison -->
+            <button class="position-absolute top-0 end-0 m-3 btn btn-white border-0 glass rounded-circle p-2 shadow-sm text-secondary hover-text-danger" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% empty %}
+        <!-- Mock Columns for Visualization -->
+        {% for i in "12"|make_list %}
+        <div class="comparison-col">
+            <div class="feature-row header">
+                <div class="image-wrapper mb-4 h-100 d-flex align-items-center justify-content-center">
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop" class="img-fluid w-75 object-fit-contain" alt="Mock Product">
+                </div>
+                <h5 class="fw-bold mb-3">Premium Sports Series S{{ forloop.counter }}</h5>
+                <h3 class="fw-bold text-primary mb-4">₹2,499</h3>
+            </div>
+            <div class="feature-row">
+                <span class="label-premium">Brand</span>
+                <span class="value-premium">Nike Sports India</span>
+            </div>
+            <div class="feature-row h-100 flex-grow-1">
+                <span class="label-premium">Rating</span>
+                <span class="value-premium text-warning"><i class="fas fa-star"></i> 4.8 (2.4k reviews)</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% endfor %}
+    </div>
+
+    <!-- Features Overview List (Zomato/Amazon Style) -->
+    <div class="mt-5 animate-on-scroll">
+        <div class="card card-premium shadow-sm p-5 border-0 bg-white">
+            <h4 class="fw-bold mb-5">Frequently Asked Questions</h4>
+            <div class="row g-5">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-primary mb-2">How real-time is the comparison?</h6>
+                    <p class="text-secondary small">Our AI clusters data from 5,000+ local merchants and top e-commerce sites every 15 minutes to guarantee accuracy.</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-primary mb-2">Can I request a price match directly?</h6>
+                    <p class="text-secondary small">Yes! Use the 'Request Price Match' button on the product detail page to negotiate directly with local merchants.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

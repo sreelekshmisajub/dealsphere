@@ -1,0 +1,62 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin ML Control - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4">
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Ranking Weights</h5>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-6">
+                    <label class="form-label">Price</label>
+                    <input class="form-control" type="number" step="0.01" min="0" name="price" value="{{ ml_weights.price }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Distance</label>
+                    <input class="form-control" type="number" step="0.01" min="0" name="distance" value="{{ ml_weights.distance }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Rating</label>
+                    <input class="form-control" type="number" step="0.01" min="0" name="rating" value="{{ ml_weights.rating }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Delivery</label>
+                    <input class="form-control" type="number" step="0.01" min="0" name="delivery" value="{{ ml_weights.delivery }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Reliability</label>
+                    <input class="form-control" type="number" step="0.01" min="0" name="reliability" value="{{ ml_weights.reliability }}">
+                </div>
+                <div class="col-12">
+                    <button class="btn-premium btn-premium-primary" type="submit">Save Weights</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-6">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Live Runtime State</h5>
+            <div class="admin-kpi-list">
+                <div class="admin-shell-metric">
+                    <span class="small text-secondary">Weight Total</span>
+                    <strong>{{ weight_total }}</strong>
+                </div>
+                <div class="admin-shell-metric">
+                    <span class="small text-secondary">Config File</span>
+                    <strong>{% if ml_meta.exists %}Present{% else %}Default Only{% endif %}</strong>
+                </div>
+            </div>
+            <p class="small text-secondary mt-3 mb-1">Runtime config path</p>
+            <div class="admin-code-block">{{ ml_meta.path }}</div>
+            <p class="small text-secondary mt-3 mb-1">Weighted score formula</p>
+            <div class="admin-code-block">score = price*w1 + distance*w2 + rating*w3 + delivery*w4 + reliability*w5</div>
+            {% if ml_meta.updated_at %}
+            <p class="small text-secondary mt-3 mb-0">Last updated: {{ ml_meta.updated_at }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - DealSphere{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-shell {
+        min-height: calc(100vh - 90px);
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        padding: 3rem 0;
+    }
+
+    .auth-card {
+        padding: 2.5rem;
+        border-radius: 1.75rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
+        color: #ffffff;
+    }
+
+    .auth-input,
+    .auth-textarea,
+    .auth-select {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 0.85rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+
+    .auth-select option {
+        color: #0f172a;
+    }
+
+    .auth-input::placeholder,
+    .auth-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    .auth-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #cbd5e1;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .type-pill {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        padding: 0.9rem 1rem;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        cursor: pointer;
+    }
+
+    .type-pill.active {
+        border-color: rgba(92, 77, 243, 0.9);
+        background: rgba(92, 77, 243, 0.18);
+    }
+
+    .type-pill input {
+        display: none;
+    }
+
+    .section-label {
+        color: #f8fafc;
+        font-weight: 700;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .inline-note {
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-xl-9 col-lg-10">
+                <div class="auth-card">
+                    <div class="text-center mb-4">
+                        <h1 class="fw-bold mb-2 text-white">Create Account</h1>
+                        <p class="text-secondary mb-0">Registration redirects to login after validation. No automatic sign-in is performed.</p>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" id="register-form" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="type-pill {% if not merchant_mode %}active{% endif %}">
+                                    <input type="radio" name="user_type" value="customer" {% if not merchant_mode %}checked{% endif %}>
+                                    <i class="fas fa-bag-shopping"></i>
+                                    User account
+                                </label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="type-pill {% if merchant_mode %}active{% endif %}">
+                                    <input type="radio" name="user_type" value="merchant" {% if merchant_mode %}checked{% endif %}>
+                                    <i class="fas fa-store"></i>
+                                    Merchant account
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="section-label">Owner Details</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="auth-label" for="first_name">First name</label>
+                                <input id="first_name" class="auth-input" type="text" name="first_name" value="{{ request.POST.first_name|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="auth-label" for="last_name">Last name</label>
+                                <input id="last_name" class="auth-input" type="text" name="last_name" value="{{ request.POST.last_name|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="auth-label" for="email">Email</label>
+                                <input id="email" class="auth-input" type="email" name="email" value="{{ request.POST.email|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="auth-label" for="phone">Phone number</label>
+                                <input id="phone" class="auth-input" type="text" name="phone" value="{{ request.POST.phone|default:'' }}" pattern="[6-9][0-9]{9}" maxlength="10" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="auth-label" for="password">Password</label>
+                                <input id="password" class="auth-input" type="password" name="password" required>
+                                <div class="inline-note mt-2">Minimum 8 characters, 1 uppercase, 1 number, 1 special character.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="auth-label" for="confirm_password">Confirm password</label>
+                                <input id="confirm_password" class="auth-input" type="password" name="confirm_password" required>
+                            </div>
+                        </div>
+
+                        <div class="section-label d-flex justify-content-between align-items-center">
+                            <span>Location</span>
+                            <button class="btn btn-sm btn-outline-light" type="button" id="capture-location">Use current location</button>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="auth-label" for="location_lat">Latitude</label>
+                                <input id="location_lat" class="auth-input" type="text" name="location_lat" value="{{ request.POST.location_lat|default:'' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="auth-label" for="location_lng">Longitude</label>
+                                <input id="location_lng" class="auth-input" type="text" name="location_lng" value="{{ request.POST.location_lng|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="inline-note mt-2">Location is required for hyperlocal comparison and shop-distance ranking.</div>
+
+                        <div id="merchant-fields" class="mt-4" {% if not merchant_mode %}style="display:none;"{% endif %}>
+                            <div class="section-label">Merchant Details</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="auth-label" for="shop_name">Shop name</label>
+                                    <input id="shop_name" class="auth-input" type="text" name="shop_name" value="{{ request.POST.shop_name|default:'' }}" {% if merchant_mode %}required{% endif %}>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="auth-label" for="business_category">Business category</label>
+                                    <select id="business_category" class="auth-select" name="business_category" {% if merchant_mode %}required{% endif %}>
+                                        <option value="">Select category</option>
+                                        <option value="Electronics" {% if request.POST.business_category == 'Electronics' %}selected{% endif %}>Electronics</option>
+                                        <option value="Groceries" {% if request.POST.business_category == 'Groceries' %}selected{% endif %}>Groceries</option>
+                                        <option value="Stationery" {% if request.POST.business_category == 'Stationery' %}selected{% endif %}>Stationery</option>
+                                        <option value="Apparel" {% if request.POST.business_category == 'Apparel' %}selected{% endif %}>Apparel</option>
+                                        <option value="Home & Kitchen" {% if request.POST.business_category == 'Home & Kitchen' %}selected{% endif %}>Home & Kitchen</option>
+                                        <option value="Health & Personal Care" {% if request.POST.business_category == 'Health & Personal Care' %}selected{% endif %}>Health & Personal Care</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="auth-label" for="delivery_radius_km">Delivery radius (km)</label>
+                                    <input id="delivery_radius_km" class="auth-input" type="number" min="0" max="100" name="delivery_radius_km" value="{{ request.POST.delivery_radius_km|default:'0' }}">
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="auth-label" for="address">Business address</label>
+                                    <textarea id="address" class="auth-textarea" name="address" rows="3" {% if merchant_mode %}required{% endif %}>{{ request.POST.address|default:'' }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="delivery_enabled" name="delivery_enabled" {% if request.POST.delivery_enabled %}checked{% endif %}>
+                                        <label class="form-check-label text-light" for="delivery_enabled">Enable hyperlocal delivery</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="form-error" class="alert alert-danger mt-4 d-none"></div>
+
+                        <button class="btn-premium btn-premium-primary w-100 mt-4" type="submit">Create account</button>
+                    </form>
+
+                    <p class="text-center text-secondary mt-4 mb-0">
+                        Already registered? <a class="text-decoration-none fw-bold" href="{% url 'login' %}">Sign in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const pills = document.querySelectorAll('.type-pill');
+    const merchantFields = document.getElementById('merchant-fields');
+    const shopName = document.getElementById('shop_name');
+    const businessCategory = document.getElementById('business_category');
+    const address = document.getElementById('address');
+    const deliveryRadius = document.getElementById('delivery_radius_km');
+    const deliveryEnabled = document.getElementById('delivery_enabled');
+    const phone = document.getElementById('phone');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+    const form = document.getElementById('register-form');
+    const errorBox = document.getElementById('form-error');
+    const latInput = document.getElementById('location_lat');
+    const lngInput = document.getElementById('location_lng');
+    const captureLocation = document.getElementById('capture-location');
+
+    function setError(message) {
+        if (!message) {
+            errorBox.classList.add('d-none');
+            errorBox.textContent = '';
+            return;
+        }
+        errorBox.textContent = message;
+        errorBox.classList.remove('d-none');
+    }
+
+    function isMerchantMode() {
+        const selected = document.querySelector('input[name="user_type"]:checked');
+        return selected && selected.value === 'merchant';
+    }
+
+    function syncMode() {
+        const merchantMode = isMerchantMode();
+        merchantFields.style.display = merchantMode ? 'block' : 'none';
+        shopName.required = merchantMode;
+        businessCategory.required = merchantMode;
+        address.required = merchantMode;
+        pills.forEach((pill) => pill.classList.toggle('active', pill.querySelector('input').checked));
+    }
+
+    function passwordIsStrong(value) {
+        return value.length >= 8 &&
+            /[A-Z]/.test(value) &&
+            /\d/.test(value) &&
+            /[^A-Za-z0-9]/.test(value);
+    }
+
+    function coordinatesAreValid() {
+        const lat = Number(latInput.value);
+        const lng = Number(lngInput.value);
+        return !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    }
+
+    pills.forEach((pill) => {
+        pill.addEventListener('click', function () {
+            this.querySelector('input').checked = true;
+            syncMode();
+        });
+    });
+
+    deliveryEnabled.addEventListener('change', function () {
+        if (!this.checked) {
+            deliveryRadius.value = deliveryRadius.value || '0';
+        }
+    });
+
+    captureLocation.addEventListener('click', function () {
+        setError('');
+        if (!navigator.geolocation) {
+            setError('Geolocation is not available in this browser.');
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                latInput.value = position.coords.latitude.toFixed(8);
+                lngInput.value = position.coords.longitude.toFixed(8);
+            },
+            function () {
+                setError('Unable to capture location. Enter latitude and longitude manually.');
+            }
+        );
+    });
+
+    form.addEventListener('submit', function (event) {
+        setError('');
+
+        if (!/^[6-9]\d{9}$/.test(phone.value.trim())) {
+            event.preventDefault();
+            setError('Enter a valid 10-digit Indian mobile number.');
+            return;
+        }
+
+        if (!passwordIsStrong(password.value)) {
+            event.preventDefault();
+            setError('Password must be at least 8 characters long and include uppercase, number, and special character.');
+            return;
+        }
+
+        if (password.value !== confirmPassword.value) {
+            event.preventDefault();
+            setError('Passwords do not match.');
+            return;
+        }
+
+        if (!coordinatesAreValid()) {
+            event.preventDefault();
+            setError('Enter valid latitude and longitude values.');
+            return;
+        }
+
+        if (isMerchantMode()) {
+            const radius = Number(deliveryRadius.value || '0');
+            if (!shopName.value.trim() || !businessCategory.value || !address.value.trim()) {
+                event.preventDefault();
+                setError('Complete all merchant registration fields.');
+                return;
+            }
+            if (deliveryEnabled.checked && (!Number.isInteger(radius) || radius <= 0)) {
+                event.preventDefault();
+                setError('Delivery radius must be greater than 0 when hyperlocal delivery is enabled.');
+                return;
+            }
+        }
+    });
+
+    syncMode();
+});
+</script>
+{% endblock %}

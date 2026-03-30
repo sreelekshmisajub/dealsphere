@@ -1,0 +1,762 @@
+{% extends 'users/dashboard_layout.html' %}
+{% load static dealsphere_filters %}
+
+{% block title %}Search Results - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .results-search-bar,
+    .results-filter-card,
+    .results-card,
+    .results-empty-state {
+        background: #ffffff;
+        border-radius: 1.65rem;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        box-shadow: 0 24px 48px -34px rgba(15, 23, 42, 0.24);
+    }
+
+    .results-filter-card {
+        padding: 1.6rem;
+        position: relative;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at top right, rgba(96, 165, 250, 0.15), transparent 30%),
+            linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .results-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 800;
+        color: #6366f1;
+    }
+
+    .results-form-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(210px, 0.8fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .results-field {
+        min-width: 0;
+    }
+
+    .results-label {
+        display: block;
+        margin-bottom: 0.55rem;
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        color: #334155;
+    }
+
+    .results-field .form-control,
+    .results-field .form-select,
+    .results-field .input-group {
+        min-height: 58px;
+        border-radius: 1rem;
+        border-color: rgba(148, 163, 184, 0.22);
+        box-shadow: none;
+    }
+
+    .results-field .input-group {
+        background: #ffffff;
+        padding: 0.18rem;
+    }
+
+    .results-field .input-group:focus-within {
+        border-color: rgba(37, 99, 235, 0.34);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+    }
+
+    .results-field .input-group .form-control,
+    .results-field .input-group .form-select,
+    .results-field .input-group .input-group-text {
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .results-field .input-group .form-control,
+    .results-field .input-group .form-select {
+        padding-top: 0.95rem;
+        padding-bottom: 0.95rem;
+    }
+
+    .results-field .input-group .input-group-text {
+        padding-left: 0.9rem;
+        padding-right: 0.9rem;
+        color: #64748b;
+    }
+
+    .results-switch {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.4rem 0.45rem 0.4rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(255, 255, 255, 0.85);
+    }
+
+    .results-switch .form-check-input {
+        float: none;
+        margin: 0;
+    }
+
+    .results-switch .form-check-label {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #475569;
+    }
+
+    .results-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        padding-top: 0.25rem;
+    }
+
+    .results-chip {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .results-chip input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .results-chip-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.72rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(255, 255, 255, 0.92);
+        color: #475569;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .results-chip-label:hover {
+        transform: translateY(-1px);
+        border-color: rgba(37, 99, 235, 0.2);
+    }
+
+    .results-chip input:checked + .results-chip-label {
+        color: #ffffff;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        box-shadow: 0 20px 30px -24px rgba(37, 99, 235, 0.82);
+    }
+
+    .results-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.35rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    .results-toolbar-copy {
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    .results-toolbar-copy strong {
+        color: #0f172a;
+    }
+
+    .results-toolbar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .results-card {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        border-radius: 1.5rem;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        min-width: 0;
+    }
+
+    .results-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        border-color: rgba(37, 99, 235, 0.22);
+    }
+
+    .result-image {
+        height: 220px;
+        border-radius: 1.2rem;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+        transition: background 0.3s ease;
+    }
+
+    .results-card:hover .result-image {
+        background: #f1f5f9;
+    }
+
+    .result-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 1.5rem;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .results-card:hover .result-image img {
+        transform: scale(1.08);
+    }
+
+    .badge-category {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .badge-deal {
+        background: #10b981;
+        color: white;
+        font-weight: 700;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.7rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+
+    .result-price {
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+
+    .result-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        background: #f8fafc;
+        padding: 0.75rem;
+        border-radius: 1rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .result-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .result-meta i {
+        font-size: 0.85rem;
+        color: var(--primary);
+        opacity: 0.8;
+    }
+
+    .result-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: auto;
+        padding-top: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        flex: 1;
+        min-width: 0;
+        padding: 0.85rem 1rem;
+        border-radius: 1rem;
+        font-weight: 700;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: none;
+        text-decoration: none !important;
+    }
+
+    .btn-action-view {
+        background: #f1f5f9;
+        color: #1e293b;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .btn-action-view:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .btn-action-cart {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-action-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+        color: white;
+    }
+
+    .btn-buy-external {
+        border-radius: 1rem;
+        justify-content: center;
+        background: #6366f1;
+    }
+
+    .btn-buy--amazon   { background: #FF9900; }
+    .btn-buy--flipkart { background: #2874F0; }
+    .btn-buy--myntra   { background: #FF3F6C; }
+
+    .btn-buy-external:hover {
+        filter: brightness(1.1);
+        color: white;
+    }
+
+    .source-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #fff;
+        background: #6366f1;
+    }
+
+    .source-badge--amazon   { background: #FF9900; }
+    .source-badge--flipkart { background: #2874F0; }
+    .source-badge--myntra   { background: #FF3F6C; }
+    .source-badge--local    { background: #10b981; }
+
+    /* Online / Offline comparison strip */
+    .offer-compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.6rem;
+    }
+
+    .offer-slot {
+        border-radius: 0.85rem;
+        padding: 0.6rem 0.75rem;
+        border: 1.5px solid rgba(226,232,240,0.9);
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 0.18s, box-shadow 0.18s;
+    }
+
+    .offer-slot:hover {
+        border-color: rgba(37,99,235,0.3);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+        color: inherit;
+    }
+
+    .offer-slot--online  { border-left: 3px solid #2563eb; }
+    .offer-slot--amazon  { border-left-color: #FF9900; }
+    .offer-slot--flipkart{ border-left-color: #2874F0; }
+    .offer-slot--myntra  { border-left-color: #FF3F6C; }
+    .offer-slot--local   { border-left: 3px solid #10b981; }
+    .offer-slot--empty   { opacity: 0.45; pointer-events: none; }
+
+    .offer-slot-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+    }
+
+    .offer-slot-price {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+    }
+
+    .offer-slot-sub {
+        font-size: 0.72rem;
+        color: #94a3b8;
+    }
+
+    .offer-slot-cheaper {
+        position: absolute;
+        top: 4px;
+        right: 6px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        background: #10b981;
+        color: #fff;
+        border-radius: 999px;
+        padding: 1px 6px;
+    }
+
+    @keyframes cardFadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-results > article {
+        animation: cardFadeIn 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    .results-empty-state {
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .results-empty-state h5 {
+        font-size: 1.35rem;
+    }
+
+    .pagination {
+        gap: 0.45rem;
+    }
+
+    .page-link {
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 0.95rem !important;
+        color: #334155;
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-color: transparent;
+    }
+
+    .page-link:hover {
+        color: var(--primary);
+        background: rgba(37, 99, 235, 0.08);
+    }
+
+    @media (max-width: 1199px) {
+        .results-form-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .results-filter-card {
+            padding: 1.2rem;
+        }
+
+        .results-form-grid,
+        .results-toolbar {
+            grid-template-columns: 1fr;
+            display: grid;
+        }
+
+        .results-toolbar {
+            justify-content: stretch;
+        }
+
+        .results-toolbar-actions {
+            width: 100%;
+        }
+
+        .results-toolbar-actions .btn-premium {
+            flex: 1 1 auto;
+        }
+
+        .results-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<a href="{% url 'dashboard_barcode' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-barcode"></i>Barcode
+</a>
+<a href="{% url 'dashboard_visual_search' %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-camera"></i>Visual Search
+</a>
+{% endblock %}
+
+{% block dashboard_content %}
+<section class="results-filter-card mb-4">
+    <form method="get" action="{% url search_route_name %}">
+        <div class="results-kicker">
+            <i class="fas fa-sliders"></i>Search and Filter
+        </div>
+
+        <div class="results-form-grid">
+            <div class="results-field">
+                <label class="results-label">Search keywords</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input class="form-control ps-0 form-control-lg" type="text" name="q" value="{{ query }}" placeholder="Product, brand, or category...">
+                </div>
+            </div>
+            <div class="results-field">
+                <label class="results-label">Price range (Rs.)</label>
+                <div class="input-group">
+                    <input class="form-control" type="number" name="min_price" value="{{ request.GET.min_price }}" placeholder="Min">
+                    <span class="input-group-text">-</span>
+                    <input class="form-control" type="number" name="max_price" value="{{ request.GET.max_price }}" placeholder="Max">
+                </div>
+            </div>
+            <div class="results-field">
+                <label class="results-label">Sort results</label>
+                <select class="form-select form-select-lg" name="sort_by">
+                    <option value="relevance" {% if sort_by == 'relevance' %}selected{% endif %}>Relevance</option>
+                    <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price Low to High</option>
+                    <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price High to Low</option>
+                    <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Best Rated</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-2">
+                <label class="results-label mb-0">Browse categories</label>
+                <div class="results-switch">
+                    <input class="form-check-input" type="checkbox" name="verified_only" id="verifiedOnly" {% if verified_only %}checked{% endif %}>
+                    <label class="form-check-label" for="verifiedOnly">Verified sellers only</label>
+                </div>
+            </div>
+            <div class="results-chip-list">
+                {% for category in categories %}
+                <label class="results-chip">
+                    <input type="checkbox" name="category" value="{{ category.name }}" {% if category.name in selected_categories %}checked{% endif %}>
+                    <span class="results-chip-label">{{ category.name|pretty_category }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="results-toolbar">
+            <div class="results-toolbar-copy">
+                {% if query %}
+                Showing <strong>{{ total_count|default:0 }}</strong> matches for "<strong>{{ query }}</strong>"
+                {% elif is_trending_view %}
+                Showing <strong>{{ total_count|default:0 }}</strong> trending products from
+                <span style="color:#FF9900;font-weight:700;">Amazon</span> ·
+                <span style="color:#2874F0;font-weight:700;">Flipkart</span> ·
+                <span style="color:#FF3F6C;font-weight:700;">Myntra</span>
+                {% else %}
+                Showing <strong>{{ total_count|default:0 }}</strong> products
+                {% endif %}
+            </div>
+            <div class="results-toolbar-actions">
+                <a href="{% url search_route_name %}" class="btn-premium btn-premium-secondary px-4">Reset</a>
+                <button class="btn-premium btn-premium-primary px-5" type="submit">Refine Results</button>
+            </div>
+        </div>
+    </form>
+</section>
+
+<section class="results-grid animate-results">
+    {% for product in products %}{% if product.best_offer %}
+    <article class="results-card" style="animation-delay: 0.{{ forloop.counter0 }}s">
+        <div class="result-image">
+            {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            {% else %}
+                {% if "Sugar" in product.name %}
+                    <img src="{% static 'images/products/sugar.png' %}" alt="Sugar">
+                {% elif "Formal Shirt" in product.name %}
+                    <img src="{% static 'images/products/formal_shirt.png' %}" alt="Formal Shirt">
+                {% elif "Salwar Suit" in product.name %}
+                    <img src="{% static 'images/products/salwar_suit.png' %}" alt="Salwar Suit">
+                {% elif product.category.name == "Grocery" %}
+                    <img src="{% static 'images/products/sugar.png' %}" alt="Grocery">
+                {% elif product.category.name == "Dresses" %}
+                    <img src="{% static 'images/products/formal_shirt.png' %}" alt="Dresses">
+                {% else %}
+                    <div class="d-flex flex-column align-items-center gap-2">
+                        <i class="fas fa-image fa-3x text-secondary opacity-25"></i>
+                        <span class="text-secondary smallest">Authentic image arriving soon</span>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div>
+            <div class="d-flex justify-content-between gap-2 align-items-start mb-2">
+                <span class="badge-category">{{ product.category.name|default:"General" }}</span>
+                {% if product.savings %}
+                <span class="badge-deal">Save Rs.{{ product.savings.amount|floatformat:0 }}</span>
+                {% elif product.best_offer.verified %}
+                <span class="badge-deal">Best Deal</span>
+                {% endif %}
+            </div>
+            <h5 class="fw-bold mb-1 h6" style="min-height:2.8rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;">{{ product.name }}</h5>
+            {% if product.brand_name %}<div class="small text-secondary mb-1">{{ product.brand_name }}</div>{% endif %}
+            {% if product.rating %}<div class="small mb-1"><i class="fas fa-star text-warning me-1"></i><strong>{{ product.rating|floatformat:1 }}</strong></div>{% endif %}
+        </div>
+
+        {# ── Online / Offline Comparison Strip ── #}
+        <div class="offer-compare">
+            {# Online slot #}
+            {% if product.best_online %}
+            <a href="{{ product.best_online.external_url }}" target="_blank" rel="noopener noreferrer"
+               class="offer-slot offer-slot--online offer-slot--{{ product.best_online.source }}">
+                {% if product.savings and product.savings.cheaper == 'online' %}
+                <span class="offer-slot-cheaper">Cheaper</span>
+                {% endif %}
+                <div class="offer-slot-label">
+                    {% if product.best_online.source == 'amazon' %}<i class="fab fa-amazon me-1"></i>Amazon
+                    {% elif product.best_online.source == 'flipkart' %}<i class="fas fa-bag-shopping me-1"></i>Flipkart
+                    {% elif product.best_online.source == 'myntra' %}<i class="fas fa-shirt me-1"></i>Myntra
+                    {% else %}Online{% endif %}
+                </div>
+                <div class="offer-slot-price">Rs.{{ product.best_online.price|floatformat:0 }}</div>
+                <div class="offer-slot-sub"><i class="fas fa-truck-fast me-1"></i>{{ product.best_online.delivery_time_hours }}h</div>
+            </a>
+            {% else %}
+            <div class="offer-slot offer-slot--empty">
+                <div class="offer-slot-label"><i class="fas fa-globe me-1"></i>Online</div>
+                <div class="offer-slot-price" style="font-size:0.85rem;color:#94a3b8;">Not listed</div>
+            </div>
+            {% endif %}
+
+            {# Local slot #}
+            {% if product.best_local %}
+            <div class="offer-slot offer-slot--local">
+                {% if product.savings and product.savings.cheaper == 'local' %}
+                <span class="offer-slot-cheaper">Cheaper</span>
+                {% endif %}
+                <div class="offer-slot-label"><i class="fas fa-store me-1"></i>Local</div>
+                <div class="offer-slot-price">Rs.{{ product.best_local.price|floatformat:0 }}</div>
+                <div class="offer-slot-sub">{{ product.best_local.merchant|truncatechars:14 }}</div>
+            </div>
+            {% else %}
+            <div class="offer-slot offer-slot--empty">
+                <div class="offer-slot-label"><i class="fas fa-store me-1"></i>Local</div>
+                <div class="offer-slot-price" style="font-size:0.85rem;color:#94a3b8;">No store</div>
+            </div>
+            {% endif %}
+        </div>
+
+        {# ── Actions ── #}
+        <div class="result-actions">
+            {% if product.id %}
+            <a href="{% url product_detail_route_name product.id %}" class="btn-action btn-action-view">Details</a>
+            {% if user.is_authenticated and not user.is_staff and not user.is_merchant %}
+            <form method="post" action="{% url 'dashboard_cart_add' %}" class="flex-grow-1 mb-0">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+                <input type="hidden" name="quantity" value="1">
+                <input type="hidden" name="source" value="{{ product.best_offer.source }}">
+                {% if product.best_offer.merchant_id %}
+                <input type="hidden" name="merchant_id" value="{{ product.best_offer.merchant_id }}">
+                {% endif %}
+                <input type="hidden" name="next" value="{% url 'dashboard_basket' %}">
+                <button type="submit" class="btn-action btn-action-cart w-100">Add</button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn-action btn-action-cart">Login</a>
+            {% endif %}
+            {% else %}
+            {% if product.best_offer.external_url %}
+            <a href="{{ product.best_offer.external_url }}" target="_blank" rel="noopener noreferrer"
+               class="btn-action btn-buy-external btn-buy--{{ product.best_offer.source }} w-100 text-white text-decoration-none">
+                <i class="fas fa-arrow-up-right-from-square"></i>View on {{ product.best_offer.merchant }}
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+        {% if product.id and user.is_authenticated and not user.is_staff and not user.is_merchant and product.best_local %}
+        <a href="{% url 'dashboard_deal_lock_product' product.id %}" class="smallest fw-bold text-primary text-decoration-none mt-1 text-center p-2 rounded-2 bg-primary bg-opacity-10 d-block">
+            REQUEST LOCAL PRICE MATCH
+        </a>
+        {% endif %}
+    </article>
+    {% endif %}
+    {% empty %}
+    <div class="results-empty-state w-100">
+        <h5 class="fw-bold mb-2">No matching results</h5>
+        <p class="text-secondary mb-0">Try another keyword or relax the current filters.</p>
+    </div>
+    {% endfor %}
+</section>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="d-flex justify-content-center mt-4">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?{% if pagination_querystring %}{{ pagination_querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

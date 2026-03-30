@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Cart - DealSphere{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cart-shell {
+        padding: 3rem 0;
+    }
+
+    .cart-item {
+        display: flex;
+        gap: 1.25rem;
+        padding: 1.5rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1rem;
+    }
+
+    .cart-thumb {
+        width: 120px;
+        height: 120px;
+        border-radius: 1rem;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .cart-thumb img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .summary-card {
+        padding: 1.75rem;
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow-sm);
+        position: sticky;
+        top: 100px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container cart-shell">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-bold mb-1">Your Cart</h1>
+            <p class="text-secondary mb-0">{{ total_items|default:0 }} tracked item(s) with real price sourcing.</p>
+        </div>
+        <a href="{% url 'product_search' %}" class="btn-premium btn-premium-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Continue shopping
+        </a>
+    </div>
+
+    {% if items %}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            {% for item in items %}
+            <div class="cart-item">
+                <div class="cart-thumb">
+                    {% if item.product.image_url %}
+                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}">
+                    {% else %}
+                    <span class="text-secondary small">No image</span>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <div class="text-secondary small">{{ item.product.category.name }}</div>
+                            <h5 class="fw-bold mb-1">
+                                <a href="{% url 'product_detail' item.product.id %}" class="text-dark text-decoration-none">
+                                    {{ item.product.name }}
+                                </a>
+                            </h5>
+                            <div class="text-secondary small">Best source: {{ item.merchant.shop_name }}</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-primary fw-bold">Rs.{{ item.total_price }}</div>
+                            <div class="text-secondary small">Qty {{ item.quantity }} | Unit Rs.{{ item.unit_price }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="col-lg-4">
+            <div class="summary-card">
+                <h5 class="fw-bold mb-4">Order Summary</h5>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-secondary">Items</span>
+                    <strong>{{ total_items }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-secondary">Subtotal</span>
+                    <strong>Rs.{{ subtotal }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="text-secondary">Total</span>
+                    <strong class="text-primary">Rs.{{ total }}</strong>
+                </div>
+                <div class="small text-secondary mb-4">
+                    This cart reflects the currently selected source for each item. Use the dashboard checkout flow to place the order.
+                </div>
+                <a href="{% url 'dashboard_checkout' %}" class="btn-premium btn-premium-primary w-100 text-center">Go to Checkout</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <h3 class="fw-bold mb-2">Your cart is empty</h3>
+        <p class="text-secondary mb-4">Search the catalog to add products and compare online and local prices.</p>
+        <a href="{% url 'product_search' %}" class="btn-premium btn-premium-primary">Start searching</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

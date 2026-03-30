@@ -1,0 +1,181 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Products - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="admin-section-card">
+    <form method="get" class="row g-3 align-items-end admin-toolbar-form">
+        <div class="col-lg-5">
+            <label class="form-label small text-secondary">Search</label>
+            <input type="text" class="form-control" name="q" value="{{ product_filters.q }}" placeholder="Product name, barcode, or description">
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Category</label>
+            <input type="text" class="form-control" name="category" value="{{ product_filters.category }}" placeholder="Electronics">
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <label class="form-label small text-secondary">Brand</label>
+            <input type="text" class="form-control" name="brand" value="{{ product_filters.brand }}" placeholder="Brand">
+        </div>
+        <div class="col-md-3 col-lg-2 d-grid">
+            <button class="btn-premium btn-premium-primary" type="submit">Apply Filters</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Total</div><div class="value">{{ product_summary.total }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Barcoded</div><div class="value">{{ product_summary.with_barcode }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">With Offers</div><div class="value">{{ product_summary.with_offers }}</div></div>
+    </div>
+    <div class="col-md-3">
+        <div class="admin-stat-card"><div class="label">Duplicate Names</div><div class="value">{{ product_summary.duplicates }}</div></div>
+    </div>
+</div>
+
+{% if editing_product %}
+<div class="admin-section-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Edit Product</h5>
+        <a href="{% url 'admin_products' %}" class="btn btn-sm btn-outline-secondary">Clear Selection</a>
+    </div>
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ editing_product.id }}">
+        <div class="col-md-6">
+            <label class="form-label">Name</label>
+            <input class="form-control" type="text" name="name" value="{{ editing_product_form_values.name }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Barcode</label>
+            <input class="form-control" type="text" name="barcode" value="{{ editing_product_form_values.barcode }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Category</label>
+            <input class="form-control" type="text" name="category" value="{{ editing_product_form_values.category }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Brand</label>
+            <input class="form-control" type="text" name="brand" value="{{ editing_product_form_values.brand }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Amazon Price</label>
+            <input class="form-control" type="text" name="amazon_price" value="{{ editing_product_form_values.amazon_price }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Flipkart Price</label>
+            <input class="form-control" type="text" name="flipkart_price" value="{{ editing_product_form_values.flipkart_price }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Amazon Rating</label>
+            <input class="form-control" type="text" name="amazon_rating" value="{{ editing_product_form_values.amazon_rating }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Amazon URL</label>
+            <input class="form-control" type="text" name="amazon_url" value="{{ editing_product_form_values.amazon_url }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Flipkart URL</label>
+            <input class="form-control" type="text" name="flipkart_url" value="{{ editing_product_form_values.flipkart_url }}">
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Image URL</label>
+            <input class="form-control" type="text" name="image_url" value="{{ editing_product_form_values.image_url }}">
+        </div>
+        <div class="col-md-12">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" rows="3" name="description">{{ editing_product_form_values.description }}</textarea>
+        </div>
+        <div class="col-12 d-flex gap-2">
+            <button class="btn-premium btn-premium-primary" type="submit" name="action" value="update">Save Product</button>
+            <button class="btn btn-outline-danger" type="submit" name="action" value="delete">Delete Product</button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+{% if duplicate_products %}
+<div class="admin-section-card">
+    <h5 class="fw-bold mb-3">Duplicate Name Watchlist</h5>
+    <div class="row g-3">
+        {% for duplicate in duplicate_products %}
+        <div class="col-md-6 col-xl-4">
+            <div class="admin-shell-metric">
+                <span class="small text-secondary">Duplicate Group</span>
+                <strong>{{ duplicate.name }}</strong>
+                <div class="small text-secondary">{{ duplicate.total }} product row(s)</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="admin-section-card">
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category / Brand</th>
+                    <th>Online Prices</th>
+                    <th>Offers</th>
+                    <th>Barcode</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products_page %}
+                <tr>
+                    <td>
+                        <div class="fw-bold">{{ product.name }}</div>
+                        <div class="small text-secondary">{{ product.description|default:"No description"|truncatechars:80 }}</div>
+                    </td>
+                    <td>{{ product.category.name|default:"-" }} / {{ product.brand.name|default:"-" }}</td>
+                    <td>
+                        <div class="small">Amazon: {{ product.amazon_price|default:"-" }}</div>
+                        <div class="small">Flipkart: {{ product.flipkart_price|default:"-" }}</div>
+                    </td>
+                    <td>{{ product.offer_count|default:0 }}</td>
+                    <td>{{ product.barcode|default:"-" }}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="?edit={{ product.id }}&q={{ product_filters.q }}&category={{ product_filters.category }}&brand={{ product_filters.brand }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-secondary">No products matched the current filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if products_page.paginator.num_pages > 1 %}
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="small text-secondary">Page {{ products_page.number }} of {{ products_page.paginator.num_pages }}</div>
+        <div class="d-flex gap-2">
+            {% if products_page.has_previous %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ products_page.previous_page_number }}&q={{ product_filters.q }}&category={{ product_filters.category }}&brand={{ product_filters.brand }}">Previous</a>
+            {% endif %}
+            {% if products_page.has_next %}
+            <a class="btn btn-sm btn-outline-secondary" href="?page={{ products_page.next_page_number }}&q={{ product_filters.q }}&category={{ product_filters.category }}&brand={{ product_filters.brand }}">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

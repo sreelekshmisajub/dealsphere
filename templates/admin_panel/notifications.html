@@ -1,0 +1,81 @@
+{% extends 'admin_panel/dashboard_layout.html' %}
+
+{% block title %}Admin Notifications - DealSphere{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4">
+    <div class="col-xl-5">
+        <div class="admin-section-card">
+            <h5 class="fw-bold mb-3">Broadcast Alert</h5>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="broadcast">
+                <div class="col-12">
+                    <label class="form-label">Target Group</label>
+                    <select class="form-select" name="target_group">
+                        <option value="all">All active users</option>
+                        <option value="customers">Customers only</option>
+                        <option value="merchants">Merchants only</option>
+                        <option value="admins">Admins only</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Title</label>
+                    <input class="form-control" type="text" name="title" placeholder="System maintenance">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Message</label>
+                    <textarea class="form-control" rows="4" name="message" placeholder="Message shown in user notifications"></textarea>
+                </div>
+                <div class="col-12">
+                    <button class="btn-premium btn-premium-primary" type="submit">Send Broadcast</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-xl-7">
+        <div class="admin-section-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Admin Notifications</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_all_read">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">Mark All Read</button>
+                </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table admin-table align-middle mb-0">
+                    <thead><tr><th>Title</th><th>Type</th><th>Created</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for item in admin_notifications %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ item.title }}</div>
+                                <div class="small text-secondary">{{ item.message|truncatechars:90 }}</div>
+                            </td>
+                            <td>{{ item.notification_type }}</td>
+                            <td>{{ item.created_at|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if not item.is_read %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="mark_read">
+                                    <input type="hidden" name="notification_id" value="{{ item.id }}">
+                                    <button class="btn btn-sm btn-outline-primary" type="submit">Mark Read</button>
+                                </form>
+                                {% else %}
+                                <span class="small text-secondary">Read</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-secondary">No admin notifications available.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

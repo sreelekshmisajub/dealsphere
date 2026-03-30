@@ -1,0 +1,77 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}{{ feature_title }} - DealSphere{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-shell {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(180deg, #f6f8ff 0%, #ffffff 100%);
+    }
+
+    .status-card {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 3rem;
+        border-radius: 2rem;
+        background: #ffffff;
+        border: 1px solid #dde4f4;
+        box-shadow: 0 24px 40px rgba(35, 49, 85, 0.08);
+        text-align: center;
+    }
+
+    .status-icon {
+        width: 82px;
+        height: 82px;
+        margin: 0 auto 1.5rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #5c4df3, #493de2);
+        color: #ffffff;
+        font-size: 2rem;
+    }
+
+    .status-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        margin-bottom: 0.9rem;
+    }
+
+    .status-copy {
+        max-width: 620px;
+        margin: 0 auto 1.75rem;
+        color: #64748b;
+        font-size: 1.05rem;
+    }
+
+    .status-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 54px;
+        padding: 0.85rem 1.35rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #5c4df3, #493de2);
+        color: #ffffff;
+        font-weight: 800;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="status-shell">
+    <div class="container">
+        <div class="status-card">
+            <div class="status-icon"><i class="fas fa-circle-info"></i></div>
+            <h1 class="status-title">{{ feature_title }}</h1>
+            <p class="status-copy">{{ feature_copy }}</p>
+            <a class="status-link" href="{{ feature_cta_url }}">{{ feature_cta_label }}</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

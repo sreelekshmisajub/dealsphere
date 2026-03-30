@@ -1,0 +1,57 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="merchant-section-card">
+            <form method="post" class="row g-4">
+                {% csrf_token %}
+                <div class="col-md-6">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input" type="checkbox" id="delivery_enabled" name="delivery_enabled" {% if merchant.delivery_enabled %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold" for="delivery_enabled">Enable hyperlocal delivery</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-premium">Delivery Radius (KM)</label>
+                    <input type="number" class="form-control" name="delivery_radius_km" value="{{ merchant.delivery_radius_km }}" min="0" required>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label-premium">Default Delivery Time for Active Offers (Hours)</label>
+                    <input type="number" class="form-control" name="default_delivery_time_hours" min="1" placeholder="Optional bulk update">
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-4 pt-2">
+                        <input class="form-check-input" type="checkbox" id="apply_delivery_time_to_offers" name="apply_delivery_time_to_offers">
+                        <label class="form-check-label" for="apply_delivery_time_to_offers">Apply to all active offers</label>
+                    </div>
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button class="btn-premium btn-premium-primary" type="submit">Save Delivery Settings</button>
+                    <a href="{% url 'merchant_inventory' %}" class="btn-premium btn-premium-secondary">Review Inventory</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="merchant-section-card mb-4">
+            <h5 class="fw-bold mb-3">Current Delivery Status</h5>
+            <div class="small text-secondary">Enabled</div>
+            <div class="fw-semibold mb-3">{% if merchant.delivery_enabled %}Yes{% else %}No{% endif %}</div>
+            <div class="small text-secondary">Radius</div>
+            <div class="fw-semibold mb-3">{{ merchant.delivery_radius_km }} KM</div>
+            <div class="small text-secondary">Active Offer Count</div>
+            <div class="fw-semibold mb-0">{{ delivery_stats.active_offer_count }}</div>
+        </div>
+
+        <div class="merchant-section-card">
+            <h5 class="fw-bold mb-3">Offer Delivery Timing</h5>
+            <div class="small text-secondary">Average Delivery Time</div>
+            <div class="fw-semibold mb-3">{{ delivery_stats.average_delivery_time }} hours</div>
+            <div class="small text-secondary">Note</div>
+            <div class="text-secondary">Delivery ranking uses these merchant settings plus each offer's own delivery time.</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

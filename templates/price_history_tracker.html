@@ -1,0 +1,330 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}Price History Tracker - DealSphere{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Price History Tracker</h1>
+                <p class="lead mb-4">Find Real Deals Skip the Fake Ones. Track genuine price drops, compare across stores, and shop smarter every day.</p>
+                
+                <!-- Search Box -->
+                <div class="search-box-hero">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="productSearchInput" placeholder="Enter product URL or name...">
+                        <button class="btn" type="button" onclick="trackProduct()">
+                            <i class="fas fa-search me-2"></i>Track Price
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <p class="mb-2"><i class="fas fa-magic me-2"></i><strong>Magic Trick for Online Shopping</strong></p>
+                    <p class="mb-0">Type <code>dealsphere.com/</code> before ANY product link</p>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <img src="https://via.placeholder.com/500x400/FF6B35/FFFFFF?text=Price+Tracking+Chart" alt="Price Tracking" class="img-fluid rounded-3">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Supported Stores -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Track Prices Across Your Favorite Stores</h2>
+            <p class="text-muted">We support 200+ e-commerce stores for comprehensive price tracking</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fab fa-amazon"></i>
+                    </div>
+                    <h5>Amazon</h5>
+                    <p class="text-muted">Global price tracking</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <h5>Flipkart</h5>
+                    <p class="text-muted">Indian marketplace</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h5>Local Stores</h5>
+                    <p class="text-muted">Nearby merchants</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h5>200+ Stores</h5>
+                    <p class="text-muted">And growing...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Price History Demo -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="price-history-container">
+                    <h3 class="mb-4">Sample Price History</h3>
+                    <canvas id="priceChart" width="400" height="200"></canvas>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h4 class="text-success">₹8,999</h4>
+                                <p class="text-muted mb-0">Lowest Price</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h4 class="text-primary">₹12,499</h4>
+                                <p class="text-muted mb-0">Current Price</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <h4 class="text-warning">₹15,999</h4>
+                                <p class="text-muted mb-0">Highest Price</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="price-tracker-card">
+                    <h4 class="mb-3">Price Drop Prediction</h4>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Next 2-3 days</span>
+                            <span class="badge bg-success">85% chance</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Next week</span>
+                            <span class="badge bg-warning">60% chance</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Next month</span>
+                            <span class="badge bg-info">40% chance</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: 40%"></div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-light btn-sm w-100 mt-3">
+                        <i class="fas fa-bell me-2"></i>Set Price Alert
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Key Features -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5">Key Features</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h5>Price Graph</h5>
+                        <p class="text-muted">Detailed breakdown of product's pricing over the last 3 months, including lowest and average prices in convenient chart format.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h5>Price Comparison</h5>
+                        <p class="text-muted">Compare prices across various e-commerce stores for the same product and find the best deal available.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-crystal-ball"></i>
+                        </div>
+                        <h5>Price Drop Prediction</h5>
+                        <p class="text-muted">Track potential price drops within next 2-3 days, one week, and even a month ahead with AI predictions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5">Key Benefits</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5>Tracking</h5>
+                    <p class="text-muted">Monitoring price history saves valuable time and effort while helping you save money.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <h5>Assists</h5>
+                    <p class="text-muted">Make well-informed buying choices by examining current prices and trends.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-paint-brush"></i>
+                    </div>
+                    <h5>User-friendly</h5>
+                    <p class="text-muted">Our interface makes it effortless to track price graphs with intuitive design.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <h5>It's Free</h5>
+                    <p class="text-muted">No account required. Enjoy all features without any cost or registration.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How to Use -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5">How to Use Our Price Tracker</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class="mb-3">📱 Mobile App</h4>
+                <ol>
+                    <li>Download the DealSphere app</li>
+                    <li>Paste product URL or search by name</li>
+ <li>View price history and predictions</li>
+                    <li>Set alerts for price drops</li>
+                </ol>
+            </div>
+            <div class="col-md-6">
+                <h4 class="mb-3">🌐 Browser Extension</h4>
+                <ol>
+                    <li>Install Chrome extension</li>
+                    <li>Visit any product page</li>
+                    <li>Click the DealSphere icon</li>
+                    <li>See instant price history and predictions</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Price History Chart
+const ctx = document.getElementById('priceChart').getContext('2d');
+const priceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Product Price',
+            data: [15999, 14999, 13999, 12999, 11999, 10999, 9999, 8999, 9999, 10999, 11999, 12499],
+            borderColor: '#FF6B35',
+            backgroundColor: 'rgba(255, 107, 53, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                ticks: {
+                    callback: function(value) {
+                        return '₹' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+function trackProduct() {
+    const input = document.getElementById('productSearchInput');
+    const product = input.value.trim();
+    
+    if (!product) {
+        alert('Please enter a product name or URL');
+        return;
+    }
+    
+    // Simulate product tracking
+    alert(`Tracking price for: ${product}\n\nPrice history will be displayed here with real data from our AI system.`);
+    
+    // In real implementation, this would:
+    // 1. Send product to backend
+    // 2. Scrape price data
+    // 3. Generate price history chart
+    // 4. Show predictions
+}
+</script>
+{% endblock %}

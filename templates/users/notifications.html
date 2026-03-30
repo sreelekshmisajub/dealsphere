@@ -1,0 +1,84 @@
+{% extends 'users/dashboard_layout.html' %}
+
+{% block title %}Notifications - DealSphere{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    .notification-card {
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem 1.35rem;
+        border-radius: 1.25rem;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 1rem;
+        min-width: 0;
+    }
+
+    .notification-card.unread {
+        border-left: 4px solid var(--primary);
+        background: rgba(37, 99, 235, 0.03);
+    }
+
+    .notification-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .notification-card .d-flex {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_actions %}
+<form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="mark_all" value="1">
+    <button class="btn-premium btn-premium-secondary" type="submit">
+        <i class="fas fa-check-double"></i>Mark All Read
+    </button>
+</form>
+{% endblock %}
+
+{% block dashboard_content %}
+{% for notification in notifications %}
+<article class="notification-card {% if not notification.is_read %}unread{% endif %}">
+    <div class="notification-icon">
+        {% if notification.notification_type == 'price_drop' %}
+        <i class="fas fa-chart-line"></i>
+        {% elif notification.notification_type == 'price_match' %}
+        <i class="fas fa-ticket"></i>
+        {% elif notification.notification_type == 'offer_available' %}
+        <i class="fas fa-tags"></i>
+        {% elif notification.notification_type == 'order_update' %}
+        <i class="fas fa-box"></i>
+        {% else %}
+        <i class="fas fa-bell"></i>
+        {% endif %}
+    </div>
+    <div class="flex-grow-1">
+        <div class="d-flex justify-content-between gap-3 mb-1">
+            <strong>{{ notification.title }}</strong>
+            <span class="small text-secondary">{{ notification.created_at|timesince }} ago</span>
+        </div>
+        <div class="text-secondary">{{ notification.message }}</div>
+    </div>
+</article>
+{% empty %}
+<section class="dashboard-header-card">
+    <h5 class="fw-bold mb-2">No notifications yet</h5>
+    <p class="text-secondary mb-0">Price-drop alerts, flash-sale notifications, and deal confirmations will appear here.</p>
+</section>
+{% endfor %}
+{% endblock %}

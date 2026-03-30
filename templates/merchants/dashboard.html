@@ -1,0 +1,135 @@
+{% extends 'merchants/dashboard_layout.html' %}
+
+{% block merchant_actions %}
+<a href="{% url 'merchant_add_product' %}" class="btn-premium btn-premium-primary">
+    <i class="fas fa-plus"></i>Add Product
+</a>
+<a href="{% url 'merchant_requests' %}" class="btn-premium btn-premium-secondary">
+    <i class="fas fa-tags"></i>Requests
+</a>
+{% endblock %}
+
+{% block merchant_content %}
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Total Products</div>
+            <div class="h2 fw-bold mb-1">{{ merchant_overview.total_products|default:0 }}</div>
+            <div class="small text-secondary">Catalog products currently listed by this merchant.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Active Deals</div>
+            <div class="h2 fw-bold mb-1">{{ merchant_overview.active_offers|default:0 }}</div>
+            <div class="small text-secondary">Listings that are currently active in search results.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Pending Requests</div>
+            <div class="h2 fw-bold mb-1">{{ price_match_stats.pending|default:0 }}</div>
+            <div class="small text-secondary">Customer price-match requests awaiting review.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="merchant-section-card h-100">
+            <div class="small text-secondary">Unread Notifications</div>
+            <div class="h2 fw-bold mb-1">{{ merchant_shell_stats.unread_notifications|default:0 }}</div>
+            <div class="small text-secondary">Order and system events for the merchant account.</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="merchant-section-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Pending Price-Match Requests</h5>
+                <a href="{% url 'merchant_requests' %}" class="small fw-semibold text-decoration-none">Open all</a>
+            </div>
+            {% for req in price_match_requests %}
+            <div class="border-top pt-3 mt-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="fw-semibold">{{ req.product.name }}</div>
+                        <div class="small text-secondary">{{ req.user.get_full_name|default:req.user.username }} requested Rs.{{ req.requested_price }}</div>
+                        <div class="small text-secondary">Competitor: Rs.{{ req.competitor_price|default:0 }}{% if req.competitor_source %} on {{ req.competitor_source }}{% endif %}</div>
+                    </div>
+                    <div class="small text-secondary text-end">{{ req.created_at|timesince }} ago</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-secondary">No pending price-match requests.</div>
+            {% endfor %}
+        </div>
+
+        <div class="merchant-section-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Recent Orders</h5>
+                <span class="small text-secondary">{{ recent_orders|length }} latest records</span>
+            </div>
+            {% for order in recent_orders %}
+            <div class="border-top pt-3 mt-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="fw-semibold">Order {{ order.id }}</div>
+                        <div class="small text-secondary">{{ order.user.get_full_name|default:order.user.username }}</div>
+                        <div class="small text-secondary">Status: {{ order.status|title }} | Payment: {{ order.payment_method|title }}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-semibold">Rs.{{ order.total_amount }}</div>
+                        <div class="small text-secondary">{{ order.created_at|date:"d M Y, H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-secondary">No order records exist for this merchant yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="merchant-section-card mb-4">
+            <h5 class="fw-bold mb-3">Shop Summary</h5>
+            <div class="small text-secondary mb-2">Shop Name</div>
+            <div class="fw-semibold mb-3">{{ merchant.shop_name }}</div>
+            <div class="small text-secondary mb-2">Location</div>
+            <div class="mb-3">{{ merchant.address|default:"Address not set" }}</div>
+            <div class="small text-secondary mb-2">Rating</div>
+            <div class="fw-semibold mb-0">{{ merchant.rating|default:0 }} / 5</div>
+        </div>
+
+        <div class="merchant-section-card mb-4">
+            <h5 class="fw-bold mb-3">Pricing Insight</h5>
+            {% if pricing_hint %}
+            <div class="small text-secondary mb-2">{{ pricing_hint.product }}</div>
+            <div class="mb-2">Current: <strong>Rs.{{ pricing_hint.current_price|default:"N/A" }}</strong></div>
+            <div class="mb-2">Suggested: <strong class="text-primary">Rs.{{ pricing_hint.suggested_price }}</strong></div>
+            <div class="small text-secondary">Competitor count: {{ pricing_hint.competitor_count|default:0 }}</div>
+            {% else %}
+            <div class="text-secondary">No pricing suggestion is available yet.</div>
+            {% endif %}
+        </div>
+
+        <div class="merchant-section-card">
+            <h5 class="fw-bold mb-3">Low Stock Alerts</h5>
+            {% for alert in low_stock_alerts %}
+            <div class="border-top pt-3 mt-3">
+                <div class="d-flex justify-content-between gap-3">
+                    <div>
+                        <div class="fw-semibold">{{ alert.product_name }}</div>
+                        <div class="small text-secondary">Current stock: {{ alert.current_stock }}</div>
+                    </div>
+                    <span class="badge {% if alert.alert_level == 'critical' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                        {{ alert.alert_level|title }}
+                    </span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-secondary">No low-stock alerts right now.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

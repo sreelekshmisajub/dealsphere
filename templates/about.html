@@ -1,0 +1,57 @@
+{% extends 'base_buyhatke.html' %}
+
+{% block title %}About DealSphere{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="display-4 fw-bold mb-4">About DealSphere</h1>
+                <p class="lead mb-4">DealSphere brings together product discovery, price tracking, and merchant comparison into one shopping workspace.</p>
+                <p class="mb-0">This frontend shell is now wired so the homepage and core navigation work locally while the deeper app flows continue to be connected.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-search-dollar"></i>
+                        </div>
+                        <h5>Compare Prices</h5>
+                        <p class="text-muted">Browse offers from marketplaces and local stores in one place.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h5>Track History</h5>
+                        <p class="text-muted">Use price history and alerts to avoid fake discounts.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h5>AI Guidance</h5>
+                        <p class="text-muted">Surface likely deals, timing hints, and basket savings opportunities.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ auth_page_title|default:"Sign In - DealSphere" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-shell {
+        min-height: calc(100vh - 90px);
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        padding: 3rem 0;
+    }
+
+    .auth-card {
+        padding: 2.5rem;
+        border-radius: 1.75rem;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 24px 50px rgba(0, 0, 0, 0.35);
+        color: #ffffff;
+    }
+
+    .auth-input {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border-radius: 0.85rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+
+    .auth-input::placeholder {
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    .auth-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #cbd5e1;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-5">
+                <div class="auth-card">
+                    <div class="text-center mb-4">
+                        <h1 class="fw-bold mb-2 text-white">{{ auth_heading|default:"Sign In" }}</h1>
+                        <p class="text-secondary mb-0">{{ auth_copy|default:"Use the real Django session login for the frontend shell." }}</p>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" id="auth-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next }}">
+
+                        <div class="mb-3">
+                            <label class="auth-label" for="email">Email</label>
+                            <input id="email" class="auth-input" type="email" name="email" value="{{ request.POST.email|default:'' }}" placeholder="name@example.com" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="auth-label" for="password">Password</label>
+                            <input id="password" class="auth-input" type="password" name="password" placeholder="Enter your password" required>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="remember" name="remember">
+                            <label class="form-check-label text-secondary" for="remember">Keep me signed in</label>
+                        </div>
+
+                        <button class="btn-premium btn-premium-primary w-100" type="submit" id="auth-submit">
+                            {{ auth_submit_label|default:"Sign In" }}
+                        </button>
+                    </form>
+
+                    {% if show_register_link|default:True %}
+                    <p class="text-center text-secondary mt-4 mb-2">
+                        Need an account? <a class="text-decoration-none fw-bold" href="{% url 'register' %}">Register here</a>
+                    </p>
+                    {% else %}
+                    <p class="text-center text-secondary mt-4 mb-2">
+                        Admin accounts are created internally. Use a staff account only.
+                    </p>
+                    {% endif %}
+
+                    {% if alternate_login_url %}
+                    <p class="text-center text-secondary mb-0">
+                        <a class="text-decoration-none fw-bold" href="{{ alternate_login_url }}">{{ alternate_login_label }}</a>
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('auth-form');
+        const submitButton = document.getElementById('auth-submit');
+
+        if (form && submitButton) {
+            const originalLabel = submitButton.innerHTML;
+            form.addEventListener('submit', function (event) {
+                if (form.dataset.submitting === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
+                form.dataset.submitting = 'true';
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Please wait...';
+
+                window.setTimeout(function () {
+                    if (document.body.contains(submitButton)) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalLabel;
+                        delete form.dataset.submitting;
+                    }
+                }, 8000);
+            });
+        }
+    });
+
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
+</script>
+{% endblock %}
